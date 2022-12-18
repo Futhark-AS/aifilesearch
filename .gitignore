@@ -1,2 +1,5 @@
 data/
 test/
+__pycache__/
+output.csv
+.DS_STORE
