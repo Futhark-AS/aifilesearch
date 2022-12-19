@@ -44,13 +44,15 @@ for index, row in df.iterrows():
     header_text, body = clean_paragraph(row['html'])
     df.at[index, 'header'] = header_text
     df.at[index, 'body'] = body
-    text = "Title: " + header_text + "\nBody: " + body
-    translated = translate_text(text)
+    text = "Paragraf Tittel: " + header_text + "\nInnhold: " + body
+    #translated = translate_text(text)
     total_char = total_char + len(text)
     print(index)
     print(total_char)
-    df.at[index, 'translated'] = translated
+    #df.at[index, 'translated'] = translated
+    df.at[index, 'combined'] = text
+
 
 # save the dataframe to a new csv file
-df.to_csv('data/lovdata_translated.csv')
+df.to_csv('test/lovdata_translated.csv')
 
