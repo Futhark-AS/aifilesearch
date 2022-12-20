@@ -59,7 +59,7 @@ def scrape_law(link):
     chapters = soup.find_all('div', {'id': re.compile(r'^KAPITTEL_\d+$')})
 
     if len(chapters) == 0:
-        result += get_all_paragraphs(soup, law_name)
+        result += get_all_paragraphs(soup, law_name, link)
     else:
         for chapter in chapters:
             # Get all divs that has id starting with "kapittel_", and append to list
@@ -67,13 +67,13 @@ def scrape_law(link):
 
             # TODO: find possible sub chapters and add to the paragraphs
 
-            result += get_all_paragraphs(chapter, law_name, chapter_name)
+            result += get_all_paragraphs(chapter, law_name, link, chapter_name)
 
 
     return result
 
 
-def get_all_paragraphs(root, law_name, chapter_name=None):
+def get_all_paragraphs(root, law_name, link, chapter_name=None):
     paragrafs = root.find_all('div', {'data-id': re.compile(r'^PARAGRAF_')})
     result = []
 
@@ -86,7 +86,8 @@ def get_all_paragraphs(root, law_name, chapter_name=None):
             "law_name": law_name,
             "chapter": chapter_name,
             "paragraph_title": paragraph_title,
-            "paragraph": paragraf_text
+            "paragraph": paragraf_text,
+            "url": link + "#" + paragraph_title.split(".")[0].replace(" ", "")
         })
 
     return result
@@ -97,7 +98,7 @@ def main():
     offset = 0
     articles = []
     next_articles = click_next_page(offset)
-    max_pages = 999
+    max_pages = 99999
     n = 0
 
 
@@ -119,11 +120,14 @@ def main():
             print(e)
 
 
+
     # Create a pandas dataframe with the result
-    df = pd.DataFrame(paragraphs, columns=["law_name", "chapter", "paragraph_title", "paragraph"])
+    df = pd.DataFrame(paragraphs, columns=["url", "law_name", "chapter", "paragraph_title", "paragraph"])
+
+    print(df)
 
     # Save the dataframe to a csv file
-    df.to_csv("data/all_lovdata.csv", index=True)
+    df.to_csv("test/all_lovdata.csv", index=True)
 
 #print(get_lov_data(first_article)[0].text.strip())
 
