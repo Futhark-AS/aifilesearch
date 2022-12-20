@@ -3,6 +3,8 @@ import requests
 import pandas as pd
 import re
 from utils import log_exc
+from multi_thread_list import multi_thread_list
+import threading
 base = "https://lovdata.no"
 # lover_url = "https://lovdata.no/register/lover?year=*&letter=*&ministry=$ministry&offset=$offset"
 lover_url = "https://lovdata.no/register/lover?year=*&letter=*&ministry=*&offset=$offset"
@@ -93,6 +95,9 @@ def get_all_paragraphs(root, law_name, link, chapter_name=None):
     return result
 
 
+
+
+
 def main():
     # Get all paragrafs from all articles and create a pandas dataframe
     offset = 0
@@ -101,34 +106,64 @@ def main():
     max_pages = 99999
     n = 0
 
-
     while next_articles and n < max_pages:
         n += 1
         offset += 20
         articles = articles + next_articles
         next_articles = click_next_page(offset)
 
+    save_path = "test/all_lovdata.csv"
 
+    start_index = 200
     paragraphs = []
+    if start_index > 0:
+        df = pd.read_csv(save_path)
+        paragraphs = df.to_dict("records")
+        print("Loaded from csv")
 
-    for article in articles:
-        # Make try catch block
+
+
+    paragraphs_lock = threading.Lock()
+    def save_paragraphs(paragraphs):
+        print("Length of paragraphs: " + str(len(paragraphs)))
+        df = pd.DataFrame(paragraphs, columns=["url", "law_name", "chapter", "paragraph_title", "paragraph"])
+        df.to_csv(save_path, index=True)
+        print("Saved to csv")
+    
+    def scrape_and_append(i, articles, paragraphs, lock):
+        article = articles[i]
         try:
-            paragraphs += scrape_law(base + article)
+            results = scrape_law(base + article)
+            with lock:
+                for result in results:
+                    paragraphs.append(result)
         except Exception as e:
             print("Error scraping: " + article)
             print(e)
 
+    multi_thread_list(input_list=articles, output_list=paragraphs, target=scrape_and_append, save=save_paragraphs, lock= paragraphs_lock, start_index=start_index, num_threads=10, save_every=100)
+    
+
+
+    # for article in articles:
+    #     # Make try catch block
+    #     try:
+    #         paragraphs += scrape_law(base + article)
+    #     except Exception as e:
+    #         print("Error scraping: " + article)
+    #         print(e)
+
 
 
     # Create a pandas dataframe with the result
-    df = pd.DataFrame(paragraphs, columns=["url", "law_name", "chapter", "paragraph_title", "paragraph"])
+    #df = pd.DataFrame(paragraphs, columns=["url", "law_name", "chapter", "paragraph_title", "paragraph"])
 
-    print(df)
+    #print(df)
 
     # Save the dataframe to a csv file
-    df.to_csv("test/all_lovdata.csv", index=True)
+    #df.to_csv("test/all_lovdata.csv", index=True)
 
 #print(get_lov_data(first_article)[0].text.strip())
 
-main()
+if __name__ == "__main__":
+    main()

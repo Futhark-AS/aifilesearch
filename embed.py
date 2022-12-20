@@ -6,8 +6,8 @@ import openai
 import numpy as np
 from openai.embeddings_utils import get_embedding
 from utils import log_exc
+from multi_thread_list import multi_thread_list
 import threading
-import numpy as np
 openai.api_key = "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"
 
 
@@ -18,6 +18,9 @@ def embed_laws(from_path, to_path, initialize_new=False, start_index=0, remove_l
         df = df.head(head)
     #df = df.reset_index(drop=False)
     df["combined"] = ""
+    if initialize_new:
+        df["ada_search"] = ""
+
 
     for i, row in df.iterrows():
         if isinstance(row['chapter'], float):
@@ -46,50 +49,56 @@ def embed_laws(from_path, to_path, initialize_new=False, start_index=0, remove_l
         print(f"Total tokens: {total_tokens}")
         print(f"Price: {price}")
 
-    # Create a lock
-    lock_df = threading.Lock()
 
     @log_exc(10)
-    def embed_text_to_df(df, i, text):
+    def embed_text_to_df(index, input_df, output_df, lock):
+        text = input_df.at[index, "combined"]
         embedding = get_embedding(
             text,
             engine="text-embedding-ada-002"
         )
-        with lock_df:
-            df.at[i, "ada_search"] = embedding
+        with lock:#keep in mind that these to df are the same df, doesnt matter which one we use
+            output_df.at[index, "ada_search"] = str(embedding)
 
-    ####df["ada_search"] = ""
+    def save_df(df):
+        df[["url", "law_name", "chapter", "paragraph_title", "paragraph", "ada_search"]].to_csv(to_path)
+        print("Saved df to csv")
+    
+    # Create a lock
+    lock_df = threading.Lock()
+    multi_thread_list(input_list=df, output_list=df, target=embed_text_to_df, save=save_df, num_threads=10, start_index=start_index, save_every=10, lock=lock_df)
 
-    # Create and start the threads
-    threads = []
-    num_threads = 10
-    i = start_index
-    while i < len(df):
-        threads = []
-        j = 0
-        while j < num_threads and i+j < len(df):
-            t = threading.Thread(target=embed_text_to_df, args=(df, i+j, df.at[i+j, "combined"],))
-            t.start()
-            threads.append(t)
-            j+=1
+
+    # # Create and start the threads
+    # threads = []
+    # num_threads = 10
+    # i = start_index
+    # while i < len(df):
+    #     threads = []
+    #     j = 0
+    #     while j < num_threads and i+j < len(df):
+    #         t = threading.Thread(target=embed_text_to_df, args=(df, i+j, df.at[i+j, "combined"],))
+    #         t.start()
+    #         threads.append(t)
+    #         j+=1
         
-        for j in range(len(threads)):
-            threads[j].join() 
+    #     for j in range(len(threads)):
+    #         threads[j].join() 
 
-        i+= num_threads
+    #     i+= num_threads
 
-        # save to csv if we have 10 rows
-        if i % (num_threads*10) == 0:
-            print("Saving to csv", i)
-            df[["url", "law_name", "chapter", "paragraph_title", "paragraph", "ada_search"]].to_csv(to_path)
+    #     # save to csv if we have 10 rows
+    #     if i % (num_threads*10) == 0:
+    #         print("Saving to csv", i)
+    #         df[["url", "law_name", "chapter", "paragraph_title", "paragraph", "ada_search"]].to_csv(to_path)
 
-    df[["url", "law_name", "chapter", "paragraph_title", "paragraph", "ada_search"]].to_csv(to_path)
+    # df[["url", "law_name", "chapter", "paragraph_title", "paragraph", "ada_search"]].to_csv(to_path)
 
-    # Print the final DataFrame
-    print(df)
+    # # Print the final DataFrame
+    # print(df)
 
 if __name__ == "__main__":
-    embed_laws("data/all_lovdata_embedded.csv", "data/all_lovdata_embedded.csv", start_index=9000)
+    embed_laws("test/all_lovdata.csv", "test/all_lovdata_embedded.csv", start_index=0)
 
 
 
