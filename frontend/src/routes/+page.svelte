@@ -1,59 +1,79 @@
-<script>
-	import Counter from './Counter.svelte';
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
+<script lang="ts">
+	import type { PageData } from './$types';
+	import { ResultSchema } from './schemas';
+
+	export let data: PageData;
+
+	export let aiActive = true;
+
+	// SEARCH INPUT PART https://sveltematerialui.com/demo/textfield/
+
+	let value = '';
+
+	function doSearch() {
+		alert('Search for ' + value);
+	}
+
+	function handleKeyDown(event: CustomEvent | KeyboardEvent) {
+		event = event as KeyboardEvent;
+		if (event.key === 'Enter') {
+			doSearch();
+		}
+	}
 </script>
 
 <svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
+	<title>Hjem</title>
+	<meta name="description" content="AIvokat" />
 </svelte:head>
 
 <section>
-	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcome_fallback} alt="Welcome" />
-			</picture>
-		</span>
+	<h1 class="text-3xl mt-10 mb-16">Velkommen til <span class="font-bold">AIvokat</span></h1>
+	<div class="flex align-middle w-full justify-left mb-2">
+		<button on:click={() => aiActive = true} class={` ${aiActive && "underline" } mr-4 `}>Spør AI</button>
+		<!-- <input type="checkbox" class="toggle toggle-s" checked /> -->
+		<button on:click={() => aiActive = false} class={` ${!aiActive && "underline" } mr-4 `}>Søk i lovverket</button>
+	</div>
 
-		to your new<br />SvelteKit app
-	</h1>
-
-	<h2>
-		try editing <strong>src/routes/+page.svelte</strong>
-	</h2>
-
-	<Counter />
+	<input type="text" placeholder="Hvor mye må jeg betale i skatt om jeg tjener 400 000?" class="input input-bordered w-full" />
 </section>
 
-<style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 0.6;
-	}
+<section class="mt-10">
+	<h3 class="text-xl">Resultater</h3>
+	<!-- 
+		result = {
+			similarities: number,
+			law_name: string,
+			chapter: string,
+			paragraph_body: string,
+			paragraph_title: string
+		}
+	} -->
 
+	<!-- Display all results as cards -->
+	{#each data.results as result}
+		<div class="card">
+			<div class="card-body">
+				<!-- <h2 class="card-title">{result.lawName}</h2>
+				<h3 class="card-subtitle">{result.chapter}</h3>
+				<p class="card-text">{result.paragraphTitle}</p> -->
+			</div>
+		</div>
+	{/each}
+
+
+</section>
+
+
+<style>
 	h1 {
 		width: 100%;
 	}
-
-	.welcome {
-		display: block;
-		position: relative;
+	section {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
 	}
 </style>

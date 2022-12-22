@@ -1,6 +1,7 @@
 <script>
 	import Header from './Header.svelte';
 	import './styles.css';
+	import "../app.css";
 </script>
 
 <div class="app">
@@ -11,7 +12,7 @@
 	</main>
 
 	<footer>
-		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
+		<p class="text-sm">En tjeneste laget av <i>Jørgen Sandhaug</i> og <i>Henrik Skog</i></p>
 	</footer>
 </div>
 
