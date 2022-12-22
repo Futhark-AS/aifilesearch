@@ -27,15 +27,26 @@
 	<meta name="description" content="AIvokat" />
 </svelte:head>
 
+<svelte:window on:keydown={handleKeyDown} />
+
 <section>
 	<h1 class="text-3xl mt-10 mb-16">Velkommen til <span class="font-bold">AIvokat</span></h1>
 	<div class="flex align-middle w-full justify-left mb-2">
-		<button on:click={() => aiActive = true} class={` ${aiActive && "underline" } mr-4 `}>Spør AI</button>
+		<button on:click={() => (aiActive = true)} class={` ${aiActive && 'underline'} mr-4 `}
+			>Spør AI</button
+		>
 		<!-- <input type="checkbox" class="toggle toggle-s" checked /> -->
-		<button on:click={() => aiActive = false} class={` ${!aiActive && "underline" } mr-4 `}>Søk i lovverket</button>
+		<button on:click={() => (aiActive = false)} class={` ${!aiActive && 'underline'} mr-4 `}
+			>Søk i lovverket</button
+		>
 	</div>
 
-	<input type="text" placeholder="Hvor mye må jeg betale i skatt om jeg tjener 400 000?" class="input input-bordered w-full" />
+	<input
+		type="text"
+		placeholder="Hvor mye må jeg betale i skatt om jeg tjener 400 000?"
+		class="input input-bordered w-full"
+		bind:value={value}
+	/>
 </section>
 
 <section class="mt-10">
@@ -60,10 +71,7 @@
 			</div>
 		</div>
 	{/each}
-
-
 </section>
-
 
 <style>
 	h1 {
