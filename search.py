@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import openai
-openai.api_key = "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"
 from openai.embeddings_utils import get_embedding, cosine_similarity
+openai.api_key = "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"
 from utils import log_exc
 
 
@@ -11,15 +11,12 @@ datafile_path = "data/all_lovdata_embedded.csv"
 text = """
 Hvordan er reglene for skatt på aksjegevinst for en privatperson?
 """
+df = pd.read_csv(datafile_path, index_col=0)
 
-def search_lover(text, from_path, to_path, n=3):
-    df = pd.read_csv(from_path, )
-    #df = df.head(30)
-    #print(df)
+def search_lover(text, n=10):
     print(df)
     df["ada_search"] = df.ada_search.apply(lambda x: np.fromstring(x[1:-1], sep=","))
     print(df)
-
     embedding = get_embedding(
         text,
         engine="text-embedding-ada-002"
@@ -29,6 +26,7 @@ def search_lover(text, from_path, to_path, n=3):
 
     res = (
         df.sort_values("similarities", ascending=False)
+        #.head(n)
     )
 
     res = res[["similarities", "law_name", "chapter", "paragraph_title", "paragraph"]]
@@ -36,7 +34,4 @@ def search_lover(text, from_path, to_path, n=3):
     worst = res.tail(10)
     print(best, worst)
     # write to file
-    res.to_csv(to_path, index=False)
-
-
-search_lover(text, datafile_path, "data/search_results.csv")
+    return res.head(n)
