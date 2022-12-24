@@ -1,0 +1,13 @@
+name: model-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy=1.24.0
+  - pandas=1.5.2
+  - openai=0.25.0
+  # - pip:
+  #     - azureml-defaults==1.38.0
+  #     - joblib==1.0.1
+  #     - azure-storage-blob==12.11
+  #     - azure-identity==1.7
