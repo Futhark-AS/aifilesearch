@@ -76,6 +76,12 @@ module.exports = async function (context, req) {
   const res = {
     // status: 200, /* Defaults to 200 */
     body: JSON.parse(response.data, { encoding: "utf8" }),
+    // allow CORS
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Length, X-Requested-With",
+    },
   };
 
   context.log(res);

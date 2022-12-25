@@ -48,12 +48,14 @@
 
 	async function normalSearch() {
 		const request = { prompt: value };
-		const res = await fetch('http://localhost:7071/api/search', {
+		// https://nlp-search-api.azurewebsites.net/api/search
+		// http://localhost:7071/api/search 
+		const res = await fetch('https://nlp-search-api.azurewebsites.net/api/search', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				//no cors
-				'Access-Control-Allow-Origin': '*'
+				//'Access-Control-Allow-Origin': '*'
 			},
 			body: JSON.stringify(request)
 		});
@@ -102,6 +104,12 @@
 			},
 			body: JSON.stringify(params)
 		};
+		// first, list all available models
+		
+		const res_models = await fetch('https://api.openai.com/v1/models', requestOptions);
+		const models = await res_models.json();
+		console.log(models)
+
 		const response = await fetch('https://api.openai.com/v1/completions', requestOptions);
 		console.log(response);
 		const json = await response.json();
