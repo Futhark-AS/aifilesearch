@@ -10,7 +10,7 @@
 	data-context="signin"
 	data-callback="onSignIn"
 	data-ux_mode="popup"
-	data-login_uri="http://127.0.0.1:5173/"
+	data-login_uri="http://localhost:5173/"
 	data-auto_select="true"
 	data-itp_support="true"
 />
