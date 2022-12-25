@@ -4,7 +4,7 @@ export const prerender = true;
 
 import { env } from '$env/dynamic/public';
 // import { envVars } from 'src/routes/env-vars';
-import { z } from 'zod';
+import { string, z } from 'zod';
 import type { PageLoad } from './$types';
 import { ResultSchema } from './schemas';
 
@@ -15,6 +15,7 @@ export const load = (async ({ params }) => {
 	const parsedResults = z.array(ResultSchema).parse([]);
 
 	return {
-		results: parsedResults
+		results: parsedResults,
+		response: ''
 	};
 }) satisfies PageLoad;

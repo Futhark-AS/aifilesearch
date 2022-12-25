@@ -47,7 +47,7 @@ module.exports = async function (context, req) {
 
   const prompt = req.body && req.body.prompt;
 
-  const data = { prompt: "Hvor mye skatt må jeg betale?" };
+  const data = { prompt: prompt };
 
   const body = JSON.stringify(data);
 

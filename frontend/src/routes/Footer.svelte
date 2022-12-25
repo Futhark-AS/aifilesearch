@@ -1,5 +1,5 @@
 <footer>
-	<p class="text-sm">En tjeneste laget av <i>Jørgen Sandhaug</i> og <i>Henrik Skog</i></p>
+	<p class="text-sm">En tjeneste laget av <i>Jørgen Sandhaug</i>, <i>Simen Sandhaug</i> og <i>Henrik Skog</i></p>
 </footer>
 
 <style>

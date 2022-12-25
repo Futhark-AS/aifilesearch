@@ -6,3 +6,6 @@ output.csv
 .venv
 __azurite*
 .vscode
+node_modules/
+package-lock.json
+package.json
