@@ -18,7 +18,8 @@ def init():
     # It is the path to the model folder (./azureml-models/$MODEL_NAME/$VERSION)
     # Please provide your model's folder name if there is one
     model_path = os.path.join(
-        os.getenv("AZUREML_MODEL_DIR"), "model/all_lovdata_embedded.csv"
+        #os.getenv("AZUREML_MODEL_DIR"), "model/all_lovdata_embedded.csv" THIS IS USED WHEN model is set to a path
+        os.getenv("AZUREML_MODEL_DIR"), "all_lovdata_embedded.csv" # THIS IS USED WHEN model is loaded from azure-ml-ws models
     )
     # deserialize the model file back into a sklearn model
 
