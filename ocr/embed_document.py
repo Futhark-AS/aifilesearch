@@ -16,6 +16,8 @@ def extract_segments(filename, segment_length=400, overlap_length=50):
   with open(filename, 'r') as f:
     text = f.read()
 
+
+  current_page = 1
   # Split the text into a list of sentences
   sentences = re.split(r'[.!?]', text)
 
@@ -27,6 +29,12 @@ def extract_segments(filename, segment_length=400, overlap_length=50):
 
   # Iterate through the rest of the sentences
   for i, sentence in enumerate(sentences[1:]):
+    # if sentece contains PAGE_NUMBER_DECLARATION, update page number and skip
+    if "PAGE_NUMBER_DECLARATION" in sentence:
+        print(sentence)
+        current_page = int(sentence.split(" ")[-1])
+        continue
+
     # If adding the sentence to the segment would make it too long,
     # append the current segment to the list of segments and start a new segment
     if len(segment) + len(sentence) > segment_length:
@@ -41,7 +49,7 @@ def extract_segments(filename, segment_length=400, overlap_length=50):
       segment += sentence + '.'
 
   # Append the final segment to the list of segments
-  segments.append(segment)
+  segments.append((current_page, segment))
 
   return segments
 
@@ -62,7 +70,7 @@ def embed_segments(segments):
         ids_batch = [str(n) for n in range(i, i_end)]
         #print("ids_batch", ids_batch)
         # prep metadata and upsert batch
-        meta = [{"text": segment } for segment in segments_batch]
+        meta = [{"page_number": segment[0], "text": segment[1] } for segment in segments_batch]
         #print("HREI", type(meta))
 
         # create embeddings for batch

@@ -44,10 +44,30 @@ def analyze_read():
         result = poller.result()
         print("Document contains {} pages: ".format(len(result.pages)))
 
-        # add all pages to file
-        with open("michael_pages/michael-%s-%s.txt" % (i, i+n-1), "w") as f:
-            f.write(result.content)
-            f.write("\n\n")
+        print("----Languages detected in the document----")
+        for language in result.languages:
+            print("Language code: '{}' with confidence {}".format(language.locale, language.confidence))
+
+        for page in result.pages:
+            print("----Analyzing Read from page #{}----".format(i + page.page_number))
+            print(
+                "Page has width: {} and height: {}, measured with unit: {}".format(
+                    page.width, page.height, page.unit
+                )
+            )
+            # concat all lines
+            page.content = ".PAGE_NUMBER_DECLARATION " + str(i + page.page_number)+"." 
+            for line in page.lines:
+                page.content += line.content + "\n"
+            # add all pages to file
+            with open("michael_pages/michael-%s-%s.txt" % (i, i+n-1), "w") as f:
+                f.write(page.content)
+                f.close()
+        
+            # print content of page
+            print(page.content)
+
+            
         
 
         #print ("Document contains content: ", result.content)
