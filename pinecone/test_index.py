@@ -8,16 +8,20 @@ pinecone.init(
     environment="us-west1-gcp"
 )
 # check if 'openai' index already exists (only create index if not)
-index_name = "lovdata"
+index_name = "michael"
 # connect to index
 index = pinecone.Index(index_name)
 
 
-query = "Hvordan funker det med skatt på aksjegevinst?"
+query = "What are the different types of competitive advantage?"
 
 xq = openai.Embedding.create(input=query, engine="text-embedding-ada-002")['data'][0]['embedding']
 
 print("Finished embedding query")
 
-res = index.query([xq], top_k=10, include_metadata=True)
+res = index.query([xq], top_k=10, include_metadata=True, )
 print(res)
+
+# print res["metadata"]["content"] for each
+for match in res.matches:
+    print(match["metadata"]["content"])
