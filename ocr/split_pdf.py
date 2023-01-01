@@ -2,8 +2,8 @@ from PyPDF2 import PdfWriter, PdfReader
 import os
 
 
-save_folder = "michael_pages"
-pdf_name = "michael"
+save_folder = "finanzas_pages"
+pdf_name = "finanzas"
 inputpdf = PdfReader(open(pdf_name+".pdf", "rb"))
 
 if not os.path.exists(save_folder):

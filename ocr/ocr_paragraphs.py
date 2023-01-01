@@ -8,6 +8,7 @@ https://docs.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/quick
 
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
+import json
 
 """
 Remember to remove the key from your code when you're done, and never post it publicly. For production, use
@@ -16,6 +17,11 @@ https://docs.microsoft.com/en-us/azure/cognitive-services/cognitive-services-sec
 """
 endpoint = "https://jorgen-receipt-recognizer.cognitiveservices.azure.com/"
 key = "ce4f6273acf642888e33b283c7481323"
+n = 2
+start = 15
+end = 50
+save_folder = "michael_pages"
+file_name = "michael"
 
 def format_bounding_box(bounding_box):
     if not bounding_box:
@@ -29,19 +35,18 @@ def analyze_read():
     document_analysis_client = DocumentAnalysisClient(
         endpoint=endpoint, credential=AzureKeyCredential(key)
     )
-    # path = "folder/document_name-0-4.pdf"
-    n = 2
-    start = 15
-    end = 18
-
+    # price is 1.5 dollars per 1000 pages
     p = 1.5
-    print("Price per 1000 pages: " + p + " dollars", end="\n\n")
+    print("Price per 1000 pages: " + str(p) + " dollars", end="\n\n")
     price = p*(end-start)/1000
     print("Price for extracting text from %s to %s pages: %s dollars" % (start, end, price), end="\n\n")
-
+    # path = "folder/document_name-0-4.pdf"
+    all_paragraphs = []
     for i in range(start, end, n):
-        path = "michael_pages/michael-%s-%s.pdf" % (i, i+n-1)
-        print(path)
+        path = save_folder+"/"+file_name+"-%s-%s.pdf" % (i, i+n-1)
+        # print now handling file
+        print("Handling file: " + path)
+
 
         with open(path, "rb") as f:
             poller = document_analysis_client.begin_analyze_document(
@@ -54,21 +59,30 @@ def analyze_read():
         for language in result.languages:
             print("Language code: '{}' with confidence {}".format(language.locale, language.confidence))
 
-        for page in result.pages:
-            print("----Analyzing Read from page #{}----".format(i + page.page_number))
+        for paragraph in result.paragraphs:
             print(
-                "Page has width: {} and height: {}, measured with unit: {}".format(
-                    page.width, page.height, page.unit
+                "...Paragraph of length'{}'".format(
+                    len(paragraph.content)
                 )
             )
-            # concat all lines
-            page.content = ".PAGE_NUMBER_DECLARATION " + str(i + page.page_number)+"." 
-            for line in page.lines:
-                page.content += line.content + "\n"
-            # add all pages to file
-            with open("michael_pages/michael-%s-%s.txt" % (i, i+n-1), "w") as f:
-                f.write(page.content)
-                f.close()
+            print("...Bounding regions: {}".format(paragraph.bounding_regions))
+            if len(paragraph.bounding_regions) > 1:
+                # throw exception
+                print("Error: more than one bounding region")
+            all_paragraphs.append({
+                "content": paragraph.content,
+                "page_number": paragraph.bounding_regions[0].page_number + i,
+                "bounding_box": [{"x": point.x, "y":point.y} for point in paragraph.bounding_regions[0].polygon]
+            })
+
+            
+    return all_paragraphs
+    
+
+
 
 if __name__ == "__main__":
-    analyze_read()
+    all_paragraphs = analyze_read()
+    path = save_folder+"/"+file_name+"-%s-%s.json" % (start, end)
+    with open(path, "w") as f:
+        json.dump(all_paragraphs, f)
