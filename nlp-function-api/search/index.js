@@ -1,81 +1,133 @@
-// import openai embedding
-// const { OpenAI } = require("openai-api");
-//const openai = new OpenAI(process.env.OPENAI_API_KEY);
-
-/* const get_embedding = async (query) => {
-  // POST https://api.openai.com/v1/embeddings
-  const response = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "text-embedding-ada-002",
-      input: query,
-    }),
-  });
-  /* response format: {
-  "object": "list",
-  "data": [
-    {
-      "object": "embedding",
-      "embedding": [
-        0.0023064255,
-        -0.009327292,
-        .... (1056 floats total for ada)
-        -0.0028842222,
-      ],
-      "index": 0
-    }
-  ],
-  "model": "text-embedding-ada-002",
-  "usage": {
-    "prompt_tokens": 8,
-    "total_tokens": 8
-  }
-}
-  const data = await response.json();
-  return data.data[0].embedding;
-}; 
-*/
 const axios = require("axios");
-const apiKey = "nmiv4f6MgA78R47rstmgbWTYstV3nix2";
 
-module.exports = async function (context, req) {
+const apiKey = 'd7c72c84-1057-48cb-b52f-d857d4c04380';
+//const index_name = "michael"
+const project_name = "cb61165"
+const environment = "us-west1-gcp"
+
+const baseUrl = (index_name, project_name, environment) => `https://${index_name}-${project_name}.svc.${environment}.pinecone.io/`
+
+const request = async (method, path, body, index_name, project_name, environment) => {
+  console.log("request", method, path, body, index_name, project_name, environment)
+  const url = baseUrl(index_name, project_name, environment) + path;
+  const headers = {
+    'Content-Type': 'application/json',
+    'Api-Key': apiKey,
+  };
+  try {
+    const response = await axios({
+      url, method, data:body, headers
+    });
+    // if response 2xx return data
+    if(response.status >= 200 && response.status < 300){
+      return response.data;
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+
+
+// body has this format:
+/*
+{
+     "includeValues": "false",
+     "includeMetadata": true,
+     "vector": [
+          1,
+          2,
+          3,
+          ...
+     ],
+     "namespace": "example-namespace",
+     "topK": 10
+}
+*/
+//url = /query
+const query = async (namespace, vector, topK, index_name, project_name, environment) => {
+    const body = {
+        namespace,
+        vector,
+        topK,
+        includeMetadata: true,
+        // filter: {
+        //     content: {
+        //         $ne: "1"
+        //   }
+        // }
+    };
+    const res = await request('POST', 'query', body, index_name, project_name, environment);
+    const matches = res.matches;
+    return matches;
+}
+
+// describe index stats
+// url : describe_index_stats
+const describeIndexStats = async (index_name, project_name, environment) => {
+    return request('POST', 'describe_index_stats', {}, index_name, project_name, environment);
+}
+
+
+const getEmbedding = async (text) => {
+  const url = "https://api.openai.com/v1/embeddings";
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer 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",
+  };
+  const data = {
+    input: text,
+    model: "text-embedding-ada-002",
+  };
+  try {
+    const response = await axios.post(url, data, { headers });
+    console.log("Usage: ", response.data.usage);
+    return response.data.data[0].embedding;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+
+
+
+module.exports = async function (context, req, document) {
   context.log("JavaScript HTTP trigger function processed a request.");
 
   const prompt = req.body && req.body.prompt;
+  const namespace = req.body && req.body.namespace;
+  const topK = req.body && req.body.topK;
 
-  const data = { prompt: prompt };
+  //TODO: check with database if index_name allowed for user
+  context.log("ID", context.bindings.document.id)
+  allowed_namespaces = context.bindings.document.allowed_namespaces
+  // format:  
+  /*"allowed_namespaces": [
+        {
+          "namespace": "",
+          "index_name": "michael"
+      }
+  ],*/
+  // if namespace not in allowed_namespaces
+  // return error
+  if (!allowed_namespaces.some((ns) => ns.namespace === namespace)) {
+    context.res = {
+      status: 403,
+      body: "Namespace not allowed for user",
+    };
+    return;
+  }
 
-  const body = JSON.stringify(data);
+  index_name = allowed_namespaces.find((ns) => ns.namespace === namespace).index_name
 
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
-    "azureml-model-deployment": "blue",
-  };
 
-  const url =
-    "https://lovdata-endpoint-1.northeurope.inference.ml.azure.com/score";
-  /* const embedding = await get_embedding(prompt); */
-
-  // connect to the azure ml blue endpoint
-
-  /*   const response = await fetch(url, {
-    method: "POST",
-    headers: headers,
-    body: body,
-  }); */
-
-  const response = await axios.post(url, body, {
-    headers: headers,
-  });
+  const vector = await getEmbedding(prompt);
+  const matches = await query(namespace, vector, topK, index_name, project_name, environment);
+  //context.log(matches)
 
   const res = {
     // status: 200, /* Defaults to 200 */
-    body: JSON.parse(response.data, { encoding: "utf8" }),
+    body: JSON.stringify(matches, { encoding: "utf8" }),
     // allow CORS
     headers: {
       "Access-Control-Allow-Origin": "*",
