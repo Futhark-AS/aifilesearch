@@ -7,3 +7,6 @@ declare namespace App {
 	// interface PageData {}
 	// interface Platform {}
 }
+declare global {
+	const google: typeof import('google.accounts');
+  }

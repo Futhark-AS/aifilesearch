@@ -13,6 +13,7 @@
 		"format": "prettier --plugin-search-dir . --write ."
 	},
 	"devDependencies": {
+		"@beyonk/svelte-social-auth": "^3.0.0",
 		"@fontsource/fira-mono": "^4.5.10",
 		"@neoconfetti/svelte": "^1.0.0",
 		"@playwright/test": "^1.28.1",
@@ -38,9 +39,12 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/google.accounts": "^0.0.4",
 		"daisyui": "^2.46.0",
 		"gapi": "^0.0.3",
 		"google": "^2.1.0",
+		"google-auth-library": "^8.7.0",
+		"jsrsasign": "^10.6.1",
 		"zod": "^3.20.2"
 	}
 }
