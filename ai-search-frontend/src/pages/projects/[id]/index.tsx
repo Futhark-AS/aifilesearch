@@ -124,7 +124,7 @@ const Home: NextPage = () => {
           </p>
         </section>
         <Button variant="outline" size="xs">
-          <Link href={`/project/${id}/edit`}>Edit project data</Link>
+          <Link href={`/projects/${id}/edit`}>Edit project data</Link>
         </Button>
 
         <TextInput

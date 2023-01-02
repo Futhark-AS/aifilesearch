@@ -4,6 +4,8 @@ import Head from "next/head";
 import Header from "../components/Header";
 import { parseJwt } from "../utils/parseJwt";
 import { useAuth } from "../utils/context/AuthContext";
+import { Button, Divider } from "@mantine/core";
+import Link from "next/link";
 
 const Home: NextPage = () => {
   const { state, login } = useAuth();
@@ -18,7 +20,7 @@ const Home: NextPage = () => {
 
       <Header />
 
-      <main className="container mx-auto flex min-h-screen w-[70ch] flex-col items-center p-4">
+      <main className="container mx-auto flex min-h-screen w-[70ch] flex-col p-4">
         <h1 className="text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
           AI Search
         </h1>
@@ -31,9 +33,10 @@ const Home: NextPage = () => {
           placeat magnam, repudiandae nesciunt quidem corrupti velit, eius
           doloribus saepe beatae.
         </p>
-        <section>
-          <h4 className="my-5 text-center text-2xl">Sign up</h4>
-          {!state.isLoggedIn && (
+        <Divider className="my-5"/>
+        {!state.isLoggedIn ? (
+          <section>
+            <h4 className="my-5 text-2xl font-semibold">Sign in / register</h4>
             <GoogleLogin
               onSuccess={async (credentialResponse) => {
                 const credentials = credentialResponse.credential;
@@ -46,6 +49,7 @@ const Home: NextPage = () => {
                   // TODO: get token
                   login({
                     name: parsed.name,
+                    firstName: parsed.given_name,
                     email: parsed.email,
                     token: "token",
                     uid: "uid",
@@ -58,8 +62,13 @@ const Home: NextPage = () => {
                 console.log("Login Failed");
               }}
             />
-          )}
-        </section>
+          </section>
+        ) : (
+          <section>
+            <h4 className="my-5 text-2xl">Welcome {state.firstName}!</h4>
+              <Button variant="outline" className="block"><Link href={"/projects"}>Your projects</Link></Button>
+          </section>
+        )}
       </main>
     </div>
   );

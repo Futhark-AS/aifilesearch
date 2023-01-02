@@ -26,16 +26,16 @@ export default function Page() {
         <h1 className="text-3xl font-semibold ">Your projects</h1>
         <ul className="auto-responsive-lg grid">
           {projects.map((project) => (
-            <Card shadow="sm" radius="md" className="p-8" key={project.id}>
-              <Link href={`/projects/${project.id}`}>
-                <a className="text-lg">{project.name}</a>
-              </Link>
-              <p className="text-gray-500">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio
-                beatae illum magni aperiam eos consequuntur corporis deleniti
-                nesciunt, unde impedit?
-              </p>
-            </Card>
+            <Link href={`/projects/${project.id}`} key={project.id}>
+              <Card shadow="sm" radius="md" className="p-8 cursor-pointer">
+                <div className="text-lg">{project.name}</div>
+                <p className="text-gray-500">
+                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio
+                  beatae illum magni aperiam eos consequuntur corporis deleniti
+                  nesciunt, unde impedit?
+                </p>
+              </Card>
+            </Link>
           ))}
         </ul>
       </main>

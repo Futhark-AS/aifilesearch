@@ -1,6 +1,7 @@
 export const initialState: LoginState = {
   email: "hei",
   name: "",
+  firstName: "",
   uid: "",
   token: "",
   isLoading: false,
@@ -11,6 +12,7 @@ export const initialState: LoginState = {
 export interface LoginState {
   email: string;
   name: string;
+  firstName: string;
   uid: string;
   token: string;
   isLoading: boolean;
@@ -25,6 +27,7 @@ export type LoginAction =
       payload: {
         email: string;
         name: string;
+        firstName: string;
         token: string;
         uid: string;
       };
@@ -40,6 +43,7 @@ export function authReducer(
         error: "",
         email: action.payload.email,
         name: action.payload.name,
+        firstName: action.payload.firstName,
         token: action.payload.token,
         uid: action.payload.uid,
         isLoggedIn: true,

@@ -12,6 +12,7 @@ export type AuthContextValue = {
 type LoginParams = {
   email: string;
   name: string;
+  firstName: string;
   token: string;
   uid: string;
 };

@@ -28,9 +28,12 @@ export function ResponsiveHeader({ links }: HeaderResponsiveProps) {
   const items = links.map((link) => (
     <div
       key={link.label}
-      className={cx(classes.link, {
-        [classes.linkActive]: active === link.label,
-      })}
+      className={cx(classes.link
+      // TODO: fix this, active is not always right
+      //   , {
+      //   [classes.linkActive]: active === link.label,
+      // }
+      )}
       onClick={(event) => {
         event.preventDefault();
         link.onClick && link.onClick();
