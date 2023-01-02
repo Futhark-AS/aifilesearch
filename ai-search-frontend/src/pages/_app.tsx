@@ -1,19 +1,13 @@
-import "../styles/globals.css";
-import type { AppType } from "next/dist/shared/lib/utils";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import type { AppType } from "next/dist/shared/lib/utils";
 import { env } from "../env/client.mjs";
-import { NotificationsProvider } from "@mantine/notifications";
-import { MantineProvider } from "@mantine/core";
+import "../styles/globals.css";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
-    <MantineProvider>
-      <NotificationsProvider>
-        <GoogleOAuthProvider clientId={env.NEXT_PUBLIC_CLIENT_ID}>
-          <Component {...pageProps} />
-        </GoogleOAuthProvider>
-      </NotificationsProvider>
-    </MantineProvider>
+    <GoogleOAuthProvider clientId={env.NEXT_PUBLIC_CLIENT_ID}>
+      <Component {...pageProps} />
+    </GoogleOAuthProvider>
   );
 };
 

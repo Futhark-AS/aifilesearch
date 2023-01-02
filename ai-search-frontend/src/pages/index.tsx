@@ -2,11 +2,12 @@ import { GoogleLogin } from "@react-oauth/google";
 import type { NextPage } from "next";
 import Head from "next/head";
 import Header from "../components/Header";
-import { useEffect } from "react";
 import useUser from "../utils/hooks/useUser";
+import { getToken } from "../utils/api/getToken";
+import { parseJwt } from "../utils/parseJwt";
 
 const Home: NextPage = () => {
-  const { user } = useUser();
+  const { user, setUser, setUid, setToken } = useUser();
 
   return (
     <>
@@ -31,19 +32,37 @@ const Home: NextPage = () => {
           placeat magnam, repudiandae nesciunt quidem corrupti velit, eius
           doloribus saepe beatae.
         </p>
-        <div className="">
-          <h4 className="mb-5 text-center text-2xl">Sign up</h4>
+        <section>
+          <h4 className="my-5 text-center text-2xl">Sign up</h4>
           {user == null && (
             <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                console.log(credentialResponse);
+              onSuccess={async (credentialResponse) => {
+                const credentials = credentialResponse.credential;
+                if (!credentials)
+                  return alert("Could not authenticate with Google");
+
+                try {
+                  const parsed = parseJwt(credentials);
+                  console.log(parsed);
+                  setUser({
+                    name: parsed.name,
+                    email: parsed.email,
+                    id: parsed.email,
+                    uid: parsed.email,
+                  });
+
+                  // const token = await getToken(credentials);
+                  // setToken(token);
+                } catch (e) {
+                  alert(`Could not authenticate with Google (${e})`);
+                }
               }}
               onError={() => {
                 console.log("Login Failed");
               }}
             />
           )}
-        </div>
+        </section>
       </main>
     </>
   );

@@ -11,6 +11,11 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { MantineLogo } from "@mantine/ds";
 import Link from "next/link";
+export interface MenuItem {
+  label: string;
+  link?: string;
+  onClick?: () => void;
+}
 
 const HEADER_HEIGHT = 60;
 
@@ -94,7 +99,7 @@ const useStyles = createStyles((theme) => ({
 }));
 
 interface HeaderResponsiveProps {
-  links: { link: string; label: string }[];
+  links: MenuItem[];
 }
 
 export function ResponsiveHeader({ links }: HeaderResponsiveProps) {
@@ -106,15 +111,16 @@ export function ResponsiveHeader({ links }: HeaderResponsiveProps) {
     <div
       key={link.label}
       className={cx(classes.link, {
-        [classes.linkActive]: active === link.link,
+        [classes.linkActive]: active === link.label,
       })}
       onClick={(event) => {
         event.preventDefault();
-        setActive(link.link);
+        setActive(link.label);
         close();
       }}
     >
-      <Link href={link.link}>{link.label}</Link>
+      {link.onClick && <button onClick={link.onClick}>{link.label}</button>}
+      {link.link && <Link href={link.link}>{link.label}</Link>}
     </div>
   ));
 

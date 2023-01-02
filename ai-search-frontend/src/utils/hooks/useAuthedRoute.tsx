@@ -8,23 +8,10 @@ export default function useAuthedRoute() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!user.user) {
+    console.log(user)
+    if (!user.user?.email) {
+      console.log(user)
       router.push('/');
-      showNotification({
-        id: 'hello-there',
-        disallowClose: true,
-        onClose: () => console.log('unmounted'),
-        onOpen: () => console.log('mounted'),
-        autoClose: 5000,
-        title: "You've been compromised",
-        message: 'Leave the building immediately',
-        color: 'red',
-        // icon: <IconX />,
-        className: 'my-notification-class',
-        style: { backgroundColor: 'red' },
-        sx: { backgroundColor: 'red' },
-        loading: false,
-      });
     }
   }, [user, router]);
 
