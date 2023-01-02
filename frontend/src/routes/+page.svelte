@@ -13,55 +13,32 @@
 
 	let value = '';
 
-	function zip(obj: { [key: string]: { [key: string]: any } }): LawResult[] {
-		const keys = Object.keys(obj);
-		const result: { [key: string]: any }[] = [];
-
-		for (const id of Object.keys(obj[keys[0]])) {
-			const item: { [key: string]: any } = { id };
-			for (const key of keys) {
-				item[key] = obj[key][id];
-			}
-			result.push(item);
-		}
-
-		// Group the items by law name
-		const grouped = result.reduce((acc, curr) => {
-			if (!acc[curr.law_name]) {
-				acc[curr.law_name] = [];
-			}
-			acc[curr.law_name].push(curr);
-			return acc;
-		}, {});
-
-		// Convert the grouped object into an array
-		const groupedArray: { law_name: string; items: { [key: string]: any }[] }[] = [];
-		for (const lawName of Object.keys(grouped)) {
-			groupedArray.push({
-				law_name: lawName,
-				items: grouped[lawName]
-			});
-		}
-
-		return groupedArray;
-	}
-
 	async function normalSearch() {
-		const request = { prompt: value };
+		const prompt= "heihei"
+		const topK= 3
+		const namespace= ""
+		const token = localStorage.getItem("token");
+		const uid = localStorage.getItem("uid");
+		console.log(token)
+		console.log(uid)
+		if(!token || !uid) {
+			alert("You need to be logged in to use this feature");
+			return;
+		}
 		// https://nlp-search-api.azurewebsites.net/api/search
 		// http://localhost:7071/api/search
-		const res = await fetch('https://nlp-search-api.azurewebsites.net/api/search', {
-			method: 'POST',
+		const res = await fetch(`https://nlp-search-api.azurewebsites.net/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
+		//const res = await fetch(`http://localhost:7071/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
+			method: 'GET',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				"X-ZUMO-AUTH": token
 				//no cors
 				//'Access-Control-Allow-Origin': '*'
 			},
-			body: JSON.stringify(request)
 		});
-		const parsed = await res.json();
+		data.results = await res.json();
 		console.log('Done');
-		data.results = zip(parsed);
 		console.log(data.results);
 	}
 
@@ -108,10 +85,6 @@
 			body: JSON.stringify(params)
 		};
 		// first, list all available models
-
-		const res_models = await fetch('https://api.openai.com/v1/models', requestOptions);
-		const models = await res_models.json();
-		console.log(models);
 
 		const response = await fetch('https://api.openai.com/v1/completions', requestOptions);
 		console.log(response);

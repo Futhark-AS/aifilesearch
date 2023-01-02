@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { getContext, onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	let buttonDiv: HTMLDivElement;
 	export let error: string = '';
@@ -20,9 +21,27 @@
 		return JSON.parse(jsonPayload);
 	}
 
-	function handleCredentialResponse(response: { credential: string }) {
+	async function handleCredentialResponse(response: { credential: string }) {
 		console.log('Encoded JWT ID token: ' + response.credential);
-		console.log(parseJwt(response.credential));
+		const parsed = parseJwt(response.credential);
+		// send post request to https://nlp-search-api.azurewebsites.net/.auth/login/google with body { id_token: response.credential }
+		// then redirect to /search
+		const res = await fetch('https://nlp-search-api.azurewebsites.net/.auth/login/google', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ id_token: response.credential })
+		});
+
+		console.log(res);
+
+		const json = await res.json();
+		console.log(json);
+		// store in local storage
+		localStorage.setItem('uid', json.user.userId);
+		localStorage.setItem('token', json.authenticationToken);
+
 	}
 
 	onMount(async () => {
