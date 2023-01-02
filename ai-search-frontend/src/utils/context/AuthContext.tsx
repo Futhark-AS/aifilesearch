@@ -1,27 +1,37 @@
 import React, { PropsWithChildren, createContext } from "react";
-import { usePersistantAuthReducer } from "../../hooks/usePersistantAuthReducer";
-import { LoginState } from "./reducer";
+import { usePersistantAuthReducer } from "../hooks/usePersistantAuthReducer";
+import { LoginState } from "../reducers/authReducer/reducer";
 
 export type AuthContextValue = {
   state: LoginState;
-  login: (email: string, name: string, token: string) => void;
+  login: (params: LoginParams) => void;
   authError: () => void;
   logout: () => void;
+};
+
+type LoginParams = {
+  email: string;
+  name: string;
+  token: string;
+  uid: string;
 };
 
 const Store = createContext<AuthContextValue>({} as AuthContextValue);
 
 export const useAuth = () => React.useContext(Store);
 
-export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
+const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [authState, dispatch] = usePersistantAuthReducer();
 
-  const login = (email: string, name: string, token: string) => {
-    dispatch({ type: "login", payload: { email, name, token } });
+  const login = (payload: LoginParams) => {
+    dispatch({ type: "login", payload });
   };
 
   const authError = () => dispatch({ type: "error" });
-  const logout = () => dispatch({ type: "logOut" });
+  const logout = () => {
+    dispatch({ type: "logout" });
+    console.log("logging out");
+  };
 
   return (
     <Store.Provider value={{ state: authState, login, authError, logout }}>
@@ -29,3 +39,5 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     </Store.Provider>
   );
 };
+
+export default AuthProvider;

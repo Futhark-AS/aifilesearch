@@ -7,7 +7,8 @@ import { useState } from "react";
 import Header from "../../../../components/Header";
 import PDFViewer from "../../../../components/pdf-viewer";
 
-const fetchFile = async (id: string): Promise<File> => {
+//TODO: get file from azure based on project.
+const fetchFiles = async (id: string): Promise<File> => {
   const res = await axios.get(`/api/file/${id}`);
   return res.data as File;
 };
@@ -66,8 +67,8 @@ const Home: NextPage = () => {
             New file
           </Button>
           <div className="auto-responsive grid">
-            {cards.map((card) => (
-              <FileCard />
+            {cards.map((card, i) => (
+              <FileCard key={i} />
             ))}
           </div>
         </section>

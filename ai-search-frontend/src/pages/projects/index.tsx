@@ -1,10 +1,8 @@
-// Display all projects
-
+import { Card } from "@mantine/core";
 import Link from "next/link";
 import Header from "../../components/Header";
-import { Card, HoverCard } from "@mantine/core";
-import useAuthedRoute from '../../utils/hooks/useAuthedRoute';
 
+//TODO: get projects from database
 const projects = [
   {
     id: 1,
@@ -21,7 +19,6 @@ const projects = [
 ];
 
 export default function Page() {
-  useAuthedRoute()
   return (
     <div>
       <Header />

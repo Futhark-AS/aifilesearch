@@ -1,6 +1,7 @@
 export const initialState: LoginState = {
-  email: "",
+  email: "hei",
   name: "",
+  uid: "",
   token: "",
   isLoading: false,
   error: "",
@@ -10,6 +11,7 @@ export const initialState: LoginState = {
 export interface LoginState {
   email: string;
   name: string;
+  uid: string;
   token: string;
   isLoading: boolean;
   error: string;
@@ -17,13 +19,14 @@ export interface LoginState {
 }
 
 export type LoginAction =
-  | { type: "error" | "logOut" }
+  | { type: "error" | "logout" }
   | {
       type: "login";
       payload: {
         email: string;
         name: string;
         token: string;
+        uid: string;
       };
     };
 
@@ -38,6 +41,7 @@ export function authReducer(
         email: action.payload.email,
         name: action.payload.name,
         token: action.payload.token,
+        uid: action.payload.uid,
         isLoggedIn: true,
         isLoading: false,
       };
@@ -50,7 +54,7 @@ export function authReducer(
         isLoading: false,
       };
     }
-    case "logOut": {
+    case "logout": {
       return {
         ...state,
         isLoggedIn: false,

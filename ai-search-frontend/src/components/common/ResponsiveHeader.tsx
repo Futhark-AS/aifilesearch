@@ -1,102 +1,20 @@
-import { useState } from "react";
 import {
-  createStyles,
-  Header,
+  Burger,
   Container,
   Group,
-  Burger,
+  Header,
   Paper,
   Transition,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { MantineLogo } from "@mantine/ds";
 import Link from "next/link";
+import { useState } from "react";
+import { HEADER_HEIGHT, useStyles } from "./ResponsiveHeaderStyles";
 export interface MenuItem {
   label: string;
-  link?: string;
+  link: string;
   onClick?: () => void;
 }
-
-const HEADER_HEIGHT = 60;
-
-const useStyles = createStyles((theme) => ({
-  root: {
-    position: "relative",
-    zIndex: 1,
-  },
-
-  dropdown: {
-    position: "absolute",
-    top: HEADER_HEIGHT,
-    left: 0,
-    right: 0,
-    zIndex: 0,
-    borderTopRightRadius: 0,
-    borderTopLeftRadius: 0,
-    borderTopWidth: 0,
-    overflow: "hidden",
-
-    [theme.fn.largerThan("sm")]: {
-      display: "none",
-    },
-  },
-
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    height: "100%",
-  },
-
-  links: {
-    [theme.fn.smallerThan("sm")]: {
-      display: "none",
-    },
-  },
-
-  burger: {
-    [theme.fn.largerThan("sm")]: {
-      display: "none",
-    },
-  },
-
-  link: {
-    display: "block",
-    lineHeight: 1,
-    padding: "8px 12px",
-    borderRadius: theme.radius.sm,
-    textDecoration: "none",
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[0]
-        : theme.colors.gray[7],
-    fontSize: theme.fontSizes.sm,
-    fontWeight: 500,
-
-    "&:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[6]
-          : theme.colors.gray[0],
-    },
-
-    [theme.fn.smallerThan("sm")]: {
-      borderRadius: 0,
-      padding: theme.spacing.md,
-    },
-  },
-
-  linkActive: {
-    "&, &:hover": {
-      backgroundColor: theme.fn.variant({
-        variant: "light",
-        color: theme.primaryColor,
-      }).background,
-      color: theme.fn.variant({ variant: "light", color: theme.primaryColor })
-        .color,
-    },
-  },
-}));
 
 interface HeaderResponsiveProps {
   links: MenuItem[];
@@ -115,12 +33,12 @@ export function ResponsiveHeader({ links }: HeaderResponsiveProps) {
       })}
       onClick={(event) => {
         event.preventDefault();
+        link.onClick && link.onClick();
         setActive(link.label);
         close();
       }}
     >
-      {link.onClick && <button onClick={link.onClick}>{link.label}</button>}
-      {link.link && <Link href={link.link}>{link.label}</Link>}
+      {<Link href={link.link || ""}>{link.label}</Link>}
     </div>
   ));
 

@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import Header from "../../../components/Header";
-import useAuthedRoute from "../../../utils/hooks/useAuthedRoute";
+import { useAuth } from "../../../utils/context/AuthContext";
 
 const LawSchema = z
   .object({
@@ -44,7 +44,7 @@ type Law = z.infer<typeof LawSchema>;
 const Home: NextPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { token, uid } = useAuthedRoute();
+  const { state: authState } = useAuth();
 
   const [searchValue, setSearchValue] = useState("");
 
@@ -54,6 +54,7 @@ const Home: NextPage = () => {
     console.log(debouncedSearchValue);
   }, [debouncedSearchValue]);
 
+  // TODO: get files from azure based on project. Should do this here and pass down maybe
   const [data, setData] = useState<{ results: Law[] }>({
     results: [
       {
@@ -80,6 +81,7 @@ const Home: NextPage = () => {
     ],
   });
 
+  // TODO: make this work 
   async function normalSearch() {
     const prompt = "heihei";
     const topK = 3;
@@ -88,12 +90,12 @@ const Home: NextPage = () => {
     // https://nlp-search-api.azurewebsites.net/api/search
     // http://localhost:7071/api/search
     const data = await axios.get(
-      `https://nlp-search-api.azurewebsites.net/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`,
+      `https://nlp-search-api.azurewebsites.net/api/search?id=${authState.uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`,
       {
         //const res = await fetch(`http://localhost:7071/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
         headers: {
           "Content-Type": "application/json",
-          "X-ZUMO-AUTH": token,
+          "X-ZUMO-AUTH": authState.token,
           //no cors
           //'Access-Control-Allow-Origin': '*'
         },

@@ -1,20 +1,25 @@
-import useUser from "../../utils/hooks/useUser";
 import ResponsiveHeader from "../common/ResponsiveHeader";
 import { useEffect, useState } from "react";
 import { MenuItem } from "../common/ResponsiveHeader";
+import { useAuth } from "../../utils/context/AuthContext";
 
 function Header() {
-  const { user, logout } = useUser();
+  const {
+    state: { isLoggedIn },
+    logout,
+  } = useAuth();
   const [links, setLinks] = useState<MenuItem[]>([]);
 
   useEffect(() => {
-    if (user) {
+    if (isLoggedIn) {
       setLinks([
         { label: "My Projects", link: "/projects" },
-        { label: "Logout", onClick: logout },
+        { label: "Logout", onClick: () => logout(), link: "/" },
       ]);
+    } else {
+      setLinks([])
     }
-  }, [user]);
+  }, [isLoggedIn, logout]);
 
   return <ResponsiveHeader links={links} />;
 }
