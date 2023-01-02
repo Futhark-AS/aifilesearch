@@ -7,8 +7,9 @@
       "name": "req",
       "methods": [
         "get",
-        "post"
-      ]
+        "options"
+      ],
+      "route": "api/search"
     },
     {
       "type": "http",
