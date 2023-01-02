@@ -1,12 +1,14 @@
 import { Button, Loader, TextInput } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
+import axios from "axios";
 import type { NextPage } from "next";
 import Head from "next/head";
-import { useState } from "react";
-import { z } from "zod";
-import { Navbar } from "@mantine/core";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import Header from "../../../components/Header";
+import useAuthedRoute from "../../../utils/hooks/useAuthedRoute";
 
 const LawSchema = z
   .object({
@@ -42,10 +44,17 @@ type Law = z.infer<typeof LawSchema>;
 const Home: NextPage = () => {
   const router = useRouter();
   const { id } = router.query;
+  const { token, uid } = useAuthedRoute();
 
   const [searchValue, setSearchValue] = useState("");
-  const [data, setData] = useState<{ results: Law[] }>({
 
+  const [debouncedSearchValue] = useDebouncedValue(searchValue, 200);
+
+  useEffect(() => {
+    console.log(debouncedSearchValue);
+  }, [debouncedSearchValue]);
+
+  const [data, setData] = useState<{ results: Law[] }>({
     results: [
       {
         law_name: "Lov om skatt",
@@ -70,6 +79,30 @@ const Home: NextPage = () => {
       },
     ],
   });
+
+  async function normalSearch() {
+    const prompt = "heihei";
+    const topK = 3;
+    const namespace = "";
+
+    // https://nlp-search-api.azurewebsites.net/api/search
+    // http://localhost:7071/api/search
+    const data = await axios.get(
+      `https://nlp-search-api.azurewebsites.net/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`,
+      {
+        //const res = await fetch(`http://localhost:7071/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-ZUMO-AUTH": token,
+          //no cors
+          //'Access-Control-Allow-Origin': '*'
+        },
+      }
+    );
+
+    console.log(data.data);
+  }
+
   return (
     <>
       <Head>
@@ -88,9 +121,9 @@ const Home: NextPage = () => {
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Tempora
           </p>
         </section>
-          <Button variant="outline" size="xs">
-            <Link href={`/project/${id}/edit`}>Edit project data</Link>
-          </Button>
+        <Button variant="outline" size="xs">
+          <Link href={`/project/${id}/edit`}>Edit project data</Link>
+        </Button>
 
         <TextInput
           label="Search"

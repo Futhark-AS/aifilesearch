@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Header from "../../components/Header";
 import { Card, HoverCard } from "@mantine/core";
+import useAuthedRoute from '../../utils/hooks/useAuthedRoute';
 
 const projects = [
   {
@@ -20,6 +21,7 @@ const projects = [
 ];
 
 export default function Page() {
+  useAuthedRoute()
   return (
     <div>
       <Header />
