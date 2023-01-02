@@ -7,7 +7,7 @@ import workerSrc from "../../pdf-worker";
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 export default function PDFViewer() {
-  const [file, setFile] = useState("./sample.pdf");
+  const [file, setFile] = useState("/sample.pdf");
   const [numPages, setNumPages] = useState(null);
 
   function onFileChange(event) {
@@ -21,7 +21,7 @@ export default function PDFViewer() {
   return (
     <div>
       <div>
-        <label htmlFor="file">Load from file:</label>{" "}
+        <label htmlFor="file">Load from file:</label>
         <input onChange={onFileChange} type="file" />
       </div>
       <div>
