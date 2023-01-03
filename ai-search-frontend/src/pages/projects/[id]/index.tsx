@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import Header from "../../../components/Header";
-import { useAuth } from "../../../utils/context/AuthContext";
+import { useAppSelector } from '../../../redux/hooks';
 
 const LawSchema = z
   .object({
@@ -44,7 +44,7 @@ type Law = z.infer<typeof LawSchema>;
 const Home: NextPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { state: authState } = useAuth();
+  const user = useAppSelector((state) => state.user);
 
   const [searchValue, setSearchValue] = useState("");
 
@@ -90,12 +90,12 @@ const Home: NextPage = () => {
     // https://nlp-search-api.azurewebsites.net/api/search
     // http://localhost:7071/api/search
     const data = await axios.get(
-      `https://nlp-search-api.azurewebsites.net/api/search?id=${authState.uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`,
+      `https://nlp-search-api.azurewebsites.net/api/search?id=${user.uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`,
       {
         //const res = await fetch(`http://localhost:7071/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
         headers: {
           "Content-Type": "application/json",
-          "X-ZUMO-AUTH": authState.token,
+          "X-ZUMO-AUTH": user.token,
           //no cors
           //'Access-Control-Allow-Origin': '*'
         },

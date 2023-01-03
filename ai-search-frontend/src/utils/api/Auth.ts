@@ -20,7 +20,9 @@ class ServerAuth {
       },
     });
 
-    return z.object({ token: z.string() }).parse(data.data).token;
+    const expectedReturnSchema = z.object({ token: z.string() });
+
+    return expectedReturnSchema.parse(data.data).token;
   }
 }
 

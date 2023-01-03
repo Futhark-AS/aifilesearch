@@ -1,25 +1,34 @@
 import ResponsiveHeader from "../common/ResponsiveHeader";
 import { useEffect, useState } from "react";
 import { MenuItem } from "../common/ResponsiveHeader";
-import { useAuth } from "../../utils/context/AuthContext";
+import { useSelector } from "react-redux";
+import { logout, selectUserIsLoggedIn } from "../../redux/slices/userSlice";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 
 function Header() {
-  const {
-    state: { isLoggedIn },
-    logout,
-  } = useAuth();
+  const isAuthenticated = useAppSelector((state) =>
+    selectUserIsLoggedIn(state)
+  );
   const [links, setLinks] = useState<MenuItem[]>([]);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isAuthenticated) {
       setLinks([
         { label: "My Projects", link: "/projects" },
-        { label: "Logout", onClick: () => logout(), link: "/" },
+        {
+          label: "Logout",
+          onClick: () => {
+            console.log("dispatching logout");
+            dispatch(logout());
+          },
+          link: "/",
+        },
       ]);
     } else {
-      setLinks([])
+      setLinks([]);
     }
-  }, [isLoggedIn, logout]);
+  }, [isAuthenticated, dispatch, logout]);
 
   return <ResponsiveHeader links={links} />;
 }
