@@ -8,10 +8,10 @@ const storage = {
     if (!user) return null;
     return AuthSchema.parse(JSON.parse(user));
   },
-  setToken: (user: UserState) => {
+  setUser: (user: UserState) => {
     window.localStorage.setItem(`${storagePrefix}user`, JSON.stringify(user));
   },
-  clearToken: () => {
+  clearUser: () => {
     window.localStorage.removeItem(`${storagePrefix}user`);
   },
 };
