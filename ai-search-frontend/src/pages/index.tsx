@@ -1,14 +1,23 @@
-import { GoogleLogin } from "@react-oauth/google";
-import type { NextPage } from "next";
-import Head from "next/head";
-import Header from "../components/Header";
-import { parseJwt } from "../utils/parseJwt";
-import { useAuth } from "../utils/context/AuthContext";
 import { Button, Divider } from "@mantine/core";
+import { GoogleLogin } from "@react-oauth/google";
+import Head from "next/head";
 import Link from "next/link";
+import Header from "../components/Header";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import {
+  login,
+  selectUser,
+  selectUserIsLoggedIn,
+} from "../redux/slices/userSlice";
+import { parseJwt } from "../utils/parseJwt";
 
-const Home: NextPage = () => {
-  const { state, login } = useAuth();
+const Home = () => {
+  const isAuthenticated = useAppSelector((state) =>
+    selectUserIsLoggedIn(state)
+  );
+
+  const user = useAppSelector((state) => selectUser(state));
+  const dispatch = useAppDispatch();
 
   return (
     <div>
@@ -33,8 +42,15 @@ const Home: NextPage = () => {
           placeat magnam, repudiandae nesciunt quidem corrupti velit, eius
           doloribus saepe beatae.
         </p>
-        <Divider className="my-5"/>
-        {!state.isLoggedIn ? (
+        <Divider className="my-5" />
+        {isAuthenticated ? (
+          <section>
+            <h4 className="my-5 text-2xl">Welcome {user.firstName}!</h4>
+            <Button variant="outline" className="block">
+              <Link href={"/projects"}>Your projects</Link>
+            </Button>
+          </section>
+        ) : (
           <section>
             <h4 className="my-5 text-2xl font-semibold">Sign in / register</h4>
             <GoogleLogin
@@ -47,13 +63,16 @@ const Home: NextPage = () => {
                   const parsed = parseJwt(credentials);
 
                   // TODO: get token
-                  login({
-                    name: parsed.name,
-                    firstName: parsed.given_name,
-                    email: parsed.email,
-                    token: "token",
-                    uid: "uid",
-                  });
+                  console.log(parsed);
+                  dispatch(
+                    login({
+                      name: parsed.name,
+                      firstName: parsed.given_name,
+                      email: parsed.email,
+                      token: "token",
+                      uid: "uid",
+                    })
+                  );
                 } catch (e) {
                   alert(`Could not authenticate with Google (${e})`);
                 }
@@ -62,11 +81,6 @@ const Home: NextPage = () => {
                 console.log("Login Failed");
               }}
             />
-          </section>
-        ) : (
-          <section>
-            <h4 className="my-5 text-2xl">Welcome {state.firstName}!</h4>
-              <Button variant="outline" className="block"><Link href={"/projects"}>Your projects</Link></Button>
           </section>
         )}
       </main>

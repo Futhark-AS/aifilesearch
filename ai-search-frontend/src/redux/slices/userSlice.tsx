@@ -47,7 +47,6 @@ export const userSlice = createSlice({
         uid: string;
       }>
     ) => {
-      console.log("running login reducer", action.payload);
       return {
         error: "",
         email: action.payload.email,
