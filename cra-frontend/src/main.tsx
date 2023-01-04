@@ -1,6 +1,6 @@
 import React from "react";
 import { Provider } from "react-redux";
-import { store } from "./app/store";
+import { store, AppDispatch } from './app/store';
 import "./index.css";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -10,6 +10,8 @@ import {
   createBrowserRouter
 } from "react-router-dom";
 import { AppRoutes } from "./routes";
+import { hydrate } from "./features/auth/authSlice";
+import storage from "./utils/storage";
 
 const container = document.getElementById("root");
 
@@ -29,6 +31,11 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
+const user = storage.getUser()
+if(user){
+  store.dispatch(hydrate(user))
+}
 
 root.render(
   <React.StrictMode>
