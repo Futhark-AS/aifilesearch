@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .auto-responsive {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+  
+    .auto-responsive-lg {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+  }
+  
+  body {
+    background-image: radial-gradient(
+        50% 50% at 50% 50%,
+        rgba(255, 255, 255, 0.75) 0%,
+        rgba(255, 255, 255, 0) 100%
+      ),
+      linear-gradient(
+        180deg,
+        var(--color-bg-0) 0%,
+        var(--color-bg-1) 15%,
+        var(--color-bg-2) 50%
+      );
+  }
+  
