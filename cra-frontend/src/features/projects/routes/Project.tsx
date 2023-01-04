@@ -41,7 +41,7 @@ type Law = z.infer<typeof LawSchema>;
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
-  const {id} = useParams<{id: string}>();
+  const { id } = useParams<{ id: string }>();
 
   const [searchValue, setSearchValue] = useState("");
 
@@ -78,7 +78,7 @@ const Project = () => {
     ],
   });
 
-  // TODO: make this work 
+  // TODO: make this work
   async function normalSearch() {
     const prompt = "heihei";
     const topK = 3;
@@ -114,6 +114,9 @@ const Project = () => {
           </p>
         </section>
         <Button variant="outline" size="xs">
+          <Link to={`files`}>Files</Link>
+        </Button>
+        <Button variant="outline" size="xs" className="mt-2">
           <Link to={`edit`}>Edit project data</Link>
         </Button>
 

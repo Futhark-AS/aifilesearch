@@ -27,7 +27,7 @@ const FileCard = () => { return (
   );
 };
 
-const EditProject = () => {
+const ProjectData = () => {
   const {id} = useParams<{id: string}>(); 
   const [numPages, setNumPages] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
@@ -60,7 +60,6 @@ const EditProject = () => {
         </section>
         <section>
           <div>
-            {/* <PDFViewer /> */}
             <p>
               Page {pageNumber} of {numPages}
             </p>
@@ -71,4 +70,4 @@ const EditProject = () => {
   );
 };
 
-export default EditProject
+export default ProjectData
