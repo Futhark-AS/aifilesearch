@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
-import { HEADER_HEIGHT, useStyles } from "./ResponsiveHeaderStyles";
+import { HEADER_HEIGHT, useStyles } from "./NavbarStyles";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 export interface MenuItem {
@@ -22,7 +22,7 @@ interface HeaderResponsiveProps {
   links: MenuItem[];
 }
 
-export function ResponsiveHeader({ links }: HeaderResponsiveProps) {
+export function Navbar({ links }: HeaderResponsiveProps) {
   const [opened, { toggle, close }] = useDisclosure(false);
   const [active, setActive] = useState<string | null>(null);
   const { classes, cx } = useStyles();
@@ -76,4 +76,4 @@ export function ResponsiveHeader({ links }: HeaderResponsiveProps) {
   );
 }
 
-export default ResponsiveHeader;
+export default Navbar;

@@ -8,6 +8,7 @@ import { Outlet } from "react-router-dom";
 const App = () => {
   const isAuthenticated = useIsAuthenticated();
   if(isAuthenticated) return (<div>Not authenticated</div>)
+
   return (
     <MainLayout>
         <Outlet />
