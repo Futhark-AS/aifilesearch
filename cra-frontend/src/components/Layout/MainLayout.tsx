@@ -1,13 +1,13 @@
+import React from "react";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import {
   Bars2Icon,
   FolderIcon,
   HomeIcon,
   UserIcon,
-  XCircleIcon
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import * as React from "react";
 import { Link, NavLink } from "react-router-dom";
 
 import { useAppDispatch } from "@/app/hooks";
@@ -242,7 +242,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             </div>
           </div>
         </div>
-        <main className="relative flex-1 overflow-y-auto focus:outline-none text-black">
+        <main className="relative flex-1 overflow-y-auto text-black focus:outline-none">
           {children}
         </main>
       </div>

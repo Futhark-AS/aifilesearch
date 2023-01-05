@@ -1,6 +1,5 @@
-import React from "react";
 import { ContentLayout } from "@/components/Layout";
-import { useIsAuthenticated, useUser } from "@/app/hooks";
+import React from "react";
 
 export const Dashboard: React.FC = () => {
   // const isAuthenticated = useIsAuthenticated();

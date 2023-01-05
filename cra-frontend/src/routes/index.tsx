@@ -1,34 +1,37 @@
 import React from "react";
-import { createBrowserRouter, useRoutes } from "react-router-dom";
+import { Outlet, createBrowserRouter } from "react-router-dom";
 
 import Authenticate from "@/features/auth/routes/Authenticate";
-import { lazyImport } from "@/utils/lazyImport";
-import { protectedRoutes } from "./protected";
 import { ErrorPage } from "@/features/misc/routes/ErrorPage";
+import { protectedRoutes } from "./protected";
+import { Landing } from "@/features/misc";
 
-const { Landing } = lazyImport(() => import('@/features/misc'), 'Landing');
+const Root = () => {
+  return (
+    <div>
+      <Outlet />
+    </div>
+  );
+};
 
-const router = createBrowserRouter([
+export const router = createBrowserRouter([
   {
     path: "/",
     errorElement: <ErrorPage />,
+    element: <Root />,
     children: [
+      {
+        index: true,
+        element: <Landing />,
+      },
       {
         path: "app/",
         children: protectedRoutes,
       },
+      {
+        path: "auth",
+        element: <Authenticate />,
+      },
     ],
   },
 ]);
-
-
-export const AppRoutes = () => {
-  const commonRoutes = [
-    { path: "/", element: <Landing /> },
-    { path: "/auth", element: <Authenticate /> },
-  ];
-
-  const element = useRoutes([...protectedRoutes, ...commonRoutes]);
-
-  return <>{element}</>;
-};

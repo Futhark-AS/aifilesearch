@@ -1,13 +1,13 @@
 import React from "react";
 import { Provider } from "react-redux";
-import { store, AppDispatch } from "./app/store";
+import { store } from "./app/store";
 import "./index.css";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { createRoot } from "react-dom/client";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import { AppRoutes } from "./routes";
+import { RouterProvider } from "react-router-dom";
 import { hydrate } from "./features/auth/authSlice";
+import { router } from "./routes";
 import storage from "./utils/storage";
 
 const container = document.getElementById("root");
@@ -15,7 +15,6 @@ const container = document.getElementById("root");
 if (!container) throw new Error("Could not find root element with id 'root'");
 
 const root = createRoot(container);
-
 
 const user = storage.getUser();
 if (user) {
