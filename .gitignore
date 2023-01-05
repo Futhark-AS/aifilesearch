@@ -8,5 +8,4 @@ __azurite*
 .vscode
 node_modules/
 package-lock.json
-package.json
 .next
