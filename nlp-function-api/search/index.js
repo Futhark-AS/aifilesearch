@@ -94,13 +94,44 @@ const getEmbedding = async (text) => {
 module.exports = async function (context, req, document) {
   context.log("JavaScript HTTP trigger function processed a request.");
 
-  const prompt = req.body && req.body.prompt;
-  const namespace = req.body && req.body.namespace;
-  const topK = req.body && req.body.topK;
+  // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
+  // from request
+  const uid = req.headers["x-ms-client-principal-id"];
+  //const client_principal_name = req.headers["x-ms-client-principal-name"];
 
-  //TODO: check with database if index_name allowed for user
-  context.log("ID", context.bindings.document.id)
+
+  if (req.method === "OPTIONS") {
+    // Send response to OPTIONS requests
+    context.res = {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Length, X-Requested-With, X-ZUMO-AUTH",
+      },
+    };
+    return;
+  }
+
+  const document_uid = context.bindings.document.id
+  if (document_uid !== uid) {
+    context.res = {
+      status: 403,
+      body: "User not allowed to access this document",
+    };
+    return;
+  }
+
   allowed_namespaces = context.bindings.document.allowed_namespaces
+  const prompt = req.query.prompt;
+  let namespace = req.query.namespace;
+  if(!namespace){
+    namespace = ""
+  }
+
+  const topK = req.query.topK;
+
+
   // format:  
   /*"allowed_namespaces": [
         {
@@ -124,10 +155,11 @@ module.exports = async function (context, req, document) {
   const vector = await getEmbedding(prompt);
   const matches = await query(namespace, vector, topK, index_name, project_name, environment);
   //context.log(matches)
+  const body = JSON.stringify({matches, uid}, { encoding: "utf8" });
 
   const res = {
     // status: 200, /* Defaults to 200 */
-    body: JSON.stringify(matches, { encoding: "utf8" }),
+    body: body,
     // allow CORS
     headers: {
       "Access-Control-Allow-Origin": "*",

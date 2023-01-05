@@ -32,4 +32,8 @@
 		margin: 0 auto;
 		box-sizing: border-box;
 	}
+
+	header {
+		margin: 0 auto;
+	}
 </style>

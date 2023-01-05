@@ -1,7 +1,6 @@
 <script>
 	import { page } from '$app/stores';
 	import logo from '$lib/images/svelte-logo.svg';
-	import github from '$lib/images/github.svg';
 </script>
 
 <header>
@@ -16,6 +15,9 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
+			<li aria-current={$page.url.pathname === '/auth' ? 'page' : undefined}>
+				<a href="/auth">Logg inn</a>
+			</li>
 			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
 				<a href="/">Hjem</a>
 			</li>
@@ -28,11 +30,7 @@
 		</svg>
 	</nav>
 
-	<div class="corner">
-		<a href="https://github.com/sveltejs/kit">
-			<img src={github} alt="GitHub" />
-		</a>
-	</div>
+	<div />
 </header>
 
 <style>

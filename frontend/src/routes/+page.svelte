@@ -13,55 +13,32 @@
 
 	let value = '';
 
-	function zip(obj: { [key: string]: { [key: string]: any } }): LawResult[] {
-		const keys = Object.keys(obj);
-		const result: { [key: string]: any }[] = [];
-
-		for (const id of Object.keys(obj[keys[0]])) {
-			const item: { [key: string]: any } = { id };
-			for (const key of keys) {
-				item[key] = obj[key][id];
-			}
-			result.push(item);
-		}
-
-		// Group the items by law name
-		const grouped = result.reduce((acc, curr) => {
-			if (!acc[curr.law_name]) {
-				acc[curr.law_name] = [];
-			}
-			acc[curr.law_name].push(curr);
-			return acc;
-		}, {});
-
-		// Convert the grouped object into an array
-		const groupedArray: { law_name: string; items: { [key: string]: any }[] }[] = [];
-		for (const lawName of Object.keys(grouped)) {
-			groupedArray.push({
-				law_name: lawName,
-				items: grouped[lawName]
-			});
-		}
-
-		return groupedArray;
-	}
-
 	async function normalSearch() {
-		const request = { prompt: value };
+		const prompt= "heihei"
+		const topK= 3
+		const namespace= ""
+		const token = localStorage.getItem("token");
+		const uid = localStorage.getItem("uid");
+		console.log(token)
+		console.log(uid)
+		if(!token || !uid) {
+			alert("You need to be logged in to use this feature");
+			return;
+		}
 		// https://nlp-search-api.azurewebsites.net/api/search
-		// http://localhost:7071/api/search 
-		const res = await fetch('https://nlp-search-api.azurewebsites.net/api/search', {
-			method: 'POST',
+		// http://localhost:7071/api/search
+		const res = await fetch(`https://nlp-search-api.azurewebsites.net/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
+		//const res = await fetch(`http://localhost:7071/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
+			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
+				"X-ZUMO-AUTH": token
 				//no cors
 				//'Access-Control-Allow-Origin': '*'
 			},
-			body: JSON.stringify(request)
 		});
-		const parsed = await res.json();
+		data.results = await res.json();
 		console.log('Done');
-		data.results = zip(parsed);
 		console.log(data.results);
 	}
 
@@ -75,18 +52,21 @@
 
 		const laws = data.results;
 
-		let prompt = `The user input is: ${value}. Given the following relevant Norwegian laws in JSON format, answer the user as best as you can: ${JSON.stringify(laws)}. Your answer:`;
+		let prompt = `The user input is: ${value}. Given the following relevant Norwegian laws in JSON format, answer the user as best as you can: ${JSON.stringify(
+			laws
+		)}. Your answer:`;
 		console.log(prompt.length);
-		console.log(prompt)
+		console.log(prompt);
 
 		while (prompt.length / 3 > 2750) {
-			if (laws[laws.length-1].items.length != 0){
-				laws[laws.length-1].items.pop();
-			}
-			else{
+			if (laws[laws.length - 1].items.length != 0) {
+				laws[laws.length - 1].items.pop();
+			} else {
 				laws.pop();
 			}
-			prompt = `The user input is: ${value}. Given the following relevant Norwegian laws in JSON format, answer the user as best as you can: ${JSON.stringify(laws)}. Your answer:`;
+			prompt = `The user input is: ${value}. Given the following relevant Norwegian laws in JSON format, answer the user as best as you can: ${JSON.stringify(
+				laws
+			)}. Your answer:`;
 			console.log(prompt.length);
 		}
 
@@ -105,10 +85,6 @@
 			body: JSON.stringify(params)
 		};
 		// first, list all available models
-		
-		const res_models = await fetch('https://api.openai.com/v1/models', requestOptions);
-		const models = await res_models.json();
-		console.log(models)
 
 		const response = await fetch('https://api.openai.com/v1/completions', requestOptions);
 		console.log(response);
@@ -181,7 +157,6 @@
 		}
 	} -->
 
-
 	{#if aiActive}
 		<div class="card">
 			<div class="card-body">
@@ -191,14 +166,16 @@
 		</div>
 	{/if}
 	{#if !aiActive}
-			{#each data.results as lawGroup}
+		{#each data.results as lawGroup}
 			<h1 class="card-law-name">{lawGroup.law_name}</h1>
 			{#each lawGroup.items as item}
 				<div class="card">
 					<div class="card-body">
 						<h3 class="card-subtitle">{item.chapter}</h3>
 						<p class="card-text">{item.paragraph_title}</p>
-						<p class="card-text">{item.paragraph.length > 256 ? `${item.paragraph.slice(0, 256)}...` : item.paragraph}</p>
+						<p class="card-text">
+							{item.paragraph.length > 256 ? `${item.paragraph.slice(0, 256)}...` : item.paragraph}
+						</p>
 					</div>
 				</div>
 			{/each}
@@ -252,6 +229,6 @@
 		overflow: hidden;
 		background-color: #ffffff;
 		position: relative;
-		padding: 0px 20px 0px 20px ;
+		padding: 0px 20px 0px 20px;
 	}
 </style>
