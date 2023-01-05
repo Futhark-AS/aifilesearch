@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@mantine/notifications": "^5.9.6",
+    "react-query": "^3.39.2"
+  }
+}

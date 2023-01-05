@@ -16,18 +16,6 @@ if (!container) throw new Error("Could not find root element with id 'root'");
 
 const root = createRoot(container);
 
-const router = createBrowserRouter([
-  {
-    path: "*",
-    element: <AppRoutes />,
-    children: [
-      {
-        path: "*",
-        element: <div>Not found!</div>,
-      },
-    ],
-  },
-]);
 
 const user = storage.getUser();
 if (user) {
