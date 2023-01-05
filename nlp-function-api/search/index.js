@@ -8,7 +8,6 @@ const environment = "us-west1-gcp"
 const baseUrl = (index_name, project_name, environment) => `https://${index_name}-${project_name}.svc.${environment}.pinecone.io/`
 
 const request = async (method, path, body, index_name, project_name, environment) => {
-  console.log("request", method, path, body, index_name, project_name, environment)
   const url = baseUrl(index_name, project_name, environment) + path;
   const headers = {
     'Content-Type': 'application/json',
@@ -69,7 +68,7 @@ const describeIndexStats = async (index_name, project_name, environment) => {
 }
 
 
-const getEmbedding = async (text) => {
+const getEmbedding = async (context, text) => {
   const url = "https://api.openai.com/v1/embeddings";
   const headers = {
     "Content-Type": "application/json",
@@ -81,7 +80,7 @@ const getEmbedding = async (text) => {
   };
   try {
     const response = await axios.post(url, data, { headers });
-    console.log("Usage: ", response.data.usage);
+    context.log("Usage: ", response.data.usage);
     return response.data.data[0].embedding;
   } catch (error) {
     throw new Error(error);
@@ -113,7 +112,9 @@ module.exports = async function (context, req, document) {
     return;
   }
 
+
   const document_uid = context.bindings.document.id
+  context.log("document_uid: ", document_uid)
   if (document_uid !== uid) {
     context.res = {
       status: 403,
@@ -122,53 +123,80 @@ module.exports = async function (context, req, document) {
     return;
   }
 
-  allowed_namespaces = context.bindings.document.allowed_namespaces
-  const prompt = req.query.prompt;
-  let namespace = req.query.namespace;
-  if(!namespace){
-    namespace = ""
-  }
+  try{
+    allowed_namespaces = context.bindings.document.allowed_namespaces
+    const prompt = req.query.prompt;
+    let namespace = req.query.namespace;
+    if(!namespace){
+      namespace = ""
+      context.log("namespace not provided, using default namespace: ", namespace)
+    }
 
-  const topK = req.query.topK;
+    const topK = req.query.topK;
 
 
-  // format:  
-  /*"allowed_namespaces": [
-        {
-          "namespace": "",
-          "index_name": "michael"
-      }
-  ],*/
-  // if namespace not in allowed_namespaces
-  // return error
-  if (!allowed_namespaces.some((ns) => ns.namespace === namespace)) {
-    context.res = {
-      status: 403,
-      body: "Namespace not allowed for user",
+    // format:  
+    /*"allowed_namespaces": [
+          {
+            "namespace": "",
+            "index_name": "michael"
+        }
+    ],*/
+    // if namespace not in allowed_namespaces
+    // return error
+    if (!allowed_namespaces.some((ns) => ns.namespace === namespace)) {
+      context.res = {
+        status: 403,
+        body: "Namespace not allowed for user",
+      };
+      return;
+    }
+
+    index_name = allowed_namespaces.find((ns) => ns.namespace === namespace).index_name
+
+
+    const vector = await getEmbedding(context, prompt);
+    if(!vector){
+      context.res = {
+        status: 500,
+        body: "Error getting embedding",
+      };
+      return;
+    }
+
+    const matches = await query(namespace, vector, topK, index_name, project_name, environment);
+    if(!matches){
+      context.res = {
+        status: 500,
+        body: "Error querying index",
+      };
+      return;
+    }
+
+    //context.log(matches)
+    const body = JSON.stringify({matches, uid}, { encoding: "utf8" });
+
+    const res = {
+      // status: 200, /* Defaults to 200 */
+      body: body,
+      // allow CORS
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Length, X-Requested-With",
+      },
     };
-    return;
+
+    //context.log(res);
+
+    context.res = res;
+  }
+  catch(error){
+    context.log.error(error)
+    context.res = {
+      status: 500,
+      body: error,
+    };
   }
 
-  index_name = allowed_namespaces.find((ns) => ns.namespace === namespace).index_name
-
-
-  const vector = await getEmbedding(prompt);
-  const matches = await query(namespace, vector, topK, index_name, project_name, environment);
-  //context.log(matches)
-  const body = JSON.stringify({matches, uid}, { encoding: "utf8" });
-
-  const res = {
-    // status: 200, /* Defaults to 200 */
-    body: body,
-    // allow CORS
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Length, X-Requested-With",
-    },
-  };
-
-  context.log(res);
-
-  context.res = res;
 };
