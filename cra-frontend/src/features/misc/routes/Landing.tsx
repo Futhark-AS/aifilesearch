@@ -13,7 +13,7 @@ export const Landing = () => {
     <PlainNavbar />
 
       <h1 className="mt-8 text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
-        AI Search
+      DocuSearch
       </h1>
 
       <p className="w-full">
