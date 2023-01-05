@@ -10,9 +10,7 @@ const fetchFiles = async (id: string): Promise<File> => {
 };
 
 const cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
-const FileCard = () => {
-  return (
+const FileCard = () => { return (
     <div className="flex flex-col rounded-lg bg-white p-4 shadow-lg">
       <div className="flex flex-row justify-between">
         <div className="flex flex-col">
@@ -29,7 +27,7 @@ const FileCard = () => {
   );
 };
 
-const EditProject = () => {
+const ProjectData = () => {
   const {id} = useParams<{id: string}>(); 
   const [numPages, setNumPages] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
@@ -62,7 +60,6 @@ const EditProject = () => {
         </section>
         <section>
           <div>
-            {/* <PDFViewer /> */}
             <p>
               Page {pageNumber} of {numPages}
             </p>
@@ -73,4 +70,4 @@ const EditProject = () => {
   );
 };
 
-export default EditProject
+export default ProjectData

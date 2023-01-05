@@ -41,7 +41,7 @@ type Law = z.infer<typeof LawSchema>;
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
-  const {id} = useParams<{id: string}>();
+  const { id } = useParams<{ id: string }>();
 
   const [searchValue, setSearchValue] = useState("");
 
@@ -78,7 +78,7 @@ const Project = () => {
     ],
   });
 
-  // TODO: make this work 
+  // TODO: make this work
   async function normalSearch() {
     const prompt = "heihei";
     const topK = 3;
@@ -113,10 +113,16 @@ const Project = () => {
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Tempora
           </p>
         </section>
-        <Button variant="outline" size="xs">
-          <Link to={`edit`}>Edit project data</Link>
-        </Button>
-
+        <Link to={`files`}>
+          <Button variant="outline" size="xs" className="w-full">
+            Files
+          </Button>
+        </Link>
+        <Link to={`edit`}>
+          <Button variant="outline" size="xs" className="mt-2 w-full">
+            Edit project data
+          </Button>
+        </Link>
         <TextInput
           label="Search"
           placeholder="Eks: Hvor mye må jeg betale i skatt om jeg tjener 400 000?"

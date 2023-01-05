@@ -1,8 +1,5 @@
-import * as React from "react";
-
-import logo from "@/assets/logo.png";
-import { Link } from "@/components/Link";
-import ResponsiveHeader from "@/features/misc/components/ResponsiveHeader";
+import React from "react";
+import { PlainNavbar } from "@/features/misc";
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -12,7 +9,7 @@ type LayoutProps = {
 export const Layout = ({ children, title }: LayoutProps) => {
   return (
     <>
-      <ResponsiveHeader links={[]} />
+      <PlainNavbar />
       <div className="flex min-h-screen flex-col bg-gray-50 py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="mt-3 text-center text-3xl font-extrabold text-gray-900">

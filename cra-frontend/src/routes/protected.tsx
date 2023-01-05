@@ -7,21 +7,24 @@ import { Outlet } from "react-router-dom";
 
 const App = () => {
   const isAuthenticated = useIsAuthenticated();
-  if(isAuthenticated) return (<div>Not authenticated</div>)
+  if (!isAuthenticated) {
+    return <div>Not authenticated</div>;
+  }
+
   return (
     <MainLayout>
-        <Outlet />
+      <Outlet />
     </MainLayout>
   );
 };
 
 export const protectedRoutes = [
   {
-    path: "app",
+    path: "",
     element: <App />,
     children: [
-      { path: "projects/*", element: <ProjectRoutes /> },
-      { path: "", element: <Dashboard /> },
+      { index: true, element: <Dashboard /> },
+      { path: "projects/", children: ProjectRoutes },
     ],
   },
 ];

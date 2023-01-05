@@ -1,14 +1,18 @@
-const storagePrefix = 'aisearch';
+import { AuthSchema, UserState } from "@/features/auth/authSlice";
+
+const storagePrefix = "aisearch";
 
 const storage = {
-  getToken: () => {
-    return JSON.parse(window.localStorage.getItem(`${storagePrefix}token`) as string);
+  getUser: () => {
+    const user = window.localStorage.getItem(`${storagePrefix}user`);
+    if (!user) return null;
+    return AuthSchema.parse(JSON.parse(user));
   },
-  setToken: (token: string) => {
-    window.localStorage.setItem(`${storagePrefix}token`, JSON.stringify(token));
+  setUser: (user: UserState) => {
+    window.localStorage.setItem(`${storagePrefix}user`, JSON.stringify(user));
   },
-  clearToken: () => {
-    window.localStorage.removeItem(`${storagePrefix}token`);
+  clearUser: () => {
+    window.localStorage.removeItem(`${storagePrefix}user`);
   },
 };
 
