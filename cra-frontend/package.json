@@ -8,6 +8,7 @@
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "dependencies": {
+    "@dropzone-ui/react": "^6.7.20",
     "@emotion/react": "^11.10.5",
     "@headlessui/react": "^1.7.7",
     "@heroicons/react": "^2.0.13",
