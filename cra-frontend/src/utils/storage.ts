@@ -5,8 +5,16 @@ const storagePrefix = "aisearch";
 const storage = {
   getUser: () => {
     const user = window.localStorage.getItem(`${storagePrefix}user`);
+
     if (!user) return null;
-    return AuthSchema.parse(JSON.parse(user));
+    const parsed = AuthSchema.safeParse(JSON.parse(user));
+
+    if (!parsed.success) {
+      console.error(parsed.error);
+      return null;
+    }
+
+    return parsed.data;
   },
   setUser: (user: UserState) => {
     window.localStorage.setItem(`${storagePrefix}user`, JSON.stringify(user));

@@ -92,7 +92,7 @@ const Project = () => {
         //const res = await fetch(`http://localhost:7071/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
         headers: {
           "Content-Type": "application/json",
-          "X-ZUMO-AUTH": user.token,
+          "X-ZUMO-AUTH": user.googleAuthToken,
           //no cors
           //'Access-Control-Allow-Origin': '*'
         },

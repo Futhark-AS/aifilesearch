@@ -12,8 +12,11 @@ export default function GoogleSignInButton() {
   return (
     <GoogleLogin
       onSuccess={async (credentialResponse) => {
+        console.log(credentialResponse)
         const credentials = credentialResponse.credential;
-        if (!credentials) return alert("Could not authenticate with Google");
+        const userId = credentialResponse.clientId
+
+        if (!credentials || !userId) return alert("Could not authenticate with Google");
 
         try {
           const parsed = parseJwt(credentials);
@@ -25,8 +28,8 @@ export default function GoogleSignInButton() {
             login({
               email: parsed.email,
               firstName: parsed.given_name,
-              token: "token",
-              uid: "uid",
+              googleAuthToken: credentials,
+              uid: userId,
               name: parsed.name,
             })
           );
