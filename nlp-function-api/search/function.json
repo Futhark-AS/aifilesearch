@@ -22,7 +22,7 @@
       "direction": "in",
       "connectionStringSetting": "COSMOS_CONNECTION_STRING",
       "databaseName": "nlp-search",
-      "collectionName": "nlp-search",
+      "collectionName": "users",
       "Id": "{Query.id}",
       "PartitionKey": "{Query.id}"
     }
