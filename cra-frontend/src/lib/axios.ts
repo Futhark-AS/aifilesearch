@@ -1,3 +1,4 @@
+import { API_URL } from "@/config";
 import storage from "@/utils/storage";
 import Axios, { AxiosRequestConfig } from "axios";
 
@@ -5,14 +6,17 @@ import Axios, { AxiosRequestConfig } from "axios";
 // const API_URL = process.env.REACT_APP_API_URL;
 
 function authRequestInterceptor(config: AxiosRequestConfig) {
-  const token = storage.getUser();
+  const user = storage.getUser();
+
+  const authHeaders = {
+    "Content-Type": "application/json",
+    "X-ZUMO-AUTH": user?.azureAuthToken,
+  };
 
   let headers = config.headers;
 
-  if (token && headers) {
-    headers = Object.assign(headers, {
-      Authorization: `Bearer ${token}`,
-    });
+  if (user?.azureAuthToken && headers) {
+    headers = Object.assign(headers, authHeaders);
   }
 
   config.headers = headers;
@@ -20,9 +24,8 @@ function authRequestInterceptor(config: AxiosRequestConfig) {
   return config;
 }
 
-export const axios = Axios
-  .create
-  // { baseURL: API_URL, }
-  ();
+export const azureAxios = Axios.create({ baseURL: API_URL });
 
-// axios.interceptors.request.use(authRequestInterceptor);
+export const baseAxios = Axios.create();
+
+azureAxios.interceptors.request.use(authRequestInterceptor);

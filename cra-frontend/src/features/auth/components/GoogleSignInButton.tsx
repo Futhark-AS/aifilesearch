@@ -5,7 +5,7 @@ import { useAppDispatch } from "../../../app/hooks";
 import { login } from "../authSlice";
 import { parseJwt } from "../parseJwt";
 import { z } from "zod";
-import { axios } from "@/lib/axios";
+import { baseAxios } from "@/lib/axios";
 
 const AzureAuthResult = z.object({
   authenticationToken: z.string(),
@@ -15,7 +15,7 @@ const AzureAuthResult = z.object({
 });
 
 async function handleCredentialResponse(googleAuthToken: string) {
-  const res = await axios.post(
+  const res = await baseAxios.post(
     "https://nlp-search-api.azurewebsites.net/.auth/login/google",
     { id_token: googleAuthToken },
     {

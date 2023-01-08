@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PDFViewer } from "@/components/PdfViewer";
-import initialPdf from "@/assets/test-pdf.pdf"
+import initialPdf from "@/assets/michael.pdf"
 
 export function ShowPdf() {
     const [file, setFile] = useState<string | File>(initialPdf);
