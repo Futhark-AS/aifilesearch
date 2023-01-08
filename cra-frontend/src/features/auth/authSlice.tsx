@@ -12,6 +12,7 @@ export const AuthSchema = z.object({
   isLoading: z.boolean(),
   error: z.string(),
   isLoggedIn: z.boolean(),
+  azureAuthToken: z.string(),
 });
 
 // Define a type for the slice state
@@ -45,6 +46,7 @@ export const authSlice = createSlice({
         firstName: string;
         googleAuthToken: string;
         uid: string;
+        azureAuthToken: string;
       }>
     ) => {
       // return initialState
@@ -57,6 +59,7 @@ export const authSlice = createSlice({
         uid: action.payload.uid,
         isLoggedIn: true,
         isLoading: false,
+        azureAuthToken: action.payload.azureAuthToken,
       };
     },
     logout: () => {

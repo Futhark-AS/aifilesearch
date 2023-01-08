@@ -4,6 +4,29 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../../app/hooks";
 import { login } from "../authSlice";
 import { parseJwt } from "../parseJwt";
+import { z } from "zod";
+import { axios } from "@/lib/axios";
+
+const AzureAuthResult = z.object({
+  authenticationToken: z.string(),
+  user: z.object({
+    userId: z.string(),
+  }),
+});
+
+async function handleCredentialResponse(googleAuthToken: string) {
+  const res = await axios.post(
+    "https://nlp-search-api.azurewebsites.net/.auth/login/google",
+    { id_token: googleAuthToken },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return AzureAuthResult.safeParse(res.data);
+}
 
 export default function GoogleSignInButton() {
   const dispatch = useAppDispatch();
@@ -12,25 +35,31 @@ export default function GoogleSignInButton() {
   return (
     <GoogleLogin
       onSuccess={async (credentialResponse) => {
-        console.log(credentialResponse)
+        console.log(credentialResponse);
         const credentials = credentialResponse.credential;
-        const userId = credentialResponse.clientId
-
-        if (!credentials || !userId) return alert("Could not authenticate with Google");
+        if (!credentials) return alert("Could not authenticate with Google");
 
         try {
-          const parsed = parseJwt(credentials);
+          const parsedGoogleJwt = parseJwt(credentials);
+
+          const azureAuth = await handleCredentialResponse(credentials);
+
+          if (!azureAuth.success) {
+            alert("Could not authenticate with Azure");
+            return;
+          }
 
           // TODO: get token
           navigate("/app");
 
           dispatch(
             login({
-              email: parsed.email,
-              firstName: parsed.given_name,
+              email: parsedGoogleJwt.email,
+              firstName: parsedGoogleJwt.given_name,
               googleAuthToken: credentials,
-              uid: userId,
-              name: parsed.name,
+              uid: azureAuth.data.user.userId,
+              name: parsedGoogleJwt.name,
+              azureAuthToken: azureAuth.data.authenticationToken,
             })
           );
         } catch (e) {
