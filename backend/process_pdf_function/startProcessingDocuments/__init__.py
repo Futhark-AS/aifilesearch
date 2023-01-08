@@ -1,7 +1,10 @@
 import logging
 
 import azure.functions as func
+from azure.cosmos import CosmosClient, PartitionKey
 
+
+import uuid
 import re
 import io
 import os
@@ -15,6 +18,13 @@ from azure.storage.blob import BlobServiceClient
 from PyPDF2 import PdfWriter, PdfReader
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
+
+#----------- COsmos DB ----------
+endpoint = "https://nlpcosmos.documents.azure.com:443/"
+key = "jCgpIdmAvXDnfejPm8s9V4APkk2lnDDErFUVhVXVabfbXA15efbzeNzYwmIK8B2KyLyQ6fBuRhMKACDbqEB3ew=="
+client = CosmosClient(url=endpoint, credential=key)
+database = client.get_database_client("processing") 
+container = database.get_container_client("processing_results")
 
 # ---------- OCR ----------
 endpoint = "https://jorgen-receipt-recognizer.cognitiveservices.azure.com/"
@@ -73,6 +83,11 @@ def analyze_read(pdfs):
                 "bounding_box": [{"x": point.x, "y":point.y} for point in paragraph.bounding_regions[0].polygon]
             })
 
+        # close the stream
+        buf.close()
+
+        # close the pdf
+        pdf.close()
             
     return all_paragraphs, price
 
@@ -211,7 +226,6 @@ def embed_paragraphs(paragraphs, namespace, index_name):
             "page_number": paragraph["page_number"], 
             "bounding_box": json.dumps(paragraph["bounding_box"]),
             "file_name": paragraph["file_name"],
-            # get first 100 characters of content
             "content": paragraph["content"]
             } for paragraph in paragraphs_batch]
         #print(meta)
@@ -237,6 +251,40 @@ def embed_paragraphs(paragraphs, namespace, index_name):
 
 
 
+def set_status_start(cosmos_result_id, user_id):
+    container.create_item(body={
+        "id": cosmos_result_id, 
+        "status": "running", 
+        "time": datetime.datetime.now().isoformat(),
+        "files_completed": []
+        })
+
+def set_status_done(cosmos_result_id, user_id, price):
+    container.upsert_item(body={
+        "id": cosmos_result_id, 
+        "status": "done", 
+        "time": datetime.datetime.now().isoformat(),
+        })
+
+def set_file_done(cosmos_result_id, user_id, file_name, price):
+    item = container.get_item(cosmos_result_id)
+    new_list = item.files_completed + [{
+        "file_name": file_name,
+        "price": price
+    }]
+    container.upsert_item(body={
+        "id": cosmos_result_id, 
+        "status": "running", 
+        "time": datetime.datetime.now().isoformat(),
+        "files_completed": new_list
+        })
+def set_status_error(cosmos_result_id, user_id, error):
+    container.upsert_item(body={
+        "id": cosmos_result_id, 
+        "status": "error", 
+        "time": datetime.datetime.now().isoformat(),
+        "error_message": error
+        })
 
 
 
@@ -262,16 +310,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     req_body = req.get_json()
     user_id = req_body.get('id') # TODO: get this from auth middleware header
     blob_names = req_body.get('file_names')
-    project = req_body.get('project')
-    namespace = user_id + "/" + project #TODO: check with the alllowed_namespaces list if this user can access other people's projects
+    namespace = req_body.get('namespace')
+    cosmos_result_id = req_body.get("cosmos_result_id")
 
     # check that all blob_names start with namespace, and that they are all pdfs, and that they are exist in the container
     for blob_name in blob_names:
         if not blob_name.startswith(namespace):
+            set_status_error(cosmos_result_id, user_id, "All files must belong to the users project")
             raise Exception("All blobs must start with the user's namespace")
         if not blob_name.endswith(".pdf"):
+            set_status_error(cosmos_result_id, user_id, "All files must be pdfs")
             raise Exception("All blobs must be pdfs")
         if not container_client.get_blob_client(blob_name).exists():
+            set_status_error(cosmos_result_id, user_id, "All files must exist in the container. The file: " + blob_name + "does not exist.")
             raise Exception("All blobs must exist in the container")
 
 
@@ -281,9 +332,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # TODO: make this work for nested directories
     for blob_name in blob_names:
         if blob_name.split("/")[:-1] != blob_names[0].split("/")[:-1]:
+            set_status_error(cosmos_result_id, user_id, "All blobs must be in the same directory")
             raise Exception("All blobs must be in the same directory")
 
+    set_status_start(cosmos_result_id, user_id)
+
     index_name = "michael" # TODO: get this from cosmos db or something. Check if it is full or not. If it is full, create a new index name and add it to cosmos db
+
+    total_price = 0
 
     for blob_name in blob_names:
         small_pdfs = []
@@ -298,33 +354,45 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     output.add_page(pdf.pages[j])
             small_pdfs.append((output, i, blob_name))
 
-    logging.info(f"Number of small pdfs: {len(small_pdfs)}")
+        logging.info(f"Number of small pdfs: {len(small_pdfs)}")
 
-    test_pdf = small_pdfs[:2]
+        test_pdf = small_pdfs[:2]
 
-    paragraphs, price = analyze_read(test_pdf)
+        paragraphs, price = analyze_read(test_pdf)
 
-    logging.info(f"Number of paragraphs: {len(paragraphs)}")
+        logging.info(f"Number of paragraphs: {len(paragraphs)}")
 
-    cleaned_paragraphs = combine_and_clean_paragraphs(paragraphs) 
+        cleaned_paragraphs = combine_and_clean_paragraphs(paragraphs) 
 
-    logging.info(f"Cleaned paragraphs. Number of paragraphs now: {len(cleaned_paragraphs)}")
+        logging.info(f"Cleaned paragraphs. Number of paragraphs now: {len(cleaned_paragraphs)}")
 
-    split_paragraphs = split_long_paragraphs(cleaned_paragraphs)
+        split_paragraphs = split_long_paragraphs(cleaned_paragraphs)
 
-    logging.info(f"Split paragraphs. Number of paragraphs now: {len(split_paragraphs)}")
+        logging.info(f"Split paragraphs. Number of paragraphs now: {len(split_paragraphs)}")
 
-    logging.info(f'Extracted {len(split_paragraphs)} paragraphs')
-    logging.info(f'First paragraph: {split_paragraphs[0]}')
-    logging.info(f'Last paragraph: {split_paragraphs[-1]}')
+        logging.info(f'Extracted {len(split_paragraphs)} paragraphs')
+        logging.info(f'First paragraph: {split_paragraphs[0]}')
+        logging.info(f'Last paragraph: {split_paragraphs[-1]}')
 
-    logging.info("Now embedding paragraphs")
-    embed_price = embed_paragraphs(split_paragraphs, namespace, index_name)
-    logging.info("Done embedding paragraphs")
+        logging.info("Now embedding paragraphs")
+        embed_price = embed_paragraphs(split_paragraphs, namespace, index_name)
+        logging.info("Done embedding paragraphs")
 
-    logging.info(f"Total price: ${price + embed_price}")
+        price = price + embed_price
+
+        logging.info(f"Price for blob {blob_name}: ${price}")
+        total_price += price
+
+        set_file_done(cosmos_result_id, user_id, blob_name, price)
+
+        # close pdf to clear memory
+        pdf.close()
+
+
+    logging.info(f"Total price: ${total_price}")
+    set_status_done(cosmos_result_id, user_id, total_price)
 
     return func.HttpResponse(
-            "This HTTP triggered function executed successfully. Total price: $" + str(price + embed_price),
+            "This HTTP triggered function executed successfully. Total price: $" + str(total_price),
             status_code=200
     )
