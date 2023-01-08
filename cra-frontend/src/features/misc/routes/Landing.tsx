@@ -1,42 +1,39 @@
-import { useIsAuthenticated, useUser } from "@/app/hooks";
+import { useIsAuthenticated } from "@/app/hooks";
 import { Button, Divider } from "@mantine/core";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PlainNavbar } from "../components";
+import { useEffect } from "react";
 
 export const Landing = () => {
   const isAuthenticated = useIsAuthenticated();
-  const { firstName } = useUser();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    isAuthenticated && navigate("app");
+  }, [isAuthenticated, navigate]);
 
   return (
     <main className="container mx-auto flex min-h-screen w-full flex-col p-4 md:w-[70ch]">
-    <PlainNavbar />
+      <PlainNavbar />
 
       <h1 className="mt-8 text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
-      DocuSearch
+        DocuSearch
       </h1>
 
       <p className="w-full">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Tempora
-        quisquam explicabo modi enim quaerat mollitia similique a reiciendis
-        laborum, recusandae sit nam distinctio illum culpa ducimus qui odit quam
-        natus? Consequuntur harum ab optio eligendi in qui, sunt repellat
-        placeat magnam, repudiandae nesciunt quidem corrupti velit, eius
-        doloribus saepe beatae.
+        Are you tired of sifting through countless folders and documents, trying
+        to find a specific piece of information? Our website simplifies the
+        search process by allowing you to use natural language queries to find
+        what you are looking for. Simply upload your files and let our advanced
+        search algorithm do the rest. Say goodbye to endless scrolling and hello
+        to efficient, accurate results with{" "}
+        <span className="text-lg font-semibold">DocuSearch</span>
       </p>
       <Divider className="my-5" />
-      {isAuthenticated ? (
-        <section>
-          <h4 className="my-5 text-2xl">Welcome {firstName}!</h4>
-          <Button variant="outline" className="block">
-            <Link to={"/projects"}>Your projects</Link>
-          </Button>
-        </section>
-      ) : (
-        <Link to={"/auth"}>
-          <Button variant="outline">Get started!</Button>
-        </Link>
-      )}
+      <Link to={"/auth"}>
+        <Button variant="outline">Get started!</Button>
+      </Link>
     </main>
   );
 };

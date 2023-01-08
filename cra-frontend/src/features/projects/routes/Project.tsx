@@ -1,12 +1,13 @@
-import React from "react";
 import { useAppSelector } from "@/app/hooks";
 import { selectUser } from "@/features/auth/authSlice";
+import { FileValidated } from "@dropzone-ui/react";
 import { Button, Loader, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { z } from "zod";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { z } from "zod";
+import { FileDropzonePassive } from "../components/FileDropzonePassive";
 
 const LawSchema = z
   .object({
@@ -92,7 +93,7 @@ const Project = () => {
         //const res = await fetch(`http://localhost:7071/api/search?id=${uid}&prompt=${prompt}&topK=${topK}&namespace=${namespace}`, {
         headers: {
           "Content-Type": "application/json",
-          "X-ZUMO-AUTH": user.token,
+          "X-ZUMO-AUTH": user.googleAuthToken,
           //no cors
           //'Access-Control-Allow-Origin': '*'
         },
@@ -101,6 +102,7 @@ const Project = () => {
 
     console.log(data.data);
   }
+  const [files, setFiles] = useState<FileValidated[]>([]);
 
   return (
     <>
@@ -123,6 +125,7 @@ const Project = () => {
             Edit project data
           </Button>
         </Link>
+        <FileDropzonePassive files={[]} setFiles={(files) => null} />
         <TextInput
           label="Search"
           placeholder="Eks: Hvor mye må jeg betale i skatt om jeg tjener 400 000?"

@@ -4,7 +4,7 @@ import { UserState } from "../auth/authSlice";
 const getProjects = (user: UserState) => {
   return axios.get("/projects", {
     headers: {
-        Authorization: `Bearer ${user.token}`,
+        Authorization: `Bearer ${user.googleAuthToken}`,
     }
   });
 };

@@ -8,10 +8,11 @@ export const AuthSchema = z.object({
   name: z.string(),
   firstName: z.string(),
   uid: z.string(),
-  token: z.string(),
+  googleAuthToken: z.string(),
   isLoading: z.boolean(),
   error: z.string(),
   isLoggedIn: z.boolean(),
+  azureAuthToken: z.string(),
 });
 
 // Define a type for the slice state
@@ -23,7 +24,7 @@ const initialState = {
   name: "",
   firstName: "",
   uid: "",
-  token: "",
+  googleAuthToken: "",
   isLoading: false,
   error: "",
   isLoggedIn: false,
@@ -43,8 +44,9 @@ export const authSlice = createSlice({
         email: string;
         name: string;
         firstName: string;
-        token: string;
+        googleAuthToken: string;
         uid: string;
+        azureAuthToken: string;
       }>
     ) => {
       // return initialState
@@ -53,10 +55,11 @@ export const authSlice = createSlice({
         email: action.payload.email,
         name: action.payload.name,
         firstName: action.payload.firstName,
-        token: action.payload.token,
+        googleAuthToken: action.payload.googleAuthToken,
         uid: action.payload.uid,
         isLoggedIn: true,
         isLoading: false,
+        azureAuthToken: action.payload.azureAuthToken,
       };
     },
     logout: () => {
