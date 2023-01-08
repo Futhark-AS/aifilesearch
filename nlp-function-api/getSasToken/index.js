@@ -43,6 +43,7 @@ module.exports = async function(context, req) {
 async function generateSasToken(context, container, blobName, permissions) {
     const connString = process.env.AzureWebJobsStorage;
     context.log("Generating SAS token for container: " + container + ", blob: " + blobName + ", permissions: " + permissions)
+
     const blobService = azure.createBlobService(connString);
     context.log("Blob service created");
 
