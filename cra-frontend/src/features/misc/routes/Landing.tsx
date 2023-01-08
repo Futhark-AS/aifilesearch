@@ -1,4 +1,4 @@
-import { useIsAuthenticated, useUser } from "@/app/hooks";
+import { useIsAuthenticated } from "@/app/hooks";
 import { Button, Divider } from "@mantine/core";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";

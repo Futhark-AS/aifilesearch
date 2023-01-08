@@ -1,6 +1,6 @@
 import { useScrollIntoView } from "@mantine/hooks";
 import React, { useCallback } from "react";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 // import default react-pdf entry
 import { TextLayerItemInternal } from "react-pdf";
 import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
@@ -17,22 +17,20 @@ function highlightPattern(text: string, pattern: string) {
 
 export function PDFViewer({ file }: Props) {
   const [numPages, setNumPages] = useState<number>(0);
-  const [searchText, setSearchText] = useState("realizar transacciones directas entre sí, sin necesidad de que los bancos actúen");
-  const scroll = useScrollIntoView()
-
+  const [searchText, setSearchText] = useState(
+    "realizar transacciones directas entre sí, sin necesidad de que los bancos actúen"
+  );
   useEffect(() => {
-    scrollTo({top: 5000})
-  
-  }, [])
-  
+    scrollTo({ top: 5000 });
+  }, []);
 
   const textRenderer = useCallback<
     (layer: TextLayerItemInternal) => JSX.Element
   >(
     (textItem) => {
       console.log(textItem);
-      const result = highlightPattern(textItem.str, searchText)
-      console.log(result)
+      const result = highlightPattern(textItem.str, searchText);
+      console.log(result);
       return <div>hei</div>;
     },
     [searchText]
