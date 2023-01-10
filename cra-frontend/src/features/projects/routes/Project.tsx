@@ -60,9 +60,10 @@ const Project = () => {
     console.log(res, status);
   };
 
-  const handleFileUpload = () => {
+  const handleFileUpload = async () => {
     if(files.length === 0) return
-    postFile(user.uid, files[0].file, "michael")
+    await postFile(user.uid, files[0].file, "michael")
+    startProcessing([files[0].file.name], "michael")
 
   }
 
