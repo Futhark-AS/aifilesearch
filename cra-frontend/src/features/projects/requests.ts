@@ -1,25 +1,30 @@
 import { azureAxios } from "@/lib/axios";
 import { z } from "zod";
 
-const promptResult = z.array(
-  z.object({
-    id: z.string(),
-    score: z.number(),
-    metadata: z.object({
-      page_number: z.number(),
-      bounding_box: z.array(
-        z.array(
-          z.object({
-            x: z.number(),
-            y: z.number(),
-          })
-        )
-      ),
-      file_name: z.string(),
-      content: z.string(),
-    }),
-  })
-);
+const promptResult = z.object({
+  matches: z.array(
+    z.object({
+      id: z.string(),
+      score: z.number(),
+      metadata: z.object({
+        page_number: z.number(),
+        bounding_box: z.array(
+          z.array(
+            z.object({
+              x: z.number(),
+              y: z.number(),
+            })
+          )
+        ),
+        file_name: z.string(),
+        content: z.string(),
+      }),
+    })
+  ),
+})  
+  
+
+export type PromptResult = z.infer<typeof promptResult>;
 
 export const searchProjectWithPromptReq = async (
   prompt: string,
@@ -33,9 +38,8 @@ export const searchProjectWithPromptReq = async (
     user_id: uid,
   });
 
-  console.log(res);
+  return promptResult.parse(res)
 
-  return promptResult.parse(res.data);
 };
 
 const startProcessingResult = z.object({

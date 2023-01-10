@@ -1,23 +1,24 @@
 import { useAppSelector } from "@/app/hooks";
 import { selectUser } from "@/features/auth/authSlice";
 import { FileValidated } from "@dropzone-ui/react";
-import { Button, Loader, TextInput } from "@mantine/core";
+import { Button, Card, Loader, TextInput } from "@mantine/core";
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { z } from "zod";
+import { Link } from "react-router-dom";
 import { FileDropzonePassive } from "../components/FileDropzonePassive";
+import { mockMatches } from "../mock-data";
 import {
+  PromptResult,
   getProcessingStatusReq,
   searchProjectWithPromptReq,
   startProcessingReq,
 } from "../requests";
-import { ShowPdf } from "../components/ShowPdf";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
   // const { id } = useParams<{ id: string }>();
 
   const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState<PromptResult[]>([]);
 
   // const [debouncedSearchValue] = useDebouncedValue(searchValue, 200);
 
@@ -27,11 +28,13 @@ const Project = () => {
 
   const onSearch = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("hello");
     const res = await searchProjectWithPromptReq(
       searchValue,
       "michael",
       user.uid
     );
+
     console.log(res);
   };
 
@@ -80,7 +83,17 @@ const Project = () => {
             rightSection={<Loader size="sm" color="blue" />}
           />
         </form>
-        <ShowPdf />
+        {/* <ShowPdf /> */}
+        <div className="">
+          {mockMatches.matches.map((result) => (
+            <Card key={result.id} className="mb-2 w-full">
+              <h4 className="text-lg">{result.metadata.file_name}</h4>
+              <p>{result.metadata.content}</p>
+              <i className="block mb-2">Page: {result.metadata.page_number}</i>
+              <Button variant="outline" onClick={() => showResultInPdf(result)}>Show in PDF viewer</Button>
+            </Card>
+          ))}
+        </div>
       </main>
     </>
   );
