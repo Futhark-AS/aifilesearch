@@ -1,5 +1,4 @@
-import { PromptResult } from "./requests";
-export const mockMatches: PromptResult = {
+export const mockMatches = {
   matches: [
     {
       id: "sid:eb29ffbd4835f17f59814309696889de/michael_0",
