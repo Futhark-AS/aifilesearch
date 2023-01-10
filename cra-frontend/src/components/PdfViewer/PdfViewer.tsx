@@ -1,13 +1,12 @@
 import { ReactJSXElement } from "@emotion/react/types/jsx-namespace";
-import React, { useCallback, useRef } from "react";
-import { useState, useEffect } from "react";
+import React, { useCallback, useRef, useState } from "react";
 // import default react-pdf entry
 import { TextLayerItemInternal } from "react-pdf";
-import { Document, Page} from "react-pdf/dist/esm/entry.webpack5";
+import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
 // import pdf worker as a url, see `next.config.js` and `pdf-worker.js`
+import { Button, TextInput } from "@mantine/core";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
-import { Button, TextInput } from "@mantine/core";
 
 interface Props {
   file: string | File;
@@ -84,7 +83,6 @@ export function PDFViewer({ file }: Props) {
       <TextInput ref={inputRef} defaultValue="3" label="Page" />
       <TextInput ref={offsetInpRef} defaultValue="10" label="offset" />
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-        <Canvas
         {Array.from({ length: 10 }, (_, index) => (
           <div key={index} ref={(el) => el && (pageRefs.current[index] = el)}>
             <Page
