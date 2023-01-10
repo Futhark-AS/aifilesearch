@@ -11,6 +11,7 @@ import {
   searchProjectWithPromptReq,
   startProcessingReq,
 } from "../requests";
+import { ShowPdf } from "../components/ShowPdf";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
@@ -79,6 +80,7 @@ const Project = () => {
             rightSection={<Loader size="sm" color="blue" />}
           />
         </form>
+        <ShowPdf />
       </main>
     </>
   );

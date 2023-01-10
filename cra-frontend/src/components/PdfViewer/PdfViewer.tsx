@@ -3,7 +3,7 @@ import React, { useCallback, useRef } from "react";
 import { useState, useEffect } from "react";
 // import default react-pdf entry
 import { TextLayerItemInternal } from "react-pdf";
-import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
+import { Document, Page} from "react-pdf/dist/esm/entry.webpack5";
 // import pdf worker as a url, see `next.config.js` and `pdf-worker.js`
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -84,6 +84,7 @@ export function PDFViewer({ file }: Props) {
       <TextInput ref={inputRef} defaultValue="3" label="Page" />
       <TextInput ref={offsetInpRef} defaultValue="10" label="offset" />
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
+        <Canvas
         {Array.from({ length: 10 }, (_, index) => (
           <div key={index} ref={(el) => el && (pageRefs.current[index] = el)}>
             <Page
