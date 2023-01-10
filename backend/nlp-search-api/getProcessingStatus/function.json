@@ -1,0 +1,28 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "get"
+      ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "cosmosDB",
+      "name": "document",
+      "direction": "in",
+      "connectionStringSetting": "COSMOS_CONNECTION_STRING",
+      "databaseName": "processing",
+      "collectionName": "processing_results",
+      "Id": "{Query.uuid}",
+      "PartitionKey": "{Query.uuid}"
+    }
+  ]
+}

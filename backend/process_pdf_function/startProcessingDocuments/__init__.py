@@ -364,9 +364,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             logging.info(f"Number of small pdfs: {len(small_pdfs)}")
 
-            test_pdf = small_pdfs[:2]
+            #test_pdf = small_pdfs[:2]
 
-            paragraphs, price = analyze_read(test_pdf)
+            paragraphs, price = analyze_read(small_pdfs)
 
             logging.info(f"Number of paragraphs: {len(paragraphs)}")
 
