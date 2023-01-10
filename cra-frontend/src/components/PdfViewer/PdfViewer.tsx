@@ -10,6 +10,7 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 
 interface Props {
   file: string | File;
+  startPage: number;
 }
 function highlightPattern(text: string, pattern: string) {
   console.log(text, pattern);
@@ -23,12 +24,10 @@ function jumpToPdfBoundingBox() {
   window.scrollTo({ top });
 }
 
-export function PDFViewer({ file }: Props) {
+export function PDFViewer({ file, startPage }: Props) {
   const [numPages, setNumPages] = useState<number>(0);
   const [searchText, setSearchText] = useState("");
   const pageRefs = useRef<{ [x: number]: HTMLDivElement }>({});
-  const inputRef = useRef<HTMLInputElement>(null);
-  const offsetInpRef = useRef<HTMLInputElement>(null);
 
   // useEffect(() => {
   //   scrollTo({ top: 5000 });
@@ -62,31 +61,13 @@ export function PDFViewer({ file }: Props) {
     page.scrollIntoView({ behavior: "auto" });
   };
 
-  const START = 30;
-
   return (
     <div>
-      <button onClick={() => goToPage(Number(inputRef.current?.value))}>
-        JUMP
-      </button>
-      <Button
-        variant="outline"
-        onClick={() =>
-          goToPageAndOffset(
-            Number(inputRef.current?.value),
-            Number(offsetInpRef.current?.value)
-          )
-        }
-      >
-        JUMP TO OFFSET
-      </Button>
-      <TextInput ref={inputRef} defaultValue="3" label="Page" />
-      <TextInput ref={offsetInpRef} defaultValue="10" label="offset" />
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-        {Array.from({ length: 10 }, (_, index) => (
+        {Array.from({ length: 5 }, (_, index) => (
           <div key={index} ref={(el) => el && (pageRefs.current[index] = el)}>
             <Page
-              pageNumber={START + index + 1}
+              pageNumber={Math.max(startPage - 5 + index + 1, 1+index)}
               renderAnnotationLayer={true}
               renderTextLayer={true}
               customTextRenderer={textRenderer}
