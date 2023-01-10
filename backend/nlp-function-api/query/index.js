@@ -13,16 +13,12 @@ const request = async (method, path, body, index_name, project_name, environment
     'Content-Type': 'application/json',
     'Api-Key': apiKey,
   };
-  try {
-    const response = await axios({
-      url, method, data:body, headers
-    });
-    // if response 2xx return data
-    if(response.status >= 200 && response.status < 300){
-      return response.data;
-    }
-  } catch (error) {
-    throw new Error(error);
+  const response = await axios({
+    url, method, data:body, headers
+  });
+  // if response 2xx return data
+  if(response.status >= 200 && response.status < 300){
+    return response.data;
   }
 };
 
@@ -57,7 +53,18 @@ const query = async (namespace, vector, topK, index_name, project_name, environm
         // }
     };
     const res = await request('POST', 'query', body, index_name, project_name, environment);
-    const matches = res.matches;
+  
+    //.log(res.matches);
+    // transform each match.bounding_box into json object
+    const matches = res.matches.map(match => {
+        return {
+            ...match,
+            metadata: {
+                ...match.metadata,
+                bounding_box: JSON.parse(match.metadata.bounding_box)
+            }
+        }
+    });
     return matches;
 }
 
@@ -78,13 +85,9 @@ const getEmbedding = async (context, text) => {
     input: text,
     model: "text-embedding-ada-002",
   };
-  try {
-    const response = await axios.post(url, data, { headers });
-    context.log("Usage: ", response.data.usage);
-    return response.data.data[0].embedding;
-  } catch (error) {
-    throw new Error(error);
-  }
+  const response = await axios.post(url, data, { headers });
+  context.log("Usage: ", response.data.usage);
+  return response.data.data[0].embedding;
 };
 
 
@@ -93,46 +96,42 @@ const getEmbedding = async (context, text) => {
 module.exports = async function (context, req, document) {
   context.log("JavaScript HTTP trigger function processed a request.");
 
-  // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
-  // from request
-  const uid = req.headers["x-ms-client-principal-id"];
-  //const client_principal_name = req.headers["x-ms-client-principal-name"];
-
-
-  if (req.method === "OPTIONS") {
-    // Send response to OPTIONS requests
-    context.res = {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Length, X-Requested-With, X-ZUMO-AUTH",
-      },
-    };
-    return;
-  }
-
-
-  const document_uid = context.bindings.document.id
-  context.log("document_uid: ", document_uid)
-  if (document_uid !== uid) {
-    context.res = {
-      status: 403,
-      body: "User not allowed to access this document",
-    };
-    return;
-  }
 
   try{
-    allowed_namespaces = context.bindings.document.allowed_namespaces
-    const prompt = req.query.prompt;
-    let namespace = req.query.namespace;
-    if(!namespace){
-      namespace = ""
-      context.log("namespace not provided, using default namespace: ", namespace)
-    }
+    // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
+    // from request
+    const uid = req.headers["x-ms-client-principal-id"];
+    //const client_principal_name = req.headers["x-ms-client-principal-name"];
 
-    const topK = req.query.topK;
+
+
+
+    const document_uid = context.bindings.document.id
+    context.log("document_uid: ", document_uid)
+    if (document_uid !== uid) {
+      context.res = {
+        status: 403,
+        body: "User not allowed to access this document",
+      };
+      return;
+    }
+    allowed_projects = context.bindings.document.projects
+    const prompt = req.body.prompt;
+    const project = req.body.project;
+    const namespace = uid + "/" + project
+
+    context.log("prompt: ", prompt)
+    context.log("namespace: ", namespace)
+    context.log("Allowed projects for user ", uid, ": ", allowed_projects)
+
+    const topK = req.body.topK;
+
+    // example request body for query
+    // {
+    //     "prompt": "I am a cat",
+    //     "namespace": "example-namespace",
+    //     "topK": 10
+    // }      
 
 
     // format:  
@@ -144,7 +143,7 @@ module.exports = async function (context, req, document) {
     ],*/
     // if namespace not in allowed_namespaces
     // return error
-    if (!allowed_namespaces.some((ns) => ns.namespace === namespace)) {
+    if (!allowed_projects.some((p) => p.namespace === namespace)) {
       context.res = {
         status: 403,
         body: "Namespace not allowed for user",
@@ -152,7 +151,7 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    index_name = allowed_namespaces.find((ns) => ns.namespace === namespace).index_name
+    index_name = allowed_projects.find((p) => p.namespace === namespace).index_name
 
 
     const vector = await getEmbedding(context, prompt);
@@ -175,21 +174,11 @@ module.exports = async function (context, req, document) {
 
     //context.log(matches)
     const body = JSON.stringify({matches, uid}, { encoding: "utf8" });
+    
 
-    const res = {
-      // status: 200, /* Defaults to 200 */
-      body: body,
-      // allow CORS
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, Content-Length, X-Requested-With",
-      },
+    context.res = { 
+      body
     };
-
-    //context.log(res);
-
-    context.res = res;
   }
   catch(error){
     context.log.error(error)

@@ -1,23 +1,22 @@
 module.exports = async function (context, req, document) {
   context.log("JavaScript HTTP trigger function processed a request.");
-
-  // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
-  // from request
-  const uid = req.headers["x-ms-client-principal-id"];
-  //const client_principal_name = req.headers["x-ms-client-principal-name"];
-
-  if (document.user_id !== uid) {
-    context.res = {
-      status: 403,
-      body: "User not allowed to access this document",
-    };
-    return;
-  }
-
   try{
+    // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
+    // from request
+    const uid = req.headers["x-ms-client-principal-id"];
+    //const client_principal_name = req.headers["x-ms-client-principal-name"];
+
+    if (document.user_id !== uid) {
+      context.res = {
+        status: 403,
+        body: "User not allowed to access this document",
+      };
+      return;
+    }
+
     const file_names = document.file_names
     const body = {
-      "processed": file_names,
+      "processed_files": file_names,
       "message": "",
       "ready": false
       //"progress": 
@@ -33,7 +32,7 @@ module.exports = async function (context, req, document) {
       body.message = `Done processing ${len(file_names)} files. [${file_names}]. Index not yet ready.`
     }
 
-    const res = {
+    context.res = { 
       status: 200,
       body: body
     };

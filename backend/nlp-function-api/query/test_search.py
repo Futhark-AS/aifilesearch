@@ -12,7 +12,7 @@ import requests
 import json
 
 def search(prompt, topK, namespace):
-    url = "http://localhost:7071/api/search?id=jorgen.sandhaug@gmail.com"
+    url = "http://localhost:7071/api/query?id=jorgen.sandhaug@gmail.com"
     payload = json.dumps({
         "prompt": prompt,
         "topK": topK,

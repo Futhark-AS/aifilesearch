@@ -10,7 +10,8 @@
     "axios": "^1.2.1",
     "azure-storage": "^2.10.7",
     "fetch": "^1.1.0",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "azure-functions-core-tools": "^4.x"

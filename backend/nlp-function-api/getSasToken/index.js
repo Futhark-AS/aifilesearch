@@ -6,38 +6,46 @@
 const azure = require('azure-storage');
 
 module.exports = async function(context, req) {
-    // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
-    // from request
-    const uid = req.headers["x-ms-client-principal-id"];
-    //const client_principal_name = req.headers["x-ms-client-principal-name"];
+    try{
+        // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
+        // from request
+        const uid = req.headers["x-ms-client-principal-id"];
+        //const client_principal_name = req.headers["x-ms-client-principal-name"];
 
-    if (req.body && req.body.container) {
-        // The following values can be used for permissions: 
-        // "a" (Add), "r" (Read), "w" (Write), "d" (Delete), "l" (List)
-        // Concatenate multiple permissions, such as "rwa" = Read, Write, Add
-        const blobUserId = req.body.blobName.split("/")[0];
-        context.log(`User ID: ${uid} is trying to access blob: ${req.body.blobName} with permissions: ${req.body.permissions?? "r"}`);
-        if (blobUserId !== uid) {
+        if (req.body && req.body.container) {
+            // The following values can be used for permissions: 
+            // "a" (Add), "r" (Read), "w" (Write), "d" (Delete), "l" (List)
+            // Concatenate multiple permissions, such as "rwa" = Read, Write, Add
+            const blobUserId = req.body.blobName.split("/")[0];
+            context.log(`User ID: ${uid} is trying to access blob: ${req.body.blobName} with permissions: ${req.body.permissions?? "r"}`);
+            if (blobUserId !== uid) {
+                context.res = {
+                    status: 403,
+                    body: "User not allowed to access this blob"
+                };
+                return;
+            }
+
+            const sasBody = await generateSasToken(context, req.body.container, req.body.blobName, req.body.permissions);
             context.res = {
-                status: 403,
-                body: "User not allowed to access this blob"
+                status: 200,
+                body: sasBody
             };
-            return;
+        } else {
+            context.res = {
+                status: 400,
+                body: "Specify a value for 'container'"
+            };
         }
+        
 
-        const sasBody = await generateSasToken(context, req.body.container, req.body.blobName, req.body.permissions);
+    } catch (error) {
+        context.log.error(error);
         context.res = {
-            status: 200,
-            body: sasBody
-        };
-    } else {
-        context.res = {
-            status: 400,
-            body: "Specify a value for 'container'"
+            status: 500,
+            body: error.message
         };
     }
-    
-    //context.done();
 };
 
 async function generateSasToken(context, container, blobName, permissions) {
@@ -69,6 +77,8 @@ async function generateSasToken(context, container, blobName, permissions) {
     };
     
     var sasToken = blobService.generateSharedAccessSignature(container, blobName, sharedAccessPolicy);
+
+    context.log("SAS token: " + sasToken);
     
     return {
         token: sasToken,

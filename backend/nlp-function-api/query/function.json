@@ -6,10 +6,8 @@
       "direction": "in",
       "name": "req",
       "methods": [
-        "get",
-        "options"
-      ],
-      "route": "api/search"
+        "post"
+      ]
     },
     {
       "type": "http",
@@ -23,8 +21,8 @@
       "connectionStringSetting": "COSMOS_CONNECTION_STRING",
       "databaseName": "nlp-search",
       "collectionName": "users",
-      "Id": "{Query.id}",
-      "PartitionKey": "{Query.id}"
+      "Id": "{user_id}",
+      "PartitionKey": "{user_id}"
     }
   ]
 }
