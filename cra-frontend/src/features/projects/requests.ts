@@ -98,9 +98,10 @@ export const postFile = async (uid: string, file: File, project: string) => {
   console.log(file.name)
   const sasTokenUri = (await getSASToken(`${uid}/${project}/${file.name}`, "w")).uri;
   console.log(sasTokenUri)
-  uploadFile(sasTokenUri, file)
+  await uploadFile(sasTokenUri, file)
 
-  console.log(sasTokenUri)
+  await startProcessingReq([file.name], project)
+
 
   // const account = "<account name>";
   // const sas = "<service Shared Access Signature Token>";
