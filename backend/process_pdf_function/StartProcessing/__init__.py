@@ -71,6 +71,11 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
 
         index_name = "michael" # TODO: get this from cosmos db or something. Check if it is full or not. If it is full, create a new index name and add it to cosmos db
 
+        first_retry_interval_in_milliseconds = 5000
+        max_number_of_attempts = 1
+
+        retry_options = df.RetryOptions(first_retry_interval_in_milliseconds, max_number_of_attempts)
+        logging.info("Retry options: " + str(retry_options))
 
         tasks = []
         for blob_name in blob_names:
@@ -80,7 +85,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
                 "index_name": index_name,
                 "namespace": namespace,
             }
-            tasks.append(context.call_activity("SingleProcess", settings))
+            tasks.append(context.call_activity_with_retry("SingleProcess", retry_options, settings))
 
         # wait for all tasks to complete
         results = yield context.task_all(tasks)
