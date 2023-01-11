@@ -6,18 +6,16 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { FileDropzonePassive } from "../components/FileDropzonePassive";
 import { ShowPromptResult } from "../components/ShowPromptResult";
+import { handleFileUpload } from "../projectAPI";
 import {
   PromptMatch,
-  getProcessingStatusReq,
-  getSASToken,
-  postFile,
+  getBlobUri,
   searchProjectWithPromptReq,
-  startProcessingReq,
 } from "../requests";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
-  const { id } = useParams<{ id: string }>();
+  const { id: projectName } = useParams<{ id: string }>();
 
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
@@ -31,7 +29,7 @@ const Project = () => {
   const [resultsLoading, setResultsLoading] = useState(false);
 
   const showResultInPdf = async (result: PromptMatch) => {
-    const fileUrl = (await getSASToken(result.metadata.file_name, "r")).uri;
+    const fileUrl = await getBlobUri(result.metadata.file_name);
 
     setActiveResult({
       fileUrl,
@@ -46,29 +44,13 @@ const Project = () => {
 
     const res = await searchProjectWithPromptReq(
       searchValue,
-      "michael",
+      projectName!,
       user.uid
     );
 
     setResultsLoading(false);
     setSearchResults(res);
   };
-
-  const startProcessing = async (filenames: string[], project: string) => {
-    const res = await startProcessingReq(filenames, project);
-    const status = await getProcessingStatusReq(res.uri);
-    //TODO: load and check status every 5 seconds until done
-    
-    console.log(res, status);
-  };
-
-  const handleFileUpload = async () => {
-    if(files.length === 0) return
-    await postFile(user.uid, files[0].file, "michael")
-    startProcessing([files[0].file.name], "michael")
-  }
-
-  // TODO: get files from azure based on project. Should do this here and pass down maybe
 
   return (
     <>
@@ -78,7 +60,17 @@ const Project = () => {
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
               Project Name
             </h2>
-            <FileDropzonePassive files={files} setFiles={setFiles} handleFileUpload={handleFileUpload}/>
+            <FileDropzonePassive
+              files={files}
+              setFiles={setFiles}
+              handleFileUpload={() =>
+                handleFileUpload(
+                  files.map((file) => file.file),
+                  user.uid,
+                  projectName!
+                )
+              }
+            />
             <form onSubmit={onSearch} className="mb-4">
               <TextInput
                 label="Search"
