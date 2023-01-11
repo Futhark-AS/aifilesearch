@@ -25,7 +25,8 @@ module.exports = async function (context, req) {
         if (req.body && req.body.project && req.body.file_names) {
             const uuid = uuidv4()
             // post to process-upload without waiting for response
-            fetch("https://process-upload.azurewebsites.net/api/startProcessingDocuments", {
+            //fetch("https://process-upload.azurewebsites.net/api/startProcessingDocuments", {
+            const res = await fetch("https://process-upload.azurewebsites.net/api/orchestrators/StartProcessing", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -33,18 +34,21 @@ module.exports = async function (context, req) {
                 body: JSON.stringify({
                     file_names,
                     namespace,
-                    id: user_id,
-                    cosmos_result_id: uuid
+                    user_id: user_id,
+                    //cosmos_result_id: uuid
                 })
             })
+
+            const data = await res.json()
+            const uri = data.statusQueryGetUri
+            context.log("uri: ", uri)
 
             context.res = {
                 status: 200,
                 body: {
                     /* It's a placeholder for the message that will be returned to the user. */
-                    "message": "Now processing documents. The status of the processing can be checked at https://nlp-search-api.azurewebsites.net/api/getProcessingStatus?uuid="+uuid,
-                    "uuid": uuid,
-                    "uri": "https://nlp-search-api.azurewebsites.net/api/getProcessingStatus?uuid="+uuid
+                    "message": "Now processing documents. The status of the processing can be checked at the following URI: " + uri,
+                    "uri": uri
                 }
             };
         } else {

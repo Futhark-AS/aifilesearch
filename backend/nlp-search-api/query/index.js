@@ -57,13 +57,13 @@ const query = async (namespace, vector, topK, index_name, project_name, environm
     //.log(res.matches);
     // transform each match.bounding_box into json object
     const matches = res.matches.map(match => {
-      blob_name = match.file_name.split("/")
+      //blob_name = match.metadata.file_name.split("/")
         return {
             ...match,
             metadata: {
                 ...match.metadata,
                 bounding_box: JSON.parse(match.metadata.bounding_box),
-                file_name: blob_name[blob_name.length - 1]
+                //file_name: blob_name[blob_name.length - 1]
             }
         }
     });
