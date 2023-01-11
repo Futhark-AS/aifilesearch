@@ -36,14 +36,14 @@ module.exports = async function (context, req) {
             const data = await res.json()
             const status_uri = data.statusQueryGetUri
             const terminate_uri = data.terminatePostUri
-            context.log("uri: ", uri)
+            context.log("uri: ", status_uri)
             context.log("terminate_uri: ", terminate_uri)
 
             context.res = {
                 status: 200,
                 body: {
-                    message: "Now processing documents. The status of the processing can be checked at the following URI: " + uri,
-                    uri: uri,
+                    message: "Now processing documents. The status of the processing can be checked at the following URI: " + status_uri,
+                    uri: status_uri,
                     terminate_uri: terminate_uri
                 }
             };
