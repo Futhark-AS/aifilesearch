@@ -58,6 +58,7 @@ const Project = () => {
     const res = await startProcessingReq(filenames, project);
     const status = await getProcessingStatusReq(res.uri);
     //TODO: load and check status every 5 seconds until done
+    
     console.log(res, status);
   };
 
@@ -65,7 +66,6 @@ const Project = () => {
     if(files.length === 0) return
     await postFile(user.uid, files[0].file, "michael")
     startProcessing([files[0].file.name], "michael")
-
   }
 
   // TODO: get files from azure based on project. Should do this here and pass down maybe

@@ -1,4 +1,4 @@
-import { azureAxios } from "@/lib/axios";
+import { azureAxios, baseAxios } from "@/lib/axios";
 import { z } from "zod";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { uploadFile } from "./azure-storage-blob";
@@ -62,15 +62,16 @@ export const startProcessingReq = async (
 };
 
 const getProcessingStatusResult = z.object({
-  processed_files: z.array(z.string()),
-  message: z.string(),
-  ready: z.boolean(),
+  runtimeStatus: z.string(),
+  // output: z.null().or(,
+  // createdTime: "2023-01-11T13:35:28Z",
+  // lastUpdatedTime: "2023-01-11T13:35:28Z"
 });
 
 export const getProcessingStatusReq = async (uri: string) => {
-  const res = await azureAxios.get(uri);
+  const res = await baseAxios.get(uri);
 
-  return getProcessingStatusResult.parse(res.data);
+  return getProcessingStatusResult.parse(res.data).runtimeStatus;
 };
 
 export const getSASToken = async (blobName: string, permissions: "r" | "w") => {
@@ -98,9 +99,6 @@ export const postFile = async (uid: string, file: File, project: string) => {
   const sasTokenUri = (await getSASToken(`${uid}/${project}/${file.name}`, "w")).uri;
   console.log(sasTokenUri)
   await uploadFile(sasTokenUri, file)
-
-  await startProcessingReq([file.name], project)
-
 
   // const account = "<account name>";
   // const sas = "<service Shared Access Signature Token>";
