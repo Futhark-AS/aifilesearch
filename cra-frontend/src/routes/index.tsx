@@ -2,9 +2,9 @@ import React from "react";
 import { Outlet, createBrowserRouter } from "react-router-dom";
 
 import Authenticate from "@/features/auth/routes/Authenticate";
-import { ErrorPage } from "@/features/misc/routes/ErrorPage";
 import { protectedRoutes } from "./protected";
 import { Landing } from "@/features/misc";
+import { ErrorPage } from "@/features/errors";
 
 const Root = () => {
   return (
