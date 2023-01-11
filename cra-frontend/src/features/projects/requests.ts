@@ -44,7 +44,6 @@ export const searchProjectWithPromptReq = async (
 
 const startProcessingResult = z.object({
   message: z.string(),
-  uuid: z.string(),
   uri: z.string(),
 });
 

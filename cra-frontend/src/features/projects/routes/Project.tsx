@@ -57,6 +57,7 @@ const Project = () => {
   const startProcessing = async (filenames: string[], project: string) => {
     const res = await startProcessingReq(filenames, project);
     const status = await getProcessingStatusReq(res.uri);
+    //TODO: load and check status every 5 seconds until done
     console.log(res, status);
   };
 
