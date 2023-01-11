@@ -10,7 +10,20 @@ module.exports = async function (context, req, document) {
             };
             return;
         }
-        const projects = document.projects.map(project => project.namespace);
+
+        const uid = req.headers["x-ms-client-principal-id"];
+        const document_uid = context.bindings.document.id
+        context.log("document_uid: ", document_uid)
+
+        if (document_uid !== uid) {
+        context.res = {
+            status: 403,
+            body: "User not allowed to access this document",
+        };
+        return;
+        }
+
+        const projects = document.projects.map(project => project.namespace.split("/")[1]);
 
         const responseMessage = {
             status: 200,

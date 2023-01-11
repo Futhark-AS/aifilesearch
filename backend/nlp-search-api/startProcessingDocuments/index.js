@@ -1,7 +1,3 @@
-//const { v4: uuidv4 } = require('uuid');
-
-//TODO: fix this!!!
-const uuidv4 = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 module.exports = async function (context, req) {
     try{
         context.log('JavaScript HTTP trigger function processed a request.');
@@ -23,7 +19,6 @@ module.exports = async function (context, req) {
         }
 
         if (req.body && req.body.project && req.body.file_names) {
-            const uuid = uuidv4()
             // post to process-upload without waiting for response
             //fetch("https://process-upload.azurewebsites.net/api/startProcessingDocuments", {
             const res = await fetch("https://process-upload.azurewebsites.net/api/orchestrators/StartProcessing", {
@@ -35,7 +30,6 @@ module.exports = async function (context, req) {
                     file_names,
                     namespace,
                     user_id: user_id,
-                    //cosmos_result_id: uuid
                 })
             })
 
@@ -46,9 +40,8 @@ module.exports = async function (context, req) {
             context.res = {
                 status: 200,
                 body: {
-                    /* It's a placeholder for the message that will be returned to the user. */
-                    "message": "Now processing documents. The status of the processing can be checked at the following URI: " + uri,
-                    "uri": uri
+                    message: "Now processing documents. The status of the processing can be checked at the following URI: " + uri,
+                    uri: uri
                 }
             };
         } else {

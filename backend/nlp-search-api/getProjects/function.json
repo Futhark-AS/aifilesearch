@@ -1,0 +1,28 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "get"
+      ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "cosmosDB",
+      "name": "document",
+      "direction": "in",
+      "connectionStringSetting": "COSMOS_CONNECTION_STRING",
+      "databaseName": "nlp-search",
+      "collectionName": "users",
+      "Id": "{Query.user_id}",
+      "PartitionKey": "{Query.user_id}"
+    }
+  ]
+}
