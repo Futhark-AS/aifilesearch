@@ -26,58 +26,59 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 endpoint = "https://jorgen-receipt-recognizer.cognitiveservices.azure.com/"
 key = "ce4f6273acf642888e33b283c7481323"
 
-def analyze_read(pdfs):
+def analyze_read(pdf, blob_name):
     document_analysis_client = DocumentAnalysisClient(
         endpoint=endpoint, credential=AzureKeyCredential(key)
     )
     # price is 1.5 dollars per 1000 pages
     p = 1.5
     logging.info("Price per 1000 pages: $" + str(p)) 
-    price = p*len(pdfs)*2/1000 # 2 pages per pdf
-    logging.info(f"Price for extracting text from {len(pdfs)} pdfs with total length {len(pdfs)*2} pages: {price} dollars")
+    price = 0 # TODO: get actual price
+    #price = p*/1000 # 2 pages per pdf
+    #logging.info(f"Price for extracting text from {len(pdfs)} pdfs with total length {len(pdfs)*2} pages: {price} dollars")
     # path = "folder/document_name-0-4.pdf"
     all_paragraphs = []
-    for i in range(len(pdfs)):
-        # pdf is of type PyPDF2.PdfReader
-        pdf = pdfs[i][0]
-        page_number_base = pdfs[i][1]
-        blob_name = pdfs[i][2]
+    # for i in range(len(pdfs)):
+    # pdf is of type PyPDF2.PdfReader
+    # pdf = pdfs[i][0]
+    # page_number_base = pdfs[i][1]
+    # blob_name = pdfs[i][2]
 
-        buf = io.BytesIO()
-        pdf.write(buf)
-        buf.seek(0)
-        poller = document_analysis_client.begin_analyze_document(
-            "prebuilt-read", document=buf
-        )
-        result = poller.result()
-        logging.info("Document {} contains {} pages: ".format(i, len(result.pages)))
+    # buf = io.BytesIO()
+    # pdf.write(buf)
+    # buf.seek(0)
+    poller = document_analysis_client.begin_analyze_document(
+        "prebuilt-read", document=pdf
+    )
+    result = poller.result()
+    logging.info("Document {} contains {} pages: ".format(i, len(result.pages)))
 
-        # logging.info("----Languages detected in the document----")
-        # for language in result.languages:
-        #     logging.info("Language code: '{}' with confidence {}".format(language.locale, language.confidence))
+    # logging.info("----Languages detected in the document----")
+    # for language in result.languages:
+    #     logging.info("Language code: '{}' with confidence {}".format(language.locale, language.confidence))
 
-        for paragraph in result.paragraphs:
-            logging.info(
-                "...Paragraph of length'{}'".format(
-                    len(paragraph.content)
-                )
+    for paragraph in result.paragraphs:
+        logging.info(
+            "...Paragraph of length'{}'".format(
+                len(paragraph.content)
             )
-            if len(paragraph.bounding_regions) > 1:
-                # throw exception
-                logging.info("Error: more than one bounding region")
+        )
+        if len(paragraph.bounding_regions) > 1:
+            # throw exception
+            logging.info("Error: more than one bounding region")
 
-            all_paragraphs.append({
-                "content": paragraph.content,
-                "page_number": paragraph.bounding_regions[0].page_number + page_number_base,
-                "file_name": blob_name,
-                "bounding_box": [[{"x": point.x, "y":point.y} for point in paragraph.bounding_regions[0].polygon]]
-            })
+        all_paragraphs.append({
+            "content": paragraph.content,
+            "page_number": paragraph.bounding_regions[0].page_number,# + page_number_base,
+            "file_name": blob_name,
+            "bounding_box": [[{"x": point.x, "y":point.y} for point in paragraph.bounding_regions[0].polygon]]
+        })
 
-        # close the stream
-        buf.close()
+        # # close the stream
+        # buf.close()
 
-        # close the pdf
-        pdf.close()
+        # # close the pdf
+        # pdf.close()
             
     return all_paragraphs, price
 
@@ -258,23 +259,23 @@ def main(settings) -> str:
 
     
 
-    small_pdfs = []
+    # small_pdfs = []
     logging.info("\nDownloading blob " + blob_name)
     blob = container_client.download_blob(blob_name).readall()
-    on_fly = io.BytesIO(blob)
-    pdf = PdfReader(on_fly)
-    for i in range(0, len(pdf.pages), 2):
-        output = PdfWriter()
-        for j in range(i, i+2):
-            if j < len(pdf.pages):
-                output.add_page(pdf.pages[j])
-        small_pdfs.append((output, i, blob_name))
+    pdf = io.BytesIO(blob)
+    # pdf = PdfReader(on_fly)
+    # for i in range(0, len(pdf.pages), 2):
+    #     output = PdfWriter()
+    #     for j in range(i, i+2):
+    #         if j < len(pdf.pages):
+    #             output.add_page(pdf.pages[j])
+    #     small_pdfs.append((output, i, blob_name))
 
-    logging.info(f"Number of small pdfs: {len(small_pdfs)}")
+    # logging.info(f"Number of small pdfs: {len(small_pdfs)}")
 
     #test_pdf = small_pdfs[:2]
 
-    paragraphs, price = analyze_read(small_pdfs)
+    paragraphs, price = analyze_read(pdf, blob_name)
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
 
