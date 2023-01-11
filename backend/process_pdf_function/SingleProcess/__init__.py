@@ -23,8 +23,8 @@ from PyPDF2 import PdfWriter, PdfReader
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 # ---------- OCR ----------
-endpoint = "https://nlp-search-ocr.cognitiveservices.azure.com/"
-key = "30ba3172b67a48a9a7093f3cb98a84cd"
+endpoint = "https://jorgen-receipt-recognizer.cognitiveservices.azure.com/"
+key = "ce4f6273acf642888e33b283c7481323"
 
 def analyze_read(pdf, blob_name):
     document_analysis_client = DocumentAnalysisClient(
