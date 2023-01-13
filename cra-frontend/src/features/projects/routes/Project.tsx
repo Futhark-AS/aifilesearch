@@ -5,7 +5,10 @@ import { Button, Card, Loader, TextInput } from "@mantine/core";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { FileDropzonePassive } from "../components/FileDropzonePassive";
-import { ShowPromptResult } from "../components/ShowPromptResult";
+import {
+  ShowPromptResult,
+  extractFileName,
+} from "../components/ShowPromptResult";
 import { handleFileUpload } from "../projectAPI";
 import {
   PromptMatch,
@@ -93,13 +96,14 @@ const Project = () => {
             )}
           </div>
         </section>
-        {/* <ShowPdf /> */}
         {/* resizeable sidebar: https://codesandbox.io/s/react-resizable-sidebar-kz9de?file=/src/App.css:0-38 */}
         <section className="w-64 overflow-auto bg-slate-600 px-4 pt-4">
           <h3 className="text-center text-lg text-white">Results</h3>
           {searchResults.map((result) => (
             <Card key={result.id} className="mb-2 w-full">
-              <h4 className="text-md">{result.metadata.file_name}</h4>
+              <h4 className="text-md">
+                {extractFileName(result.metadata.file_name)}
+              </h4>
               <p className="text-sm">{result.metadata.content}</p>
               <i className="mb-2 block">Page: {result.metadata.page_number}</i>
               <Button

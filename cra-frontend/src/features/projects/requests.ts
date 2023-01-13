@@ -77,21 +77,28 @@ const getSASToken = async (blobName: string, permissions: "r" | "w") => {
   const res = await azureAxios.post("/api/getsastoken", {
     container: "users",
     blobName,
-    permissions
+    permissions,
   });
 
-  return z.object({
-    token: z.string(),
-    uri: z.string()
-  }).parse(res.data)
+  return z
+    .object({
+      token: z.string(),
+      uri: z.string(),
+    })
+    .parse(res.data);
 };
 
 export const getBlobUri = async (blobName: string) => {
   return (await getSASToken(blobName, "r")).uri;
-}
-
+};
 
 export const postFile = async (uid: string, file: File, project: string) => {
-  const sasTokenUri = (await getSASToken(`${uid}/${project}/${file.name}`, "w")).uri;
-  await uploadFile(sasTokenUri, file)
-}
+  const sasTokenUri = (await getSASToken(`${uid}/${project}/${file.name}`, "w"))
+    .uri;
+  await uploadFile(sasTokenUri, file);
+};
+
+export const getProjects = async (uid: string) => {
+  const res = await azureAxios.get(`/api/getProjects?user_id=${uid}`);
+  return z.object({ projects: z.array(z.string()) }).parse(res.data).projects;
+};

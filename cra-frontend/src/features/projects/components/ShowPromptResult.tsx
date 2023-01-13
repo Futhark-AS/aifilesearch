@@ -7,13 +7,14 @@ interface Props {
   promptResult: PromptMatch;
 }
 
+export const extractFileName = (filePath: string) =>
+  filePath.slice(filePath.lastIndexOf("/") + 1);
+
 export function ShowPromptResult({ file, promptResult }: Props) {
   return (
     <div>
       <h1 className="text-xl font-semibold">
-        {promptResult.metadata.file_name.slice(
-          promptResult.metadata.file_name.lastIndexOf("/") + 1
-        )}
+        {extractFileName(promptResult.metadata.file_name)}
       </h1>
       <div>{promptResult.metadata.content}</div>
       <i className="text-xs">Page {promptResult.metadata.page_number}</i>
