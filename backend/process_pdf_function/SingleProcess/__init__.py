@@ -33,7 +33,6 @@ def analyze_read(pdf, blob_name):
     # price is 1.5 dollars per 1000 pages
     p = 1.5
     logging.info("Price per 1000 pages: $" + str(p)) 
-    price = 0 # TODO: get actual price
     #price = p*/1000 # 2 pages per pdf
     #logging.info(f"Price for extracting text from {len(pdfs)} pdfs with total length {len(pdfs)*2} pages: {price} dollars")
     # path = "folder/document_name-0-4.pdf"
@@ -51,7 +50,9 @@ def analyze_read(pdf, blob_name):
         "prebuilt-read", document=pdf
     )
     result = poller.result()
-    logging.info("Document {} contains {} pages: ".format(i, len(result.pages)))
+    logging.info("Document contains {} pages: ".format(len(result.pages)))
+
+    price = p*len(result.pages)/1000
 
     # logging.info("----Languages detected in the document----")
     # for language in result.languages:

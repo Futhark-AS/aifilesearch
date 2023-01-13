@@ -87,6 +87,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
             }
             tasks.append(context.call_activity_with_retry("SingleProcess", retry_options, settings))
 
+        
         # wait for all tasks to complete
         results = yield context.task_all(tasks)
         logging.info("All tasks completed")
