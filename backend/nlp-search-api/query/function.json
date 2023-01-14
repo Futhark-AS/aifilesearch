@@ -21,8 +21,8 @@
       "connectionStringSetting": "COSMOS_CONNECTION_STRING",
       "databaseName": "nlp-search",
       "collectionName": "users",
-      "Id": "{user_id}",
-      "PartitionKey": "{user_id}"
+      "Id": "{headers.x-ms-client-principal-id}",
+      "PartitionKey": "{headers.x-ms-client-principal-id}"
     }
   ]
 }

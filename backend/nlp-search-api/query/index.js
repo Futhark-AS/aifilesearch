@@ -106,46 +106,20 @@ module.exports = async function (context, req, document) {
     //const client_principal_name = req.headers["x-ms-client-principal-name"];
 
 
-
-
-    const document_uid = context.bindings.document.id
-    context.log("document_uid: ", document_uid)
-    if (document_uid !== uid) {
-      context.res = {
-        status: 403,
-        body: "User not allowed to access this document",
-      };
-      return;
-    }
-    allowed_projects = context.bindings.document.projects
+    const projects = context.bindings.document.projects
     const prompt = req.body.prompt;
     const project = req.body.project;
     const namespace = uid + "/" + project
 
     context.log("prompt: ", prompt)
     context.log("namespace: ", namespace)
-    context.log("Allowed projects for user ", uid, ": ", allowed_projects)
+    context.log("Allowed projects for user ", uid, ": ", projects)
 
     const topK = req.body.topK;
 
-    // example request body for query
-    // {
-    //     "prompt": "I am a cat",
-    //     "namespace": "example-namespace",
-    //     "topK": 10
-    // }      
-
-
-    // format:  
-    /*"allowed_namespaces": [
-          {
-            "namespace": "",
-            "index_name": "michael"
-        }
-    ],*/
     // if namespace not in allowed_namespaces
     // return error
-    if (!allowed_projects.some((p) => p.namespace === namespace)) {
+    if (!projects.some((p) => p.namespace === namespace)) {
       context.res = {
         status: 403,
         body: "Namespace not allowed for user",
@@ -153,7 +127,7 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    index_name = allowed_projects.find((p) => p.namespace === namespace).index_name
+    index_name = projects.find((p) => p.namespace === namespace).index_name
 
 
     const vector = await getEmbedding(context, prompt);
@@ -174,7 +148,6 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    //context.log(matches)
     const body = JSON.stringify({matches}, { encoding: "utf8" });
     
 
