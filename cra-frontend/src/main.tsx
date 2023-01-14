@@ -38,11 +38,14 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
     },
   },
 });
 
-initMocks()
+await initMocks();
 
 root.render(
   <React.StrictMode>
