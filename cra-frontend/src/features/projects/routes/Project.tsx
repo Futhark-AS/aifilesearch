@@ -13,12 +13,41 @@ import { handleFileUpload } from "../projectAPI";
 import {
   PromptMatch,
   getBlobUri,
+  getFiles,
   searchProjectWithPromptReq,
 } from "../requests";
+import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
+import { useQuery } from "react-query";
+
+// const mockFiles = [
+//   {
+//     name: "file1",
+//     size: "200mb",
+//     type: "pdf",
+//     url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+//     pages: 10,
+//   },
+//   {
+//     name: "file2",
+//     size: "200mb",
+//     type: "pdf",
+//     url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+//     pages: 10,
+//   },
+//   {
+//     name: "file3",
+//     size: "200mb",
+//     type: "pdf",
+//     url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+//     pages: 10,
+//   },
+// ];
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
   const { id: projectName } = useParams<{ id: string }>();
+
+  const {data: projectFiles} = useQuery("files", () => getFiles())
 
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
@@ -58,6 +87,7 @@ const Project = () => {
   return (
     <>
       <main className="col flex h-full w-full">
+        <FileExplorerSideBar files={projectFiles || []} fileOnClick={(file) => console.log(file)} initialSelectedFile=""/>
         <section className="grow">
           <div className="container mx-auto p-4">
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">

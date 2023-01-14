@@ -99,6 +99,15 @@ export const postFile = async (uid: string, file: File, project: string) => {
 };
 
 export const getProjects = async (uid: string) => {
-  const res = await azureAxios.get(`/api/getProjects?user_id=${uid}`);
+  const res = await azureAxios.get(`/api/getPr`);
   return z.object({ projects: z.array(z.string()) }).parse(res.data).projects;
 };
+
+export const getFiles = async () => {
+  const res = await azureAxios.get(`/api/getFiles`);
+  console.log(res)
+  return res.data
+  // return z.object({ projects: z.array(z.string()) }).parse(res.data).projects;
+};
+
+

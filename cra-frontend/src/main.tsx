@@ -10,6 +10,7 @@ import { hydrate } from "./features/auth/authSlice";
 import { router } from "./routes";
 import storage from "./utils/storage";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { initMocks } from "./test/server";
 
 const container = document.getElementById("root");
 
@@ -33,20 +34,27 @@ store.subscribe(() => {
   }
 });
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
+initMocks()
 
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-    <QueryClientProvider client={queryClient}>
-      <GoogleOAuthProvider
-        clientId={
-          "1060860818910-of2mib6de089jn475e0ivlf80r849cm5.apps.googleusercontent.com"
-        }
-      >
-        <RouterProvider router={router} />
-      </GoogleOAuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <GoogleOAuthProvider
+          clientId={
+            "1060860818910-of2mib6de089jn475e0ivlf80r849cm5.apps.googleusercontent.com"
+          }
+        >
+          <RouterProvider router={router} />
+        </GoogleOAuthProvider>
       </QueryClientProvider>
     </Provider>
   </React.StrictMode>
