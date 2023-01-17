@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   VariableSizeList as List,
   ListChildComponentProps,
@@ -37,9 +37,19 @@ interface Props {
   startPage: number;
 }
 
-export function PdfViewer({ file }: Props) {
+export function PdfViewer({ file, startPage }: Props) {
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [pageViewports, setPageViewports] = useState<ViewPort[] | null>(null);
+  const listRef = useRef<List | null>(null);
+  const [rendered, setRendered] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    if (listRef.current && !hasScrolled) {
+      listRef.current.scrollToItem(startPage, "start");
+      setHasScrolled(true);
+    }
+  }, [rendered, hasScrolled, startPage]);
 
   /**
    * React-Window cannot get item size using async getter, therefore we need to
@@ -92,6 +102,8 @@ export function PdfViewer({ file }: Props) {
           estimatedItemSize={height}
           itemCount={pdf.numPages}
           itemSize={getPageHeight}
+          ref={listRef}
+          onItemsRendered={() => setRendered(true)}
         >
           {Row}
         </List>
