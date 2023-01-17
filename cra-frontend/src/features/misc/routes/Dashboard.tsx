@@ -32,7 +32,7 @@ export const Dashboard: React.FC = () => {
       <Divider className="my-2" />
       {data &&
         data.map((project) => (
-          <Link to={`./${project}`} key={project}>
+          <Link to={`./projects/${project}`} key={project}>
             <Card shadow="sm" radius="md" className="my-2 cursor-pointer p-8">
               <div className="text-lg">{project}</div>
               <p className="text-gray-500">

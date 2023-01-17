@@ -24,7 +24,7 @@ const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
   const { id: projectName } = useParams<{ id: string }>();
 
-  const {data: projectFiles} = useQuery("files", () => getFiles())
+  const { data: projectFiles } = useQuery("files", () => getFiles());
 
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
@@ -64,9 +64,13 @@ const Project = () => {
   return (
     <>
       <main className="col flex h-full w-full">
-        <FileExplorerSideBar files={projectFiles || []} fileOnClick={(file) => console.log(file)} initialSelectedFile=""/>
+        <FileExplorerSideBar
+          files={projectFiles || []}
+          fileOnClick={(file) => console.log(file)}
+          initialSelectedFile=""
+        />
         <section className="grow">
-          <div className="container mx-auto p-4 max-h-screen overflow-y-scroll">
+          <div className="container mx-auto max-h-screen overflow-y-scroll p-4">
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
               Project Name
             </h2>
@@ -97,6 +101,7 @@ const Project = () => {
               <ShowPromptResult
                 file={activeResult.fileUrl}
                 promptResult={activeResult.result}
+                highlightText={activeResult.result.metadata.content}
               />
             ) : (
               <div>No results</div>
