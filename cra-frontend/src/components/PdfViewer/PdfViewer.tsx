@@ -1,81 +1,101 @@
-import { ReactJSXElement } from "@emotion/react/types/jsx-namespace";
-import React, { useCallback, useRef, useState } from "react";
-// import default react-pdf entry
-import { TextLayerItemInternal } from "react-pdf";
-import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
-// import pdf worker as a url, see `next.config.js` and `pdf-worker.js`
-import { Button, TextInput } from "@mantine/core";
+import React, { useEffect, useState } from "react";
+import {
+  VariableSizeList as List,
+  ListChildComponentProps,
+} from "react-window";
+
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
+import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
+
+type ViewPort = RenderParameters["viewport"];
+
+import {
+  PDFDocumentProxy,
+  RenderParameters,
+} from "pdfjs-dist/types/src/display/api";
+
+const width = 400;
+const height = width * 1.5;
+
+function Row({ index, style }: ListChildComponentProps) {
+  return (
+    <div style={style}>
+      <Page
+        onRenderSuccess={(page) =>
+          console.log(`Page ${page.pageNumber} rendered`)
+        }
+        pageIndex={index}
+        width={width}
+      />
+    </div>
+  );
+}
 
 interface Props {
-  file: string | File;
+  file: string;
   startPage: number;
 }
-function highlightPattern(text: string, pattern: string) {
-  console.log(text, pattern);
-  return text.replace(pattern, (value) => `<mark>${value}</mark>`);
-}
 
-function jumpToPdfBoundingBox() {
-  const element = document.querySelector(".react-pdf__Page__textContent");
-  if (!element) return;
-  const { top } = element.getBoundingClientRect();
-  window.scrollTo({ top });
-}
+export function PdfViewer({ file }: Props) {
+  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
+  const [pageViewports, setPageViewports] = useState<ViewPort[] | null>(null);
 
-export function PDFViewer({ file, startPage }: Props) {
-  const [numPages, setNumPages] = useState<number>(0);
-  const [searchText, setSearchText] = useState("");
-  const pageRefs = useRef<{ [x: number]: HTMLDivElement }>({});
+  /**
+   * React-Window cannot get item size using async getter, therefore we need to
+   * calculate them ahead of time.
+   */
+  useEffect(() => {
+    setPageViewports(null);
 
-  // useEffect(() => {
-  //   scrollTo({ top: 5000 });
-  // }, []);
+    if (!pdf) {
+      return;
+    }
 
-  function onDocumentLoadSuccess({
-    numPages: nextNumPages,
-  }: {
-    numPages: number;
-  }) {
-    setNumPages(nextNumPages);
+    (async () => {
+      const pageNumbers = Array.from(new Array(pdf.numPages)).map(
+        (_, index) => index + 1
+      );
+
+      const nextPageViewports: ViewPort[] = [];
+      for (const pageNumber of pageNumbers) {
+        const page = await pdf.getPage(pageNumber);
+        nextPageViewports.push(page.getViewport({ scale: 1 }));
+      }
+
+      setPageViewports(nextPageViewports);
+    })();
+  }, [pdf]);
+
+  function onDocumentLoadSuccess(nextPdf: PDFDocumentProxy) {
+    setPdf(nextPdf);
   }
 
-  const textRenderer = useCallback(
-    (textItem: TextLayerItemInternal) => {
-      return highlightPattern(
-        textItem.str,
-        searchText
-      ) as unknown as ReactJSXElement;
-    },
-    [searchText]
-  );
+  function getPageHeight(pageIndex: number) {
+    if (!pageViewports) {
+      throw new Error("getPageHeight() called too early");
+    }
 
-  const goToPage = (pageNumber: number) => {
-    pageRefs.current[pageNumber - 1].scrollIntoView({ behavior: "auto" });
-  };
+    const pageViewport = pageViewports[pageIndex];
+    const scale = width / pageViewport.width;
+    const actualHeight = pageViewport.height * scale;
 
-  const goToPageAndOffset = (pageNumber: number, offset: number) => {
-    const page = pageRefs.current[pageNumber - 1];
-    page.scrollTop = offset;
-    page.scrollIntoView({ behavior: "auto" });
-  };
+    return actualHeight;
+  }
 
   return (
-    <div>
-      <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-        {Array.from({ length: 5 }, (_, index) => (
-          <div key={index} ref={(el) => el && (pageRefs.current[index] = el)}>
-            <Page
-              pageNumber={Math.max(startPage - 5 + index + 1, 1+index)}
-              renderAnnotationLayer={true}
-              renderTextLayer={true}
-              customTextRenderer={textRenderer}
-            />
-            <div>Page {index + 1}</div>
-          </div>
-        ))}
-      </Document>
-    </div>
+    <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
+      {pdf && pageViewports ? (
+        <List
+          width={width}
+          height={height}
+          estimatedItemSize={height}
+          itemCount={pdf.numPages}
+          itemSize={getPageHeight}
+        >
+          {Row}
+        </List>
+      ) : null}
+    </Document>
   );
 }

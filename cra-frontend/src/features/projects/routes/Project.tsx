@@ -19,29 +19,6 @@ import {
 import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
 import { useQuery } from "react-query";
 
-// const mockFiles = [
-//   {
-//     name: "file1",
-//     size: "200mb",
-//     type: "pdf",
-//     url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-//     pages: 10,
-//   },
-//   {
-//     name: "file2",
-//     size: "200mb",
-//     type: "pdf",
-//     url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-//     pages: 10,
-//   },
-//   {
-//     name: "file3",
-//     size: "200mb",
-//     type: "pdf",
-//     url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-//     pages: 10,
-//   },
-// ];
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
@@ -89,7 +66,7 @@ const Project = () => {
       <main className="col flex h-full w-full">
         <FileExplorerSideBar files={projectFiles || []} fileOnClick={(file) => console.log(file)} initialSelectedFile=""/>
         <section className="grow">
-          <div className="container mx-auto p-4">
+          <div className="container mx-auto p-4 max-h-screen overflow-y-scroll">
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
               Project Name
             </h2>
