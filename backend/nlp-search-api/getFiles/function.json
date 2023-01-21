@@ -1,7 +1,7 @@
 {
   "bindings": [
     {
-      "authLevel": "function",
+      "authLevel": "anonymous",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
@@ -9,7 +9,7 @@
         "get",
         "post"
       ],
-      "route": "{project}"
+      "route": "projects/{project}"
     },
     {
       "type": "http",

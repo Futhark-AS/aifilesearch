@@ -14,7 +14,8 @@ module.exports = async function (context, req) {
     let body = {};
     document.projects.forEach((p) => {
         if (p.namespace.split("/")[1] === project) {
-            body = p.files;
+            body["files"] = p.files;
+            return
         }
     }); 
 
