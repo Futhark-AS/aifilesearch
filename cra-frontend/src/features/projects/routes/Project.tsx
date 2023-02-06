@@ -1,14 +1,14 @@
 import { useAppSelector } from "@/app/hooks";
+import { PdfViewer } from "@/components/PdfViewer";
 import { selectUser } from "@/features/auth/authSlice";
 import { FileValidated } from "@dropzone-ui/react";
 import { Button, Card, Loader, TextInput } from "@mantine/core";
 import React, { useState } from "react";
+import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import { FileDropzonePassive } from "../components/FileDropzonePassive";
-import {
-  ShowPromptResult,
-  extractFileName,
-} from "../components/ShowPromptResult";
+import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
+import { extractFileName } from "../components/ShowPromptResult";
 import { handleFileUpload } from "../projectAPI";
 import {
   PromptMatch,
@@ -16,23 +16,26 @@ import {
   getFiles,
   searchProjectWithPromptReq,
 } from "../requests";
-import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
-import { useQuery } from "react-query";
-
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
-  const { id: projectName } = useParams<{ id: string }>();
 
-  const { data: projectFiles } = useQuery("files", () => getFiles());
+  const { id: projectName } = useParams<{ id: string }>();
+  const { data: projectFiles, refetch: refetchFiles } = useQuery("files", () =>
+    getFiles()
+  );
 
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
 
-  const [files, setFiles] = useState<FileValidated[]>([]);
+  const [filesUploading, setFilesUploading] = useState(false);
+
+  const [filesUpload, setFilesUpload] = useState<FileValidated[]>([]);
+
+  // The currently showing result in the pdf viewer
   const [activeResult, setActiveResult] = useState<{
     fileUrl: string;
-    result: PromptMatch;
+    fileSearchResult: PromptMatch; // highlight info
   } | null>(null);
 
   const [resultsLoading, setResultsLoading] = useState(false);
@@ -42,23 +45,51 @@ const Project = () => {
 
     setActiveResult({
       fileUrl,
-      result,
+      fileSearchResult: result,
     });
   };
 
   const onSearch = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("hello");
     setResultsLoading(true);
+
+    if (!projectName) {
+      console.error("Illegal component state: projectName is undefined");
+      // TODO: show error to user
+      return setResultsLoading(false);
+    }
 
     const res = await searchProjectWithPromptReq(
       searchValue,
-      projectName!,
+      projectName,
       user.uid
     );
 
     setResultsLoading(false);
     setSearchResults(res);
+  };
+
+  const setCompleted = () => {
+    setFilesUploading(false);
+    refetchFiles();
+  };
+
+  const handleFileUploadOnClick = async () => {
+    setFilesUploading(true);
+
+    if (!projectName) {
+      console.error("Illegal component state: projectName is undefined");
+      // TODO: show error to user
+      return setResultsLoading(false);
+    }
+
+    handleFileUpload(
+      filesUpload.map((file) => file.file),
+      user.uid,
+      projectName,
+      setCompleted
+    );
+    setFilesUpload([]);
   };
 
   return (
@@ -68,23 +99,27 @@ const Project = () => {
           files={projectFiles || []}
           fileOnClick={(file) => console.log(file)}
           initialSelectedFile=""
+          loadingFiles={
+            filesUploading ? filesUpload.map((file) => file.file.name) : []
+          }
         />
         <section className="grow">
+          {filesUploading && (
+            <div className="flex w-full items-center justify-center bg-slate-300 p-4">
+              <Loader size="md" color="blue" className="mr-2 inline" />
+              <span>Uploading files...</span>
+            </div>
+          )}
           <div className="container mx-auto max-h-screen overflow-y-scroll p-4">
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
               Project Name
             </h2>
             <FileDropzonePassive
-              files={files}
-              setFiles={setFiles}
-              handleFileUpload={() =>
-                handleFileUpload(
-                  files.map((file) => file.file),
-                  user.uid,
-                  projectName!
-                )
-              }
+              files={!filesUploading ? filesUpload : []}
+              setFiles={setFilesUpload}
+              handleFileUpload={handleFileUploadOnClick}
             />
+
             <form onSubmit={onSearch} className="mb-4">
               <TextInput
                 label="Search"
@@ -98,10 +133,10 @@ const Project = () => {
               />
             </form>
             {activeResult ? (
-              <ShowPromptResult
+              <PdfViewer
                 file={activeResult.fileUrl}
-                promptResult={activeResult.result}
-                highlightText={activeResult.result.metadata.content}
+                promptResult={activeResult.fileSearchResult}
+                key={activeResult.fileSearchResult.id}
               />
             ) : (
               <div>No results</div>

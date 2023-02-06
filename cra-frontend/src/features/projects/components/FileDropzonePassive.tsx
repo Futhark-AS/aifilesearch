@@ -6,13 +6,13 @@ import { Button, Modal } from "@mantine/core";
 interface Props {
   setFiles: (files: FileValidated[]) => void;
   files: FileValidated[];
-  handleFileUpload: () => void
+  handleFileUpload: () => void;
 }
 
 export function FileDropzonePassive({
   setFiles,
   files,
-  handleFileUpload
+  handleFileUpload,
 }: Props) {
   const updateFiles = (incomingFile: FileValidated[]) => {
     setFiles(incomingFile);
@@ -40,8 +40,16 @@ export function FileDropzonePassive({
       opened={opened}
       title={<div className="text-lg font-semibold">Drag in files</div>}
     >
-      <FileDropzone setFiles={updateFiles} files={files} hiddenWhenInactive />
-      <Button variant="outline" onClick={handleFileUpload}>Upload</Button>
+      <FileDropzone setFiles={updateFiles} files={files} />
+      <Button
+        variant="outline"
+        onClick={() => {
+          setOpened(false);
+          handleFileUpload();
+        }}
+      >
+        Upload
+      </Button>
     </Modal>
   );
 }

@@ -1,24 +1,23 @@
 import { useUser } from "@/app/hooks";
 import { ContentLayout } from "@/components/Layout";
+import { FileDropzone } from "@/features/projects/components/FileDropzone";
 import { getProjects } from "@/features/projects/requests";
-import { Card, Divider } from "@mantine/core";
-import React, { useState } from "react";
+import { FileValidated } from "@dropzone-ui/react";
+import { Button, Card, Divider, Select } from "@mantine/core";
+import React, { useRef, useState } from "react";
 import { useQuery } from "react-query";
 import { Link } from "../../../components/Link/Link";
-import { FileDropzone } from "@/features/projects/components/FileDropzone";
-import { FileValidated } from "@dropzone-ui/react";
+import { handleFileUpload } from "@/features/projects/projectAPI";
 
 export const Dashboard: React.FC = () => {
-  // const isAuthenticated = useIsAuthenticated();
   const user = useUser();
   const [files, setFiles] = useState<FileValidated[]>([]);
+  const [uploadProject, setUploadProject] = useState<string | null>(null);
 
   const { data } = useQuery({
     queryKey: ["projects", user.uid],
     queryFn: () => getProjects(user.uid),
   });
-
-  // if (!isAuthenticated) return <div>You are not authenticated</div>;
 
   return (
     <ContentLayout title="">
@@ -27,7 +26,38 @@ export const Dashboard: React.FC = () => {
       </h1>
       <h3 className="mt-8 text-lg font-semibold">Upload files</h3>
       <Divider className="my-2" />
-      <FileDropzone setFiles={setFiles} files={files}/>
+      <FileDropzone setFiles={setFiles} files={files} />
+      {files.length > 0 && (
+        <div>
+          <Select
+            label="Pick a project"
+            placeholder="Project"
+            value={uploadProject}
+            onChange={(value) => setUploadProject(value as string)}
+            data={
+              data?.map((project) => ({ label: project, value: project })) || []
+            }
+            className="mb-2"
+          />
+          <Button
+            variant="outline"
+            disabled={uploadProject === null}
+            onClick={() => {
+              handleFileUpload(
+                files.map((file) => file.file),
+                user.uid,
+                uploadProject!,
+                () => {
+                  null;
+                }
+              );
+              setFiles([]);
+            }}
+          >
+            Upload!
+          </Button>
+        </div>
+      )}
       <h3 className="mt-8 text-lg font-semibold">Recent Projects</h3>
       <Divider className="my-2" />
       {data &&

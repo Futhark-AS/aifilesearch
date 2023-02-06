@@ -10,7 +10,7 @@ import { hydrate } from "./features/auth/authSlice";
 import { router } from "./routes";
 import storage from "./utils/storage";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { initMocks } from "./test/server";
+import { initMocks } from "./testing/server";
 
 const container = document.getElementById("root");
 
