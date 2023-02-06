@@ -104,12 +104,6 @@ const Project = () => {
           }
         />
         <section className="grow">
-          {filesUploading && (
-            <div className="flex w-full items-center justify-center bg-slate-300 p-4">
-              <Loader size="md" color="blue" className="mr-2 inline" />
-              <span>Uploading files...</span>
-            </div>
-          )}
           <div className="container mx-auto max-h-screen overflow-y-scroll p-4">
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
               Project Name
