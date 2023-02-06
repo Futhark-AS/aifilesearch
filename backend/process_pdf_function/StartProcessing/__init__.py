@@ -33,7 +33,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
 
         #user_id = "sid:61fdee33eb5fc49c1e82df86d649c8cd"
         req_body = context.get_input()
-        user_id = req_body.get('user_id') # TODO: get this from auth middleware header
+        user_id = req_body.get('user_id') 
         blob_names = req_body.get('file_names')
         namespace = req_body.get('namespace')
         #cosmos_result_id = req_body.get("cosmos_result_id")
@@ -84,6 +84,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
                 "blob_name": blob_name,
                 "index_name": index_name,
                 "namespace": namespace,
+                "user_id": user_id
             }
             tasks.append(context.call_activity_with_retry("SingleProcess", retry_options, settings))
 

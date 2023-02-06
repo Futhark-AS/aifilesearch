@@ -5,7 +5,7 @@
 # - create a Durable HTTP starter function
 # - add azure-functions-durable to requirements.txt
 # - run pip install -r requirements.txt
-
+from azure.cosmos import CosmosClient
 import logging
 import json
 import io
@@ -241,7 +241,15 @@ def embed_paragraphs(paragraphs, namespace, index_name):
     return price
 
 
-# Retrieve the connection string for use with the application. The storage
+#----------- COsmos DB ----------
+cosmos_endpoint = "https://nlpcosmos.documents.azure.com:443/"
+cosmos_key = "jCgpIdmAvXDnfejPm8s9V4APkk2lnDDErFUVhVXVabfbXA15efbzeNzYwmIK8B2KyLyQ6fBuRhMKACDbqEB3ew=="
+cosmos_client = CosmosClient(url=cosmos_endpoint, credential=cosmos_key)
+logging.info("Cosmos DB client created")
+cosmos_database = cosmos_client.get_database_client("nlp-search") 
+cosmos_container = cosmos_database.get_container_client("users")
+
+# Retrieve the connection string for use with the application. The blob storage
 connect_str = "DefaultEndpointsProtocol=https;AccountName=nlpsearchapi;AccountKey=E3hMExwQh1j50yYeW/KUA5tPkZLf0VwEu3/jlz7NRGgCmElfjpiBbnTRN5LxrN77warRvknuP9bM+AStWj3EGA==;EndpointSuffix=core.windows.net"
 
 def main(settings) -> str:
@@ -257,6 +265,8 @@ def main(settings) -> str:
     namespace = settings["namespace"]
     # get index name
     index_name = settings["index_name"]
+    #get user id
+    user_id = settings["user_id"]
 
     
 
@@ -300,6 +310,25 @@ def main(settings) -> str:
 
     logging.info(f"Price for blob {blob_name}: ${price}")
 
-    #set_file_done(cosmos_result_id, user_id, blob_name, price)
+    # update projects total cost and files in prpoject in cosmos db
+    user = cosmos_container.read_item(item=user_id, partition_key=user_id)
+    projects = user["projects"]
+    logging.info(projects)
+    for project in projects:
+        if project["namespace"] == namespace:
+            # update cost
+            if "cost" in project:
+                project["cost"] += price
+            else:
+                project["cost"] = price
+
+            # update files
+            if "files" in project:
+                project["files"].append(blob_name)
+            else:
+                project["files"] = [blob_name]
+
+    cosmos_container.upsert_item(user)
+
     return price
 
