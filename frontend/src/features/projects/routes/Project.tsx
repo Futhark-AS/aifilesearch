@@ -1,8 +1,11 @@
-import { useAppSelector } from "@/redux/hooks";
+import { Button } from "@/components/Button";
 import { PdfViewer } from "@/components/PdfViewer";
+import { Spinner } from "@/components/Spinner";
 import { selectUser } from "@/features/auth/authSlice";
+import { useAppSelector } from "@/redux/hooks";
 import { FileValidated } from "@dropzone-ui/react";
-import { Card, Loader, TextInput } from "@mantine/core";
+import { Card, TextInput } from "@mantine/core";
+import { showNotification } from '@mantine/notifications';
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
@@ -10,14 +13,12 @@ import { FileDropzonePassive } from "../components/FileDropzonePassive";
 import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
 import { extractFileName } from "../components/ShowPromptResult";
 import { handleFileUpload } from "../projectAPI";
-import { showNotification } from '@mantine/notifications';
 import {
   PromptMatch,
   getBlobUri,
   getFiles,
   searchProjectWithPromptReq,
 } from "../requests";
-import { Button } from "@/components/Button";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
@@ -128,7 +129,7 @@ const Project = () => {
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 rightSection={
-                  resultsLoading && <Loader size="sm" color="blue" />
+                  resultsLoading && <Spinner size="sm" />
                 }
               />
             </form>

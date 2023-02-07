@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDisclosure } from "../../../hooks/useDisclosure";
 import { ArrowRightCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
-import { Loader } from "@mantine/core";
+import { Spinner } from "@/components/Spinner";
 
 type FileT = {
   name: string;
@@ -41,7 +41,7 @@ function File({
       >
         <div className="mx-4">
           <span>{file.name}</span>
-          {loading && <Loader size="xs" className=" ml-2 inline" />}
+          {loading && <Spinner size="sm" className=" ml-2 inline" />}
         </div>
       </button>
 
@@ -59,7 +59,6 @@ function File({
 export function FileExplorerSideBar({
   fileOnClick,
   files,
-  initialSelectedFile,
   loadingFiles,
 }: Props) {
   const [selectedFile, setSelectedFile] = useState<number | null>(null);
