@@ -28,7 +28,7 @@ export const Dashboard: React.FC = () => {
       <h3 className="mt-8 text-lg font-semibold">Upload files</h3>
       <Divider className="my-2" />
       <FileDropzone setFiles={setFiles} files={files} />
-      {files.length == 0 && (
+      {files.length > 0 && (
         <div>
           <Select
             label="Pick a project"
@@ -66,6 +66,7 @@ export const Dashboard: React.FC = () => {
           <Link to={`./projects/${project}`} key={project}>
             <Card shadow="sm" radius="md" className="my-2 cursor-pointer p-8">
               <div className="text-lg">{project}</div>
+              {/* TODO: let user give description to project */}
               <p className="text-gray-500">
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio
                 beatae illum magni aperiam eos consequuntur corporis deleniti

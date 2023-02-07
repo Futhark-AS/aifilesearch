@@ -1,7 +1,6 @@
 import React from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import clsx from 'clsx';
-import 'intersection-observer';
 import { XCircleIcon } from '@heroicons/react/24/outline';
 
 const sizes = {

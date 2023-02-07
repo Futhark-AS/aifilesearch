@@ -1,22 +1,13 @@
-.app-container {
-  min-height: 100vh;
-  display: flex;
-}
-
 .app-sidebar {
+  height: 100%;
   flex-grow: 0;
   flex-shrink: 0;
   max-width: 300px;
   display: flex;
   flex-direction: row;
-  background: #ffffff;
-  box-shadow: -8px 2px 22px -7px rgba(0, 0, 0, 0.25);
+  /* box-shadow: -8px 2px 22px -7px rgba(0, 0, 0, 0.25); */
   border-radius: 10px 0px 0px 10px;
   z-index: 2;
-}
-
-.app-sidebar .app-sidebar-content {
-  flex: 1;
 }
 
 .app-sidebar .app-sidebar-resizer {
@@ -26,9 +17,4 @@
   justify-self: flex-end;
   cursor: col-resize;
   resize: horizontal;
-}
-
-.app-sidebar .app-sidebar-resizer:hover {
-  width: 3px;
-  background: #c1c3c5b4;
 }
