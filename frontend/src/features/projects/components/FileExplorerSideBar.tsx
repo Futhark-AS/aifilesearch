@@ -33,8 +33,6 @@ function File({
     <div>
       <button
         onClick={() => {
-          // fileOnClick(file.name);
-          // setSelectedFile(file.name);
           fileOnClick(file);
         }}
         className={`w-full border-t-2 border-l-neutral-500 py-4 text-left ${

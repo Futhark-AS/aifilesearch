@@ -1,6 +1,6 @@
 import React from "react";
 import { Provider } from "react-redux";
-import { store } from "./app/store";
+import { store } from "./redux/store";
 import "./index.css";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -11,6 +11,7 @@ import { router } from "./routes";
 import storage from "./utils/storage";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { initMocks } from "./testing/server";
+import { NotificationsProvider } from "@mantine/notifications";
 
 const container = document.getElementById("root");
 
@@ -56,7 +57,9 @@ root.render(
             "1060860818910-of2mib6de089jn475e0ivlf80r849cm5.apps.googleusercontent.com"
           }
         >
-          <RouterProvider router={router} />
+          <NotificationsProvider>
+            <RouterProvider router={router} />
+          </NotificationsProvider>
         </GoogleOAuthProvider>
       </QueryClientProvider>
     </Provider>

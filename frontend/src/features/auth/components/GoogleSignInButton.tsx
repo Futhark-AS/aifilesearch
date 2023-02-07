@@ -1,7 +1,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../../../app/hooks";
+import { useAppDispatch } from "../../../redux/hooks";
 import { login } from "../authSlice";
 import { parseJwt } from "../parseJwt";
 import { z } from "zod";

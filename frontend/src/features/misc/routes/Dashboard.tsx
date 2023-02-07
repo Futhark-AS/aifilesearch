@@ -1,13 +1,14 @@
-import { useUser } from "@/app/hooks";
+import { useUser } from "@/redux/hooks";
 import { ContentLayout } from "@/components/Layout";
 import { FileDropzone } from "@/features/projects/components/FileDropzone";
+import { handleFileUpload } from "@/features/projects/projectAPI";
 import { getProjects } from "@/features/projects/requests";
 import { FileValidated } from "@dropzone-ui/react";
-import { Button, Card, Divider, Select } from "@mantine/core";
-import React, { useRef, useState } from "react";
+import { Card, Divider, Select } from "@mantine/core";
+import React, { useState } from "react";
 import { useQuery } from "react-query";
-import { Link } from "../../../components/Link/Link";
-import { handleFileUpload } from "@/features/projects/projectAPI";
+import { Link } from "@/components/Link";
+import { Button } from "@/components/Button";
 
 export const Dashboard: React.FC = () => {
   const user = useUser();
@@ -27,7 +28,7 @@ export const Dashboard: React.FC = () => {
       <h3 className="mt-8 text-lg font-semibold">Upload files</h3>
       <Divider className="my-2" />
       <FileDropzone setFiles={setFiles} files={files} />
-      {files.length > 0 && (
+      {files.length == 0 && (
         <div>
           <Select
             label="Pick a project"
@@ -40,7 +41,7 @@ export const Dashboard: React.FC = () => {
             className="mb-2"
           />
           <Button
-            variant="outline"
+            variant="primary"
             disabled={uploadProject === null}
             onClick={() => {
               handleFileUpload(

@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { z } from "zod";
-import { RootState } from "../../app/store";
+import { RootState } from "../../redux/store";
 
 export const AuthSchema = z.object({
   email: z.string(),

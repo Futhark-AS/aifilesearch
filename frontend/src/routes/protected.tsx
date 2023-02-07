@@ -1,4 +1,4 @@
-import { useIsAuthenticated } from "@/app/hooks";
+import { useIsAuthenticated } from "@/redux/hooks";
 import { MainLayout } from "@/components/Layout";
 import { Dashboard } from "@/features/misc";
 import { ProjectRoutes } from "@/features/projects/routes";

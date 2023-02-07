@@ -1,8 +1,8 @@
-import { useAppSelector } from "@/app/hooks";
+import { useAppSelector } from "@/redux/hooks";
 import { PdfViewer } from "@/components/PdfViewer";
 import { selectUser } from "@/features/auth/authSlice";
 import { FileValidated } from "@dropzone-ui/react";
-import { Button, Card, Loader, TextInput } from "@mantine/core";
+import { Card, Loader, TextInput } from "@mantine/core";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
@@ -10,12 +10,14 @@ import { FileDropzonePassive } from "../components/FileDropzonePassive";
 import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
 import { extractFileName } from "../components/ShowPromptResult";
 import { handleFileUpload } from "../projectAPI";
+import { showNotification } from '@mantine/notifications';
 import {
   PromptMatch,
   getBlobUri,
   getFiles,
   searchProjectWithPromptReq,
 } from "../requests";
+import { Button } from "@/components/Button";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
@@ -55,7 +57,11 @@ const Project = () => {
 
     if (!projectName) {
       console.error("Illegal component state: projectName is undefined");
-      // TODO: show error to user
+      showNotification({
+        title: 'Error',
+        message: 'Unfortunately, an error occurred. Please try again later.',
+        color: 'red',
+      })
       return setResultsLoading(false);
     }
 
@@ -148,8 +154,7 @@ const Project = () => {
               <p className="text-sm">{result.metadata.content}</p>
               <i className="mb-2 block">Page: {result.metadata.page_number}</i>
               <Button
-                variant="outline"
-                size="xs"
+                size="sm"
                 onClick={() => showResultInPdf(result)}
               >
                 Show in PDF viewer

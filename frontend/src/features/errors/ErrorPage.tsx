@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { useNavigate, useRouteError } from "react-router-dom";
 import { z } from "zod";
-import { Button } from '../../components/Button/Button';
 import { ShowError } from "./ShowError";
 
 const errorSchema = z.object({

@@ -1,8 +1,9 @@
-import { useIsAuthenticated } from "@/app/hooks";
-import { Button, Divider } from "@mantine/core";
+import { useIsAuthenticated } from "@/redux/hooks";
+import { Divider } from "@mantine/core";
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PlainNavbar } from "../components";
+import { Button } from "@/components/Button";
 
 export const Landing = () => {
   const isAuthenticated = useIsAuthenticated();
@@ -31,7 +32,7 @@ export const Landing = () => {
       </p>
       <Divider className="my-5" />
       <Link to={"/auth"}>
-        <Button variant="outline">Get started!</Button>
+        <Button>Get started!</Button>
       </Link>
     </main>
   );

@@ -10,7 +10,7 @@ import {
 import clsx from "clsx";
 import { Link, NavLink } from "react-router-dom";
 
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/features/auth/authSlice";
 import { Logo } from "../Logo";
 

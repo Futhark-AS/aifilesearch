@@ -1,6 +1,6 @@
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch, store } from "./store";
 import { selectIsAuthenticated, selectUser } from "../features/auth/authSlice";
+import { AppDispatch, RootState } from "./store";
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = () => useDispatch<AppDispatch>();

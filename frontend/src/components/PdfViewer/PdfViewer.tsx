@@ -12,6 +12,7 @@ import {
   PDFDocumentProxy,
   RenderParameters,
 } from "pdfjs-dist/types/src/display/api";
+import { showNotification } from "@mantine/notifications";
 
 const width = 400;
 const height = width * 1.5;
@@ -33,57 +34,20 @@ type BoundingBox = {
 };
 
 function highlightBoundingBox(bb: BoundingBox, ctx: CanvasRenderingContext2D) {
-  const { x1, x2, x3, x4, y1, y2, y3, y4 } = bb;
-  console.log("hello");
-  console.log("drawing: ", x1, y1, x2, y2);
-  console.log(bb);
+  const { x1, x2, y1, y3 } = bb;
 
-  const inchToPixel = 96
+  const inchToPixel = 96;
 
-  const x = x1 * inchToPixel
-  const y = y1 * inchToPixel
-  const width = (x2 - x1) * inchToPixel
-  const height = (y3 - y1) * inchToPixel
-  console.log(x, y, width, height)
+  const x = x1 * inchToPixel;
+  const y = y1 * inchToPixel;
+  const width = (x2 - x1) * inchToPixel;
+  const height = (y3 - y1) * inchToPixel;
   ctx.save();
   ctx.globalAlpha = 0.2;
   ctx.fillStyle = "yellow";
   ctx.fillRect(x, y, width, height);
   ctx.restore();
 }
-
-function test() {
-  console.log("testing testing");
-}
-
-// function highlightPattern(pdfLine: string, text: string) {
-//   const textToHighlight = pdfLine.trim();
-//   // 1. If a line is contained in the text, highlight the whole line
-//   if (text.includes(textToHighlight)) {
-//     return `<mark>${textToHighlight}</mark>`;
-//   }
-
-//   // 2. If some part of the pdfLine is contained in the text, highlight it as long as it as long as:
-//   // - it is at least one whole word
-
-//   // - it is the start or the end of the text
-//   let highlightedLine = textToHighlight;
-//   let match;
-//   const pattern = new RegExp(`(\\b${text}\\b)`, "gi");
-//   while ((match = pattern.exec(textToHighlight)) !== null) {
-//     // Check if the match starts at the beginning of the line or ends at the end of the line
-//     if (
-//       match.index === 0 ||
-//       match.index + match[0].length === textToHighlight.length
-//     ) {
-//       highlightedLine = highlightedLine.replace(
-//         match[0],
-//         `<mark>${match[0]}</mark>`
-//       );
-//     }
-//   }
-//   return highlightedLine;
-// }
 
 export function PdfViewer({ file, promptResult }: Props) {
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
@@ -93,15 +57,6 @@ export function PdfViewer({ file, promptResult }: Props) {
   const [hasScrolled, setHasScrolled] = useState(false);
 
   const canvasElementsRef = useRef<(HTMLCanvasElement | null)[]>([]);
-
-  // const textRenderer = useCallback(
-  //   (textItem: TextLayerItemInternal) =>
-  //     highlightPattern(
-  //       textItem.str,
-  //       selectText || ""
-  //     ) as unknown as JSX.Element,
-  //   [selectText]
-  // );
 
   useEffect(() => {
     if (listRef.current && !hasScrolled) {
@@ -155,22 +110,6 @@ export function PdfViewer({ file, promptResult }: Props) {
     return actualHeight;
   }
 
-  // canvasElementsRef.current.forEach((el, i) => {
-  //   if (el) {
-  //     const ctx = el.getContext("2d");
-  //     if (ctx) {
-  //       console.log(ctx);
-  //       ctx.fillStyle = "red";
-  //       ctx?.fillRect(20, 20, 150, 100);
-  //       ctx?.arc(100, 75, 50, 0, 2 * Math.PI);
-  //     } else {
-  //       console.log("no ctx");
-  //     }
-  //   } else {
-  //     console.log("no canvas", i);
-  //   }
-  // });
-
   return (
     <div>
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
@@ -198,25 +137,25 @@ export function PdfViewer({ file, promptResult }: Props) {
                       const ctx = canvas?.getContext("2d");
                       const boundingBox = promptResult.metadata.bounding_box[0];
 
-
-                      if(ctx) {
-
-                      highlightBoundingBox(
-                        {
-                          x1: boundingBox[0].x,
-                          y1: boundingBox[0].y,
-                          x2: boundingBox[1].x,
-                          y2: boundingBox[1].y,
-                          x3: boundingBox[2].x,
-                          y3: boundingBox[2].y,
-                          x4: boundingBox[3].x,
-                          y4: boundingBox[3].y,
-                        },
-                        ctx
-                      );
+                      if (ctx) {
+                        highlightBoundingBox(
+                          {
+                            x1: boundingBox[0].x,
+                            y1: boundingBox[0].y,
+                            x2: boundingBox[1].x,
+                            y2: boundingBox[1].y,
+                            x3: boundingBox[2].x,
+                            y3: boundingBox[2].y,
+                            x4: boundingBox[3].x,
+                            y4: boundingBox[3].y,
+                          },
+                          ctx
+                        );
                       } else {
-                        // TODO: add notification for not being able to highlight match
-                        console.error("No context found for canvas")
+                        showNotification({
+                          message: "Could not highlight text",
+                          color: "red",
+                        });
                       }
                     }
                   }}

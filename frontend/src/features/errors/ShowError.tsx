@@ -1,7 +1,7 @@
 import React from "react";
 import { PageError } from "./ErrorPage";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@mantine/core";
+import { Button } from "@/components/Button"
 
 interface Props {
   error: PageError;
@@ -25,7 +25,6 @@ export const ShowError = ({ error }: Props) => {
         <Button
           className="mx-auto rounded px-8 py-3 font-semibold"
           onClick={() => navigate(-1)}
-          variant="outline"
         >
           Go back
         </Button>

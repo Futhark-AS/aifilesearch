@@ -1,7 +1,8 @@
 import { FileValidated } from "@dropzone-ui/react";
 import React, { useEffect, useState } from "react";
 import { FileDropzone } from "./FileDropzone";
-import { Button, Modal } from "@mantine/core";
+import { Modal } from "@mantine/core";
+import { Button } from "@/components/Button";
 
 interface Props {
   setFiles: (files: FileValidated[]) => void;
@@ -42,7 +43,6 @@ export function FileDropzonePassive({
     >
       <FileDropzone setFiles={updateFiles} files={files} />
       <Button
-        variant="outline"
         onClick={() => {
           setOpened(false);
           handleFileUpload();

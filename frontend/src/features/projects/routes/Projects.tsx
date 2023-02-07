@@ -1,4 +1,4 @@
-import { useAppSelector } from "@/app/hooks";
+import { useAppSelector } from "@/redux/hooks";
 import { selectUser } from "@/features/auth/authSlice";
 import { Card } from "@mantine/core";
 import React from "react";
