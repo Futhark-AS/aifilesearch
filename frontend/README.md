@@ -1,38 +1,57 @@
-# create-svelte
+# React, Typescript, Tailwindcss, Redux Toolkit, eslint with Vite
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This is a [React](https://reactjs.org) + [TypeScript](https://www.typescriptlang.org/) + [Tailwind](https://tailwindcss.com/) + [RTK](https://redux-toolkit.js.org/) + [eslint](https://eslint.org/) boilerplate built with [Vite](https://vitejs.dev).
 
-## Creating a project
+## What's inside?
 
-If you're seeing this, you've probably already done this step. Congrats!
+-   [ReactJS](https://reactjs.org)
+-   [Vite](https://vitejs.dev)
+-   [TypeScript](https://www.typescriptlang.org)
+-   [Tailwind](https://tailwindcss.com/)
+-   [RTK](https://redux-toolkit.js.org/)
+-   [ESLint](https://eslint.org)
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## Getting started
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+1. Clone the repository.
 
-## Developing
+    ```bash
+    git clone https://github.com/IsaiaPhiliph/vite-reactts-tailwind-rtk-eslint.git
+    ```
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+2. Access the project.
 
-```bash
-npm run dev
+    ```bash
+    cd vite-reactts-tailwind-rtk-eslint
+    ```
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+3. Make it your own repository
 
-## Building
+    ```bash
+    rm -rf .git
+    git init
+    ```
 
-To create a production version of your app:
+4. Install dependencies.
 
-```bash
-npm run build
-```
+    ```bash
+    npm i
+    ```
 
-You can preview the production build with `npm run preview`.
+5. Start the development server.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+    ```bash
+    npm run dev
+    ```
+
+6. Build for production.
+
+    ```bash
+    npm run build
+    ```
+
+7. Test your production build.
+
+    ```bash
+    npm run serve
+    ```
