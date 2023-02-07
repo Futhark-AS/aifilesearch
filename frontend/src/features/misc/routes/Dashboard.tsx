@@ -1,6 +1,5 @@
 import { useUser } from "@/redux/hooks";
 import { ContentLayout } from "@/components/Layout";
-import { FileDropzone } from "@/features/projects/components/FileDropzone";
 import { handleFileUpload } from "@/features/projects/projectAPI";
 import { getProjects } from "@/features/projects/requests";
 import { FileValidated } from "@dropzone-ui/react";
@@ -9,6 +8,7 @@ import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { Link } from "@/components/Link";
 import { Button } from "@/components/Button";
+import { FileDropzone } from "@/components/FileDropzone";
 
 export const Dashboard: React.FC = () => {
   const user = useUser();

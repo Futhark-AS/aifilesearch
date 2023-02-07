@@ -5,13 +5,11 @@ import { selectUser } from "@/features/auth/authSlice";
 import { useAppSelector } from "@/redux/hooks";
 import { FileValidated } from "@dropzone-ui/react";
 import { Card, TextInput } from "@mantine/core";
-import { showNotification } from '@mantine/notifications';
+import { showNotification } from "@mantine/notifications";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
-import { FileDropzonePassive } from "../components/FileDropzonePassive";
 import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
-import { extractFileName } from "../components/ShowPromptResult";
 import { handleFileUpload } from "../projectAPI";
 import {
   PromptMatch,
@@ -19,6 +17,9 @@ import {
   getFiles,
   searchProjectWithPromptReq,
 } from "../requests";
+import { FileDropzonePassive } from "@/components/FileDropzone";
+import { extractFileName } from "../utils";
+import { PromptResultSideBar } from "../components";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
@@ -59,10 +60,10 @@ const Project = () => {
     if (!projectName) {
       console.error("Illegal component state: projectName is undefined");
       showNotification({
-        title: 'Error',
-        message: 'Unfortunately, an error occurred. Please try again later.',
-        color: 'red',
-      })
+        title: "Error",
+        message: "Unfortunately, an error occurred. Please try again later.",
+        color: "red",
+      });
       return setResultsLoading(false);
     }
 
@@ -128,9 +129,7 @@ const Project = () => {
                 className="input input-bordered mt-5 w-full"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                rightSection={
-                  resultsLoading && <Spinner size="sm" />
-                }
+                rightSection={resultsLoading && <Spinner size="sm" />}
               />
             </form>
             {activeResult ? (
@@ -145,24 +144,10 @@ const Project = () => {
           </div>
         </section>
         {/* resizeable sidebar: https://codesandbox.io/s/react-resizable-sidebar-kz9de?file=/src/App.css:0-38 */}
-        <section className="w-64 overflow-auto bg-slate-600 px-4 pt-4">
-          <h3 className="text-center text-lg text-white">Results</h3>
-          {searchResults.map((result) => (
-            <Card key={result.id} className="mb-2 w-full">
-              <h4 className="text-md">
-                {extractFileName(result.metadata.file_name)}
-              </h4>
-              <p className="text-sm">{result.metadata.content}</p>
-              <i className="mb-2 block">Page: {result.metadata.page_number}</i>
-              <Button
-                size="sm"
-                onClick={() => showResultInPdf(result)}
-              >
-                Show in PDF viewer
-              </Button>
-            </Card>
-          ))}
-        </section>
+        <PromptResultSideBar
+          items={searchResults}
+          itemOnClick={showResultInPdf}
+        />
       </main>
     </>
   );
