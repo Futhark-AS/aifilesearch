@@ -1,41 +1,50 @@
-import React from "react";
+import { useAppSelector } from "@/app/hooks";
+import { selectUser } from "@/features/auth/authSlice";
 import { Card } from "@mantine/core";
+import React from "react";
+import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
+import { getProjects } from "../requests";
 
-//TODO: get projects from database
-const projects = [
-  {
-    id: 1,
-    name: "Project 1",
-  },
-  {
-    id: 2,
-    name: "Project 2",
-  },
-  {
-    id: 3,
-    name: "Project 3",
-  },
-];
+export default function Projects() {
+  const { uid } = useAppSelector((state) => selectUser(state));
 
-export default function Page() {
+  const { data, isLoading, error, isError } = useQuery({
+    queryKey: ["projects", uid],
+    queryFn: () => getProjects(uid),
+  });
+
   return (
     <div>
-      <main className="mx-auto md:mx-0 px-4">
-        <h1 className="text-3xl font-semibold mt-8">Your projects</h1>
-        <ul className="auto-responsive-lg grid mt-8">
-          {projects.map((project) => (
-            <Link to={`./${project.id}`} key={project.id}>
-              <Card shadow="sm" radius="md" className="cursor-pointer p-8 my-2">
-                <div className="text-lg">{project.name}</div>
-                <p className="text-gray-500">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio
-                  beatae illum magni aperiam eos consequuntur corporis deleniti
-                  nesciunt, unde impedit?
-                </p>
-              </Card>
-            </Link>
-          ))}
+      <main className="mx-auto px-4 md:mx-0">
+        <h1 className="mt-8 text-3xl font-semibold">Your projects</h1>
+        <ul className="auto-responsive-lg mt-8 grid">
+          {isError ? (
+            <div className="text-red-500">
+              There was an error loading your projects
+              <i>{error instanceof Error && error.message}</i>
+            </div>
+          ) : isLoading ? (
+            <div>Loading...</div>
+          ) : (
+            data &&
+            data.map((project) => (
+              <Link to={`./${project}`} key={project}>
+                <Card
+                  shadow="sm"
+                  radius="md"
+                  className="my-2 cursor-pointer p-8"
+                >
+                  <div className="text-lg">{project}</div>
+                  <p className="text-gray-500">
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                    Optio beatae illum magni aperiam eos consequuntur corporis
+                    deleniti nesciunt, unde impedit?
+                  </p>
+                </Card>
+              </Link>
+            ))
+          )}
         </ul>
       </main>
     </div>

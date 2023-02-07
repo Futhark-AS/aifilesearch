@@ -1,41 +1,44 @@
-// ./src/azure-storage-blob.ts
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT Licence.
 
-// <snippet_package>
-// THIS IS SAMPLE CODE ONLY - NOT MEANT FOR PRODUCTION USE
-import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
+/**
+ * Here we demonstrate how to inject new SAS for an ongoing upload.
+ * SAS might get expired before a large upload finishes, for this scenario, we want to request a new
+ * SAS token during the upload instead of starting a new upload.
+ *
+ * In this sample, we give a SAS injection sample for browsers like Chrome which supports await/async.
+ *
+ * Before executing the sample:
+ * - Make sure storage account has CORS set up properly
+ * - Implement method `getNewSasForBlob`
+ * - Update url in `upload()` method
+ *
+ * This sample creates a global function called `upload` that will upload
+ * data from a file upload form. For example, the following HTML will create
+ * such a form.
+ *
+ * <form><input type="file" id="file" /></form>
+ * <button id="upload" onclick="upload()">Upload</button>
+ *
+ * For instructions on building this sample for the browser, refer to
+ * "Building for Browsers" in the readme.
+ *
+ *
+ */
 
-// <snippet_createBlobInContainer>
-const createBlobInContainer = async (
-  containerClient: ContainerClient,
-  file: File
-) => {
-  // create blobClient for container
-  const blobClient = containerClient.getBlockBlobClient(file.name);
+import {
+  AnonymousCredential,
+  BlockBlobClient,
+  newPipeline,
+} from "@azure/storage-blob";
 
-  // set mimetype as determined from browser with file upload control
-  const options = { blobHTTPHeaders: { blobContentType: file.type } };
+export async function uploadFile(sasUri: string, file: File) {
+  const pipeline = newPipeline(new AnonymousCredential());
 
-  // upload file
-  await blobClient.uploadData(file, options);
-};
-// </snippet_createBlobInContainer>
+  const blockBlobClient = new BlockBlobClient(sasUri, pipeline);
 
-// <snippet_uploadFileToBlob>
-const uploadFileToBlob = async (file: File | null, uri: string) => {
-  if (!file) return [];
-
-  // get BlobService = notice `?` is pulled out of sasToken - if created in Azure portal
-  const blobService = new BlobServiceClient(uri);
-
-  // get Container - full public read access
-  const containerClient: ContainerClient = blobService.getContainerClient(containerName);
-  await containerClient.createIfNotExists({
-    access: "container",
+  await blockBlobClient.uploadData(file, {
+    maxSingleShotSize: 4 * 1024 * 1024,
+    blobHTTPHeaders: { blobContentType: file.type }, // set mimetype
   });
-
-  // upload file
-  await createBlobInContainer(containerClient, file);
-};
-// </snippet_uploadFileToBlob>
-
-export default uploadFileToBlob;
+}

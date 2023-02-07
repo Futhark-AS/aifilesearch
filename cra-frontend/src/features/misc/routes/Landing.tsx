@@ -1,10 +1,8 @@
 import { useIsAuthenticated } from "@/app/hooks";
 import { Button, Divider } from "@mantine/core";
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PlainNavbar } from "../components";
-import { useEffect } from "react";
-import { ShowPromptResult } from "@/features/projects/components/ShowPromptResult";
 
 export const Landing = () => {
   const isAuthenticated = useIsAuthenticated();
@@ -35,7 +33,6 @@ export const Landing = () => {
       <Link to={"/auth"}>
         <Button variant="outline">Get started!</Button>
       </Link>
-      <ShowPromptResult />
     </main>
   );
 };

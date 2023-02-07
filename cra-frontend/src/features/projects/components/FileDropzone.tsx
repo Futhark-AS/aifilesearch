@@ -4,10 +4,9 @@ import { Dropzone, FileItem, FileValidated } from "@dropzone-ui/react";
 interface Props {
   setFiles: (files: FileValidated[]) => void;
   files: FileValidated[];
-  hiddenWhenInactive: boolean
 }
 
-export function FileDropzone({ setFiles, files, hiddenWhenInactive }: Props) {
+export function FileDropzone({ setFiles, files }: Props) {
   const updateFiles = (incomingFile: FileValidated[]) => {
     setFiles(incomingFile);
   };

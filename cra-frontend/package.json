@@ -11,6 +11,7 @@
     "@azure/storage-blob": "^12.12.0",
     "@dropzone-ui/react": "^6.7.20",
     "@emotion/react": "^11.10.5",
+    "@faker-js/faker": "^7.6.0",
     "@headlessui/react": "^1.7.7",
     "@heroicons/react": "^2.0.13",
     "@hookform/resolvers": "^2.9.10",
@@ -22,8 +23,11 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/react-window": "^1.8.5",
     "@vitejs/plugin-react": "^3.0.0",
+    "@wojtekmaj/async-array-utils": "^1.5.0",
     "axios": "^1.2.2",
+    "msw": "^0.49.2",
     "react": "^18",
     "react-dom": "^18",
     "react-helmet": "^6.1.0",
@@ -33,6 +37,7 @@
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.6.1",
     "react-scripts": "5.0.1",
+    "react-window": "^1.8.8",
     "web-vitals": "^2.1.4",
     "zod": "^3.18.0"
   },
@@ -55,5 +60,8 @@
     "typescript": "^4.8.2",
     "vite": "^4.0.1",
     "vite-tsconfig-paths": "^4.0.3"
+  },
+  "msw": {
+    "workerDirectory": "public"
   }
 }

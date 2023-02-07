@@ -1,52 +1,67 @@
 import { useAppSelector } from "@/app/hooks";
+import { PdfViewer } from "@/components/PdfViewer";
 import { selectUser } from "@/features/auth/authSlice";
 import { FileValidated } from "@dropzone-ui/react";
 import { Button, Card, Loader, TextInput } from "@mantine/core";
 import React, { useState } from "react";
+import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import { FileDropzonePassive } from "../components/FileDropzonePassive";
-import { ShowPromptResult } from "../components/ShowPromptResult";
+import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
+import { extractFileName } from "../components/ShowPromptResult";
+import { handleFileUpload } from "../projectAPI";
 import {
   PromptMatch,
-  getProcessingStatusReq,
-  getSASToken,
-  postFile,
+  getBlobUri,
+  getFiles,
   searchProjectWithPromptReq,
-  startProcessingReq,
 } from "../requests";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
-  const { id } = useParams<{ id: string }>();
+
+  const { id: projectName } = useParams<{ id: string }>();
+  const { data: projectFiles, refetch: refetchFiles } = useQuery("files", () =>
+    getFiles()
+  );
 
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
 
-  const [files, setFiles] = useState<FileValidated[]>([]);
+  const [filesUploading, setFilesUploading] = useState(false);
+
+  const [filesUpload, setFilesUpload] = useState<FileValidated[]>([]);
+
+  // The currently showing result in the pdf viewer
   const [activeResult, setActiveResult] = useState<{
     fileUrl: string;
-    result: PromptMatch;
+    fileSearchResult: PromptMatch; // highlight info
   } | null>(null);
 
   const [resultsLoading, setResultsLoading] = useState(false);
 
   const showResultInPdf = async (result: PromptMatch) => {
-    const fileUrl = (await getSASToken(result.metadata.file_name, "r")).uri;
+    const fileUrl = await getBlobUri(result.metadata.file_name);
 
     setActiveResult({
       fileUrl,
-      result,
+      fileSearchResult: result,
     });
   };
 
   const onSearch = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("hello");
     setResultsLoading(true);
+
+    if (!projectName) {
+      console.error("Illegal component state: projectName is undefined");
+      // TODO: show error to user
+      return setResultsLoading(false);
+    }
 
     const res = await searchProjectWithPromptReq(
       searchValue,
-      "michael",
+      projectName,
       user.uid
     );
 
@@ -54,29 +69,51 @@ const Project = () => {
     setSearchResults(res);
   };
 
-  const startProcessing = async (filenames: string[], project: string) => {
-    const res = await startProcessingReq(filenames, project);
-    const status = await getProcessingStatusReq(res.uri);
-    console.log(res, status);
+  const setCompleted = () => {
+    setFilesUploading(false);
+    refetchFiles();
   };
 
-  const handleFileUpload = () => {
-    if(files.length === 0) return
-    postFile(user.uid, files[0].file, "michael")
+  const handleFileUploadOnClick = async () => {
+    setFilesUploading(true);
 
-  }
+    if (!projectName) {
+      console.error("Illegal component state: projectName is undefined");
+      // TODO: show error to user
+      return setResultsLoading(false);
+    }
 
-  // TODO: get files from azure based on project. Should do this here and pass down maybe
+    handleFileUpload(
+      filesUpload.map((file) => file.file),
+      user.uid,
+      projectName,
+      setCompleted
+    );
+    setFilesUpload([]);
+  };
 
   return (
     <>
       <main className="col flex h-full w-full">
+        <FileExplorerSideBar
+          files={projectFiles || []}
+          fileOnClick={(file) => console.log(file)}
+          initialSelectedFile=""
+          loadingFiles={
+            filesUploading ? filesUpload.map((file) => file.file.name) : []
+          }
+        />
         <section className="grow">
-          <div className="container mx-auto p-4">
+          <div className="container mx-auto max-h-screen overflow-y-scroll p-4">
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
               Project Name
             </h2>
-            <FileDropzonePassive files={files} setFiles={setFiles} handleFileUpload={handleFileUpload}/>
+            <FileDropzonePassive
+              files={!filesUploading ? filesUpload : []}
+              setFiles={setFilesUpload}
+              handleFileUpload={handleFileUploadOnClick}
+            />
+
             <form onSubmit={onSearch} className="mb-4">
               <TextInput
                 label="Search"
@@ -90,22 +127,24 @@ const Project = () => {
               />
             </form>
             {activeResult ? (
-              <ShowPromptResult
+              <PdfViewer
                 file={activeResult.fileUrl}
-                promptResult={activeResult.result}
+                promptResult={activeResult.fileSearchResult}
+                key={activeResult.fileSearchResult.id}
               />
             ) : (
               <div>No results</div>
             )}
           </div>
         </section>
-        {/* <ShowPdf /> */}
         {/* resizeable sidebar: https://codesandbox.io/s/react-resizable-sidebar-kz9de?file=/src/App.css:0-38 */}
         <section className="w-64 overflow-auto bg-slate-600 px-4 pt-4">
           <h3 className="text-center text-lg text-white">Results</h3>
           {searchResults.map((result) => (
             <Card key={result.id} className="mb-2 w-full">
-              <h4 className="text-md">{result.metadata.file_name}</h4>
+              <h4 className="text-md">
+                {extractFileName(result.metadata.file_name)}
+              </h4>
               <p className="text-sm">{result.metadata.content}</p>
               <i className="mb-2 block">Page: {result.metadata.page_number}</i>
               <Button

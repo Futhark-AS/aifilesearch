@@ -1,6 +1,17 @@
-import { azureAxios } from "@/lib/axios";
+import { azureAxios, baseAxios } from "@/lib/axios";
 import { z } from "zod";
-import { BlobServiceClient } from "@azure/storage-blob";
+import { uploadFile } from "./azure-storage-blob";
+
+export const URLS = {
+  query: "/api/query",
+  startProcessing: "/api/startProcessingDocuments",
+  getProcessingStatus: "/api/getProcessingStatus",
+  getSASToken: "/api/getsastoken",
+  getBlobUri: "/api/getBlobUri",
+  postFile: "/api/postFile",
+  getFiles: (project: string) => `/api/projects/${project}`,
+  getProjects: "/api/getProjects",
+} as const;
 
 const matchSchema = z.object({
   id: z.string(),
@@ -31,7 +42,7 @@ export const searchProjectWithPromptReq = async (
   project: string,
   uid: string
 ) => {
-  const res = await azureAxios.post(`/api/query`, {
+  const res = await azureAxios.post(URLS.query, {
     prompt,
     project,
     topK: 10,
@@ -43,7 +54,6 @@ export const searchProjectWithPromptReq = async (
 
 const startProcessingResult = z.object({
   message: z.string(),
-  uuid: z.string(),
   uri: z.string(),
 });
 
@@ -51,7 +61,7 @@ export const startProcessingReq = async (
   filenames: string[],
   project: string
 ) => {
-  const res = await azureAxios.post(`/api/startProcessingDocuments`, {
+  const res = await azureAxios.post(URLS.startProcessing, {
     file_names: filenames,
     project: project,
   });
@@ -62,52 +72,57 @@ export const startProcessingReq = async (
 };
 
 const getProcessingStatusResult = z.object({
-  processed_files: z.array(z.string()),
-  message: z.string(),
-  ready: z.boolean(),
+  runtimeStatus: z.string(),
+  // output: z.null().or(,
+  // createdTime: "2023-01-11T13:35:28Z",
+  // lastUpdatedTime: "2023-01-11T13:35:28Z"
 });
 
 export const getProcessingStatusReq = async (uri: string) => {
-  const res = await azureAxios.get(uri);
+  const res = await baseAxios.get(uri);
 
-  return getProcessingStatusResult.parse(res.data);
+  return getProcessingStatusResult.parse(res.data).runtimeStatus;
 };
 
-export const getSASToken = async (blobName: string, permissions: "r" | "w") => {
-  const res = await azureAxios.post("/api/getsastoken", {
+const getSASToken = async (blobName: string, permissions: "r" | "w") => {
+  const res = await azureAxios.post(URLS.getSASToken, {
     container: "users",
-    // blobName: "sid:eb29ffbd4835f17f59814309696889de/michael/michael.pdf",
     blobName,
-    permissions
+    permissions,
   });
 
-  return z.object({
-    token: z.string(),
-    uri: z.string()
-  }).parse(res.data)
+  return z
+    .object({
+      token: z.string(),
+      uri: z.string(),
+    })
+    .parse(res.data);
 };
 
-// {
-//   processed_files: string[],
-//   message: string,
-//   ready: boolean
-// }
+export const getBlobUri = async (blobName: string) => {
+  return (await getSASToken(blobName, "r")).uri;
+};
 
 export const postFile = async (uid: string, file: File, project: string) => {
-  console.log(file.name)
-  const sasTokenUri = (await getSASToken(`${uid}/${project}/${file.name}`, "w")).uri;
+  const sasTokenUri = (await getSASToken(`${uid}/${project}/${file.name}`, "w"))
+    .uri;
+  await uploadFile(sasTokenUri, file);
+};
 
-  console.log(sasTokenUri)
+export const getProjects = async (uid: string) => {
+  const res = await azureAxios.get(URLS.getProjects + `?user_id=${uid}`);
+  return z.object({ projects: z.array(z.string()) }).parse(res.data).projects;
+};
 
-  // const account = "<account name>";
-  // const sas = "<service Shared Access Signature Token>";
-  
-  // const blobServiceClient = new BlobServiceClient(`https://${account}.blob.core.windows.net${sas}`);
+export const getFiles = async () => {
+  const res = await azureAxios.get(URLS.getFiles("michael"));
 
-  // const res = await azureAxios.post("/api/upload", {
-  //   file,
-  //   project,
-  // });
-
-  // return res.data;
-}
+  // TODO: fetch file metadata from api
+  return z.array(z.string()).parse(res.data).map((name) => ({
+    name: name.split("/").slice(-1)[0],
+    url: URLS.getBlobUri + `?blobName=michael/michael/${name}`,
+    size: "0",
+    type: "pdf",
+    pages: 10,
+  }));
+};

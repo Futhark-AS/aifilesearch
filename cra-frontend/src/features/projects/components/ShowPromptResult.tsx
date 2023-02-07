@@ -1,23 +1,23 @@
-import { PDFViewer } from "@/components/PdfViewer";
-import React from "react";
-import { PromptMatch } from "../requests";
+// import React from "react";
+// import { PromptMatch } from "../requests";
+// import { PdfViewer } from "@/components/PdfViewer";
 
-interface Props {
-  file: string | File;
-  promptResult: PromptMatch;
-}
+// interface Props {
+//   file: string;
+//   promptResult: PromptMatch;
+//   highlightText?: string;
+// }
 
-export function ShowPromptResult({ file, promptResult }: Props) {
-  return (
-    <div>
-      <h1 className="text-xl font-semibold">
-        {promptResult.metadata.file_name.slice(
-          promptResult.metadata.file_name.lastIndexOf("/") + 1
-        )}
-      </h1>
-      <div>{promptResult.metadata.content}</div>
-      <i className="text-xs">Page {promptResult.metadata.page_number}</i>
-      <PDFViewer file={file} startPage={promptResult.metadata.page_number} />
-    </div>
-  );
-}
+export const extractFileName = (filePath: string) =>
+  filePath.slice(filePath.lastIndexOf("/") + 1);
+
+// export function ShowPromptResult({ file, promptResult, highlightText }: Props) {
+//   return (
+//       <PdfViewer
+//         file={file}
+//         startPage={promptResult.metadata.page_number}
+//         selectText={highlightText}
+//         boundingBox={promptResult.metadata.bounding_box}
+//       />
+//   );
+// }
