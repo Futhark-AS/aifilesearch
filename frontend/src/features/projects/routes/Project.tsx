@@ -19,7 +19,7 @@ import {
 } from "../requests";
 import { FileDropzonePassive } from "@/components/FileDropzone";
 import { extractFileName } from "../utils";
-import { PromptResultSideBar } from "../components";
+import { PromptResultSideBar, TestShowPromptResult } from "../components";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
@@ -114,7 +114,7 @@ const Project = () => {
         <section className="grow">
           <div className="container mx-auto max-h-screen overflow-y-scroll p-4">
             <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
-              Project Name
+            {projectName}
             </h2>
             <FileDropzonePassive
               files={!filesUploading ? filesUpload : []}
@@ -132,7 +132,7 @@ const Project = () => {
                 rightSection={resultsLoading && <Spinner size="sm" />}
               />
             </form>
-            {activeResult ? (
+            {/* {activeResult ? (
               <PdfViewer
                 file={activeResult.fileUrl}
                 promptResult={activeResult.fileSearchResult}
@@ -140,7 +140,8 @@ const Project = () => {
               />
             ) : (
               <div>No results</div>
-            )}
+            )} */}
+            <TestShowPromptResult />
           </div>
         </section>
         {/* resizeable sidebar: https://codesandbox.io/s/react-resizable-sidebar-kz9de?file=/src/App.css:0-38 */}

@@ -3,7 +3,7 @@ import { Outlet, createBrowserRouter } from "react-router-dom";
 
 import Authenticate from "@/features/auth/routes/Authenticate";
 import { protectedRoutes } from "./protected";
-import { Landing } from "@/features/misc";
+import { About, Landing } from "@/features/misc";
 import { ErrorPage } from "@/features/errors";
 
 const Root = () => {
@@ -31,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: "auth",
         element: <Authenticate />,
+      },
+      {
+        path: "about",
+        element: <About />,
       },
     ],
   },

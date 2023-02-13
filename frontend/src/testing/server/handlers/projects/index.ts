@@ -2,8 +2,8 @@ import { rest } from "msw";
 
 import { API_URL } from "@/config";
 
-import { getFiles, getProjects, getsastoken, query, startProcessing } from "./resolvers";
 import { URLS } from "@/features/projects/requests";
+import { getFiles, getProjects, getsastoken, query, startProcessing } from "./resolvers";
 
 export const projectsHandlers = [
   rest.get(`${API_URL}${URLS.getFiles}`, getFiles),

@@ -1,6 +1,7 @@
 import React from "react"
 import { PromptMatch } from "../requests"
 import { PdfViewer } from '../../../components/PdfViewer/PdfViewer';
+import pdf from "@/assets/test-pdf.pdf"
 const matches: PromptMatch[] = [
     {
         "id": "sid:eb29ffbd4835f17f59814309696889de/michael_17",
@@ -317,6 +318,6 @@ const testData = {
 export function TestShowPromptResult() {
     const cryptoTextFile = "https://nlpsearchapi.blob.core.windows.net/users/sid%3Aeb29ffbd4835f17f59814309696889de/michael/test-pdf.pdf?st=2023-01-21T10%3A43%3A20Z&se=2023-01-21T12%3A43%3A20Z&sp=r&sv=2018-03-28&sr=b&sig=9ywSHjL7rgnvcWHHuQYaiyNQsb3cPV%2BS5ygiZVmcu6A%3D"
     return (
-        <PdfViewer file={cryptoTextFile} promptResult={matches[2]}/>
+        <PdfViewer file={pdf} promptResult={matches[2]}/>
     )
 }

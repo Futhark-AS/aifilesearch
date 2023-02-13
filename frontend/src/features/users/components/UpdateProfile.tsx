@@ -10,7 +10,7 @@ import { UpdateProfileDTO, useUpdateProfile } from "../api/updateProfile";
 
 const schema = z.object({
   email: z.string().min(1, "Required"),
-  firstName: z.string().min(1, "Required"),
+  name: z.string().min(1, "Required"),
 });
 
 export const UpdateProfile = () => {
@@ -40,31 +40,33 @@ export const UpdateProfile = () => {
       <Form<UpdateProfileDTO["data"], typeof schema>
         id="update-profile"
         onSubmit={async (values) => {
-          // await updateProfileMutation.mutateAsync({ data: values });
+          await updateProfileMutation.mutateAsync({ data: values });
         }}
         options={{
           defaultValues: {
-            firstName: user?.firstName,
+            name: user?.name,
             email: user?.email,
           },
         }}
         schema={schema}
       >
-        {({ register, formState }) => (
-          <>
-            <InputField
-              label="First Name"
-              error={formState.errors["firstName"]}
-              registration={register("firstName")}
-            />
-            <InputField
-              label="Email Address"
-              type="email"
-              error={formState.errors["email"]}
-              registration={register("email")}
-            />
-          </>
-        )}
+        {({ register, formState }) => {
+          return (
+            <>
+              <InputField
+                label="Name"
+                error={formState.errors["name"]}
+                registration={register("name")}
+              />
+              <InputField
+                label="Email Address"
+                type="email"
+                error={formState.errors["email"]}
+                registration={register("email")}
+              />
+            </>
+          );
+        }}
       </Form>
     </FormDrawer>
   );
