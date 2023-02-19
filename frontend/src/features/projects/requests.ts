@@ -73,7 +73,11 @@ export const startProcessingReq = async (
 
 const getProcessingStatusResult = z.object({
   runtimeStatus: z.string(),
-  error: z.string().optional(),
+  output: z
+    .object({
+      error: z.string().optional(),
+    })
+    .optional(),
   // output: z.null().or(,
   // createdTime: "2023-01-11T13:35:28Z",
   // lastUpdatedTime: "2023-01-11T13:35:28Z"
@@ -81,15 +85,19 @@ const getProcessingStatusResult = z.object({
 
 export const getProcessingStatusReq = async (
   uri: string
-): Promise<{ runtimeStatus: string; error?: string; isError: boolean }> => {
+): Promise<{ runtimeStatus: string; error: string; isError: boolean }> => {
   const res = await baseAxios.get(uri);
 
   const parsed = getProcessingStatusResult.parse(res.data);
 
+  const isError = Boolean(
+    parsed.output?.error && parsed.output.error.length > 0
+  );
+
   return {
     runtimeStatus: parsed.runtimeStatus,
-    error: parsed.error,
-    isError: Boolean(parsed.error && parsed.error.length > 0),
+    error: parsed.output?.error || "",
+    isError: isError,
   };
 };
 

@@ -5,7 +5,6 @@ import { selectUser } from "@/features/auth/authSlice";
 import { useAppSelector } from "@/redux/hooks";
 import { FileValidated } from "@dropzone-ui/react";
 import { TextInput } from "@mantine/core";
-import { showNotification } from "@mantine/notifications";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
@@ -18,12 +17,13 @@ import {
   getFiles,
   searchProjectWithPromptReq,
 } from "../requests";
+import { showError } from "@/utils/showError";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
   const ref = React.useRef<HTMLDivElement>(null);
 
-  const { id: projectName } = useParams<{ id: string }>();
+  const { id: projectName } = useParams<{ id: string }>() as { id: string };
   const { data: projectFiles, refetch: refetchFiles } = useQuery("files", () =>
     getFiles()
   );
@@ -34,7 +34,6 @@ const Project = () => {
   const [filesUploading, setFilesUploading] = useState(false);
 
   const [filesUpload, setFilesUpload] = useState<FileValidated[]>([]);
-  const [fileUploadIsError, setFileUploadIsError] = useState(false);
 
   // The currently showing result in the pdf viewer
   const [activeResult, setActiveResult] = useState<{
@@ -57,72 +56,41 @@ const Project = () => {
     e.preventDefault();
     setResultsLoading(true);
 
-    if (!projectName) {
-      console.error("Illegal component state: projectName is undefined");
-      showNotification({
-        title: "Error",
-        message: "Unfortunately, an error occurred. Please try again later.",
-        color: "red",
+    searchProjectWithPromptReq(searchValue, projectName, user.uid)
+      .then((res) => {
+        setSearchResults(res);
+      })
+      .catch((e) => {
+        console.error(e);
+        showError();
+      })
+      .finally(() => {
+        setResultsLoading(false);
+        setSearchValue("");
       });
-      setResultsLoading(false);
-      setSearchValue("");
-      return;
-    }
-
-    try {
-      const res = await searchProjectWithPromptReq(
-        searchValue,
-        projectName,
-        user.uid
-      );
-
-      setResultsLoading(false);
-      setSearchResults(res);
-    } catch (e) {
-      console.error(e);
-      showNotification({
-        title: "Error",
-        message: "Unfortunately, an error occurred. Please try again later.",
-        color: "red",
-      });
-    }
-    setResultsLoading(false);
-    setSearchValue("");
-  };
-
-  const setCompleted = () => {
-    setFilesUploading(false);
-    refetchFiles();
   };
 
   const handleFileUploadOnClick = async () => {
     setFilesUploading(true);
-    setFileUploadIsError(false);
 
-    if (!projectName) {
-      console.error("Illegal component state: projectName is undefined");
-      // TODO: show error to user
-      return setResultsLoading(false);
-    }
-
-    try {
-      handleFileUpload(
-        filesUpload.map((file) => file.file),
-        user.uid,
-        projectName,
-        setCompleted,
-        setFileUploadIsError
-      );
-    } catch (e) {
-      console.error(e);
-      showNotification({
-        title: "Error",
-        message: "Unfortunately, an error occurred. Please try again later.",
-        color: "red",
+    handleFileUpload(
+      filesUpload.map((file) => file.file),
+      user.uid,
+      projectName
+    )
+      .then((data) => {
+        refetchFiles();
+      })
+      .catch((e) => {
+        console.error(e);
+        showError(
+          "Unfortunately, there occured an error while uploading the file. Please try again later."
+        );
+      })
+      .finally(() => {
+        setFilesUpload([]);
+        setFilesUploading(false);
       });
-    }
-
-    setFilesUpload([]);
   };
 
   return (
@@ -133,7 +101,7 @@ const Project = () => {
           fileOnClick={(file) => console.log(file)}
           initialSelectedFile=""
           loadingFiles={
-            filesUploading ? filesUpload.map((file) => file.file.name) : []
+            !filesUploading ? filesUpload.map((file) => file.file.name) : []
           }
         />
         <section
@@ -170,7 +138,6 @@ const Project = () => {
           )}
           {/* <PdfViewer file={pdf} promptResult={mockMatches[2]} ref={ref} /> */}
         </section>
-        {/* resizeable sidebar: https://codesandbox.io/s/react-resizable-sidebar-kz9de?file=/src/App.css:0-38 */}
         <PromptResultSideBar
           items={searchResults}
           itemOnClick={showResultInPdf}

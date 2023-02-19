@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { ArrowRightCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@/components/Spinner";
+import React, { useState } from "react";
 import { SideBar } from "./SideBar";
 
 type FileT = {
@@ -25,7 +24,7 @@ function File({
   loading,
 }: {
   file: FileT;
-  fileOnClick: (file: FileT) => void;
+  fileOnClick?: (file: FileT) => void;
   active: boolean;
   loading?: boolean;
 }) {
@@ -33,7 +32,7 @@ function File({
     <div>
       <button
         onClick={() => {
-          fileOnClick(file);
+          fileOnClick && fileOnClick(file);
         }}
         className={`w-full border-t-2 border-l-neutral-500 py-4 text-left ${
           active && "font-bold "
@@ -64,32 +63,28 @@ export function FileExplorerSideBar({
   const [selectedFile, setSelectedFile] = useState<number | null>(null);
   return (
     <SideBar title="Files in project" side="left">
-      <>
-        {files
-          .map((file, i) => (
-            <File
-              active={selectedFile == i}
-              file={file}
-              fileOnClick={(file) => {
-                fileOnClick(file.name);
-                const newSelectedFile = selectedFile == i ? null : i;
-                setSelectedFile(newSelectedFile);
-              }}
-              key={file.name + i}
-            />
-          ))
-          .concat(
-            loadingFiles.map((file, i) => (
-              <File
-                active={false}
-                file={{ name: file, size: "", type: "", url: "", pages: 0 }}
-                fileOnClick={() => null}
-                key={"loading" + file}
-                loading
-              />
-            ))
-          )}
-      </>
+      <div>
+        {files.map((file, i) => (
+          <File
+            active={selectedFile == i}
+            file={file}
+            fileOnClick={(file) => {
+              fileOnClick(file.name);
+              const newSelectedFile = selectedFile == i ? null : i;
+              setSelectedFile(newSelectedFile);
+            }}
+            key={file.name + i}
+          />
+        ))}
+        {loadingFiles.map((file) => (
+          <File
+            active={false}
+            file={{ name: file, size: "", type: "", url: "", pages: 0 }}
+            key={"loading" + file}
+            loading
+          />
+        ))}
+      </div>
     </SideBar>
   );
 }

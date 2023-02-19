@@ -23,8 +23,8 @@ function setIntervalX(
 export const startProcessing = async (
   filenames: string[],
   project: string,
-  setCompleted: () => void,
-  setIsError: (error: boolean) => void
+  resolve: (val: unknown) => void,
+  reject: (e: any) => void
 ) => {
   const res = await startProcessingReq(filenames, project);
 
@@ -34,10 +34,10 @@ export const startProcessing = async (
       switch (processRes.runtimeStatus) {
         case "Completed":
           if (processRes.isError) {
-            setIsError(true);
+            reject(processRes.error);
             console.log(`Error: ${processRes.error}`);
           }
-          setCompleted();
+          resolve("success");
           clearInterval();
           break;
         case "Running":
@@ -47,8 +47,10 @@ export const startProcessing = async (
           console.log(`Files uploading... (status: ${status}})`);
           break;
         default:
-          setIsError(true);
-          setCompleted();
+          reject(
+            "One process check recieved an unexpected status: " +
+              processRes.runtimeStatus
+          );
           clearInterval();
       }
     },
@@ -61,17 +63,19 @@ export const handleFileUpload = async (
   files: File[],
   uid: string,
   project: string,
-  setCompleted: () => void,
-  setIsError: (error: boolean) => void
 ) => {
-  for (const file of files) {
-    await postFile(uid, file, project);
-  }
+  return new Promise((resolve, reject) => {
+    for (const file of files) {
+      postFile(uid, file, project).catch((e) => {
+        reject(e);
+      });
+    }
 
-  startProcessing(
-    files.map((file) => file.name),
-    project,
-    setCompleted,
-    setIsError
-  );
+    startProcessing(
+      files.map((file) => file.name),
+      project,
+      resolve,
+      reject
+    );
+  });
 };
