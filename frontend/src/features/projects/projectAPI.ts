@@ -23,16 +23,20 @@ function setIntervalX(
 export const startProcessing = async (
   filenames: string[],
   project: string,
-  setCompleted: () => void
+  setCompleted: () => void,
+  setIsError: (error: boolean) => void
 ) => {
   const res = await startProcessingReq(filenames, project);
-  // const status = await getProcessingStatusReq(res.uri);
 
   const clearInterval = setIntervalX(
     async () => {
-      const status = await getProcessingStatusReq(res.uri);
-      switch (status) {
+      const processRes = await getProcessingStatusReq(res.uri);
+      switch (processRes.runtimeStatus) {
         case "Completed":
+          if (processRes.isError) {
+            setIsError(true);
+            console.log(`Error: ${processRes.error}`);
+          }
           setCompleted();
           clearInterval();
           break;
@@ -43,6 +47,7 @@ export const startProcessing = async (
           console.log(`Files uploading... (status: ${status}})`);
           break;
         default:
+          setIsError(true);
           setCompleted();
           clearInterval();
       }
@@ -56,7 +61,8 @@ export const handleFileUpload = async (
   files: File[],
   uid: string,
   project: string,
-  setCompleted: () => void
+  setCompleted: () => void,
+  setIsError: (error: boolean) => void
 ) => {
   for (const file of files) {
     await postFile(uid, file, project);
@@ -65,6 +71,7 @@ export const handleFileUpload = async (
   startProcessing(
     files.map((file) => file.name),
     project,
-    setCompleted
+    setCompleted,
+    setIsError
   );
 };

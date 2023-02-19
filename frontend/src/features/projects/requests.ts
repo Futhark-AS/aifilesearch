@@ -73,15 +73,24 @@ export const startProcessingReq = async (
 
 const getProcessingStatusResult = z.object({
   runtimeStatus: z.string(),
+  error: z.string().optional(),
   // output: z.null().or(,
   // createdTime: "2023-01-11T13:35:28Z",
   // lastUpdatedTime: "2023-01-11T13:35:28Z"
 });
 
-export const getProcessingStatusReq = async (uri: string) => {
+export const getProcessingStatusReq = async (
+  uri: string
+): Promise<{ runtimeStatus: string; error?: string; isError: boolean }> => {
   const res = await baseAxios.get(uri);
 
-  return getProcessingStatusResult.parse(res.data).runtimeStatus;
+  const parsed = getProcessingStatusResult.parse(res.data);
+
+  return {
+    runtimeStatus: parsed.runtimeStatus,
+    error: parsed.error,
+    isError: Boolean(parsed.error && parsed.error.length > 0),
+  };
 };
 
 const getSASToken = async (blobName: string, permissions: "r" | "w") => {
@@ -118,11 +127,14 @@ export const getFiles = async () => {
   const res = await azureAxios.get(URLS.getFiles("michael"));
 
   // TODO: fetch file metadata from api
-  return z.array(z.string()).parse(res.data).map((name) => ({
-    name: name.split("/").slice(-1)[0],
-    url: URLS.getBlobUri + `?blobName=michael/michael/${name}`,
-    size: "0",
-    type: "pdf",
-    pages: 10,
-  }));
+  return z
+    .array(z.string())
+    .parse(res.data)
+    .map((name) => ({
+      name: name.split("/").slice(-1)[0],
+      url: URLS.getBlobUri + `?blobName=michael/michael/${name}`,
+      size: "0",
+      type: "pdf",
+      pages: 10,
+    }));
 };

@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  Ref,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { VariableSizeList as List } from "react-window";
 
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
@@ -13,9 +20,7 @@ import {
   RenderParameters,
 } from "pdfjs-dist/types/src/display/api";
 import { showNotification } from "@mantine/notifications";
-
-const width = 400;
-const height = width * 1.5;
+import { useMeasure } from "react-use";
 
 interface Props {
   file: string;
@@ -49,7 +54,10 @@ function highlightBoundingBox(bb: BoundingBox, ctx: CanvasRenderingContext2D) {
   ctx.restore();
 }
 
-export function PdfViewer({ file, promptResult }: Props) {
+export const PdfViewer = forwardRef(function PdfViewer(
+  { file, promptResult }: Props,
+  ref
+) {
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [pageViewports, setPageViewports] = useState<ViewPort[] | null>(null);
   const listRef = useRef<List | null>(null);
@@ -57,6 +65,15 @@ export function PdfViewer({ file, promptResult }: Props) {
   const [hasScrolled, setHasScrolled] = useState(false);
 
   const canvasElementsRef = useRef<(HTMLCanvasElement | null)[]>([]);
+
+  const [setRef, { width: parentWidth, height: parentHeight }] = useMeasure();
+
+  useEffect(() => {
+    if (!ref) return;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    setRef(ref.current);
+  }, [ref, setRef]);
 
   useEffect(() => {
     if (listRef.current && !hasScrolled) {
@@ -104,7 +121,7 @@ export function PdfViewer({ file, promptResult }: Props) {
     }
 
     const pageViewport = pageViewports[pageIndex];
-    const scale = width / pageViewport.width;
+    const scale = parentWidth / pageViewport.width;
     const actualHeight = pageViewport.height * scale;
 
     return actualHeight;
@@ -115,9 +132,9 @@ export function PdfViewer({ file, promptResult }: Props) {
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
         {pdf && pageViewports ? (
           <List
-            width={width}
-            height={height}
-            estimatedItemSize={height}
+            width={parentWidth}
+            height={parentHeight}
+            estimatedItemSize={parentHeight}
             itemCount={pdf.numPages}
             itemSize={getPageHeight}
             ref={listRef}
@@ -160,7 +177,7 @@ export function PdfViewer({ file, promptResult }: Props) {
                     }
                   }}
                   pageIndex={index}
-                  width={width}
+                  width={parentWidth}
                   canvasRef={(el) => {
                     canvasElementsRef.current[index] = el;
                   }}
@@ -172,4 +189,4 @@ export function PdfViewer({ file, promptResult }: Props) {
       </Document>
     </div>
   );
-}
+});

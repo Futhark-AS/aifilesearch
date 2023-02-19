@@ -1,14 +1,15 @@
-import { Button } from "@/components/Button";
+import { FileDropzonePassive } from "@/components/FileDropzone";
 import { PdfViewer } from "@/components/PdfViewer";
 import { Spinner } from "@/components/Spinner";
 import { selectUser } from "@/features/auth/authSlice";
 import { useAppSelector } from "@/redux/hooks";
 import { FileValidated } from "@dropzone-ui/react";
-import { Card, TextInput } from "@mantine/core";
+import { TextInput } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
+import { PromptResultSideBar } from "../components";
 import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
 import { handleFileUpload } from "../projectAPI";
 import {
@@ -17,12 +18,10 @@ import {
   getFiles,
   searchProjectWithPromptReq,
 } from "../requests";
-import { FileDropzonePassive } from "@/components/FileDropzone";
-import { extractFileName } from "../utils";
-import { PromptResultSideBar, TestShowPromptResult } from "../components";
 
 const Project = () => {
   const user = useAppSelector((state) => selectUser(state));
+  const ref = React.useRef<HTMLDivElement>(null);
 
   const { id: projectName } = useParams<{ id: string }>();
   const { data: projectFiles, refetch: refetchFiles } = useQuery("files", () =>
@@ -35,6 +34,7 @@ const Project = () => {
   const [filesUploading, setFilesUploading] = useState(false);
 
   const [filesUpload, setFilesUpload] = useState<FileValidated[]>([]);
+  const [fileUploadIsError, setFileUploadIsError] = useState(false);
 
   // The currently showing result in the pdf viewer
   const [activeResult, setActiveResult] = useState<{
@@ -64,17 +64,30 @@ const Project = () => {
         message: "Unfortunately, an error occurred. Please try again later.",
         color: "red",
       });
-      return setResultsLoading(false);
+      setResultsLoading(false);
+      setSearchValue("");
+      return;
     }
 
-    const res = await searchProjectWithPromptReq(
-      searchValue,
-      projectName,
-      user.uid
-    );
+    try {
+      const res = await searchProjectWithPromptReq(
+        searchValue,
+        projectName,
+        user.uid
+      );
 
+      setResultsLoading(false);
+      setSearchResults(res);
+    } catch (e) {
+      console.error(e);
+      showNotification({
+        title: "Error",
+        message: "Unfortunately, an error occurred. Please try again later.",
+        color: "red",
+      });
+    }
     setResultsLoading(false);
-    setSearchResults(res);
+    setSearchValue("");
   };
 
   const setCompleted = () => {
@@ -84,6 +97,7 @@ const Project = () => {
 
   const handleFileUploadOnClick = async () => {
     setFilesUploading(true);
+    setFileUploadIsError(false);
 
     if (!projectName) {
       console.error("Illegal component state: projectName is undefined");
@@ -91,12 +105,23 @@ const Project = () => {
       return setResultsLoading(false);
     }
 
-    handleFileUpload(
-      filesUpload.map((file) => file.file),
-      user.uid,
-      projectName,
-      setCompleted
-    );
+    try {
+      handleFileUpload(
+        filesUpload.map((file) => file.file),
+        user.uid,
+        projectName,
+        setCompleted,
+        setFileUploadIsError
+      );
+    } catch (e) {
+      console.error(e);
+      showNotification({
+        title: "Error",
+        message: "Unfortunately, an error occurred. Please try again later.",
+        color: "red",
+      });
+    }
+
     setFilesUpload([]);
   };
 
@@ -111,38 +136,39 @@ const Project = () => {
             filesUploading ? filesUpload.map((file) => file.file.name) : []
           }
         />
-        <section className="grow">
-          <div className="container mx-auto max-h-screen overflow-y-scroll p-4">
-            <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
+        <section
+          className="container mx-auto max-h-screen overflow-y-scroll p-4"
+          ref={ref}
+        >
+          <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
             {projectName}
-            </h2>
-            <FileDropzonePassive
-              files={!filesUploading ? filesUpload : []}
-              setFiles={setFilesUpload}
-              handleFileUpload={handleFileUploadOnClick}
-            />
+          </h2>
+          <FileDropzonePassive
+            files={!filesUploading ? filesUpload : []}
+            setFiles={setFilesUpload}
+            handleFileUpload={handleFileUploadOnClick}
+          />
 
-            <form onSubmit={onSearch} className="mb-4">
-              <TextInput
-                label="Search"
-                placeholder="Eks: Hvor mye må jeg betale i skatt om jeg tjener 400 000?"
-                className="input input-bordered mt-5 w-full"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                rightSection={resultsLoading && <Spinner size="sm" />}
-              />
-            </form>
-            {/* {activeResult ? (
-              <PdfViewer
-                file={activeResult.fileUrl}
-                promptResult={activeResult.fileSearchResult}
-                key={activeResult.fileSearchResult.id}
-              />
-            ) : (
-              <div>No results</div>
-            )} */}
-            <TestShowPromptResult />
-          </div>
+          <form onSubmit={onSearch} className="mb-4">
+            <TextInput
+              label="Search"
+              placeholder="Eks: Hvor mye må jeg betale i skatt om jeg tjener 400 000?"
+              className="input input-bordered mt-5 w-full"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              rightSection={resultsLoading && <Spinner size="sm" />}
+            />
+          </form>
+          {activeResult ? (
+            <PdfViewer
+              file={activeResult.fileUrl}
+              promptResult={activeResult.fileSearchResult}
+              key={activeResult.fileSearchResult.id}
+            />
+          ) : (
+            <div></div>
+          )}
+          {/* <PdfViewer file={pdf} promptResult={mockMatches[2]} ref={ref} /> */}
         </section>
         {/* resizeable sidebar: https://codesandbox.io/s/react-resizable-sidebar-kz9de?file=/src/App.css:0-38 */}
         <PromptResultSideBar
