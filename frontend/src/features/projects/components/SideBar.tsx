@@ -18,7 +18,7 @@ export function SideBar({ title, children, side }: Props) {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState<number | null>(268);
+  const [sidebarWidth, setSidebarWidth] = useState<number | null>(200);
 
   const close = () => {
     setSidebarWidth(CLOSEDSIZE);

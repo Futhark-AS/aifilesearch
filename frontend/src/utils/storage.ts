@@ -10,7 +10,6 @@ const storage = {
     const parsed = AuthSchema.safeParse(JSON.parse(user));
 
     if (!parsed.success) {
-      console.error(parsed.error);
       return null;
     }
 

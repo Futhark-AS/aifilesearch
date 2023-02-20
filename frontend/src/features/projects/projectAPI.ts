@@ -3,23 +3,15 @@ import {
   postFile,
   startProcessingReq,
 } from "./requests";
+import { setIntervalX } from "./utils";
 
-function setIntervalX(
-  callback: () => void,
-  delay: number,
-  repetitions: number
-) {
-  let x = 0;
-  const intervalID = window.setInterval(function () {
-    callback();
-
-    if (++x === repetitions) {
-      window.clearInterval(intervalID);
-    }
-  }, delay);
-  return () => window.clearInterval(intervalID);
-}
-
+/**
+ * Start processing a given list of files (uploading)
+ * @param filenames 
+ * @param project 
+ * @param resolve callback to call when processing is completed successfully
+ * @param reject callback to call when processing is completed with an error
+ */
 export const startProcessing = async (
   filenames: string[],
   project: string,
@@ -28,10 +20,22 @@ export const startProcessing = async (
 ) => {
   const res = await startProcessingReq(filenames, project);
 
+  const STATUS_RETRIES = 20;
+  const STATUS_RETRY_DELAY = 2500;
+
+  // Check the status of the processing until recieved completed, and no error
   const clearInterval = setIntervalX(
     async () => {
-      const processRes = await getProcessingStatusReq(res.uri);
-      switch (processRes.runtimeStatus) {
+      let processRes;
+      try {
+        processRes = await getProcessingStatusReq(res.uri);
+      } catch (e) {
+        reject(e);
+        clearInterval();
+        return;
+      }
+
+      switch (processRes.status) {
         case "Completed":
           if (processRes.isError) {
             reject(processRes.error);
@@ -49,20 +53,23 @@ export const startProcessing = async (
         default:
           reject(
             "One process check recieved an unexpected status: " +
-              processRes.runtimeStatus
+              processRes.status
           );
           clearInterval();
       }
     },
-    2500,
-    10
+    STATUS_RETRY_DELAY,
+    STATUS_RETRIES,
+    () => {
+      reject("Processing timed out");
+    }
   );
 };
 
 export const handleFileUpload = async (
   files: File[],
   uid: string,
-  project: string,
+  project: string
 ) => {
   return new Promise((resolve, reject) => {
     for (const file of files) {

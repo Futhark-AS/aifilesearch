@@ -101,7 +101,7 @@ const Project = () => {
           fileOnClick={(file) => console.log(file)}
           initialSelectedFile=""
           loadingFiles={
-            !filesUploading ? filesUpload.map((file) => file.file.name) : []
+            filesUploading ? filesUpload.map((file) => file.file.name) : []
           }
         />
         <section

@@ -1,6 +1,7 @@
 import { azureAxios, baseAxios } from "@/lib/axios";
 import { z } from "zod";
 import { uploadFile } from "./azure-storage-blob";
+import { createManyUnion } from "./utils";
 
 export const URLS = {
   query: "/api/query",
@@ -71,21 +72,26 @@ export const startProcessingReq = async (
   return startProcessingResult.parse(res.data);
 };
 
+
+const processingStatus = createManyUnion([
+  "Completed",
+  "Running",
+  "Pending",
+] as const);
+type processingStatus = z.infer<typeof processingStatus>;
+
 const getProcessingStatusResult = z.object({
-  runtimeStatus: z.string(),
+  runtimeStatus: processingStatus,
   output: z
     .object({
       error: z.string().optional(),
     })
     .optional(),
-  // output: z.null().or(,
-  // createdTime: "2023-01-11T13:35:28Z",
-  // lastUpdatedTime: "2023-01-11T13:35:28Z"
 });
 
 export const getProcessingStatusReq = async (
   uri: string
-): Promise<{ runtimeStatus: string; error: string; isError: boolean }> => {
+): Promise<{ status: processingStatus; error: string; isError: boolean }> => {
   const res = await baseAxios.get(uri);
 
   const parsed = getProcessingStatusResult.parse(res.data);
@@ -95,7 +101,7 @@ export const getProcessingStatusReq = async (
   );
 
   return {
-    runtimeStatus: parsed.runtimeStatus,
+    status: parsed.runtimeStatus,
     error: parsed.output?.error || "",
     isError: isError,
   };
@@ -140,7 +146,7 @@ export const getFiles = async () => {
     .parse(res.data)
     .map((name) => ({
       name: name.split("/").slice(-1)[0],
-      url: URLS.getBlobUri + `?blobName=michael/michael/${name}`,
+      url: URLS.getBlobUri + `?blobName=michael/michael/${name}`, //TODO: this is hardcoded for michael project
       size: "0",
       type: "pdf",
       pages: 10,
