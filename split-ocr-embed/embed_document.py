@@ -7,7 +7,7 @@ import openai
 import json
 openai.api_key = "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"
 pinecone.init(
-    api_key="d7c72c84-1057-48cb-b52f-d857d4c04380",
+    api_key="4af86256-76e3-4317-9343-964fb445a00a",
     environment="us-west1-gcp"
 )
 

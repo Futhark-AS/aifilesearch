@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const apiKey = 'd7c72c84-1057-48cb-b52f-d857d4c04380';
+const apiKey = '4af86256-76e3-4317-9343-964fb445a00a';
 //const index_name = "michael"
 const project_name = "cb61165"
 const environment = "us-west1-gcp"
