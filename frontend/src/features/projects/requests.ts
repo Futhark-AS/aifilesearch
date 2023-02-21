@@ -1,7 +1,8 @@
 import { azureAxios, baseAxios } from "@/lib/axios";
 import { z } from "zod";
 import { uploadFile } from "./azure-storage-blob";
-import { createManyUnion } from "./utils";
+import { createManyUnion, extractFileName } from './utils';
+import { c } from "msw/lib/glossary-de6278a9";
 
 export const URLS = {
   query: "/api/query",
@@ -14,35 +15,72 @@ export const URLS = {
   getProjects: "/api/getProjects",
 } as const;
 
-const matchSchema = z.object({
-  id: z.string(),
-  score: z.number(),
-  metadata: z.object({
-    page_number: z.number(),
-    bounding_box: z.array(
-      z.array(
-        z.object({
-          x: z.number(),
-          y: z.number(),
-        })
-      )
-    ),
-    file_name: z.string(),
-    content: z.string(),
-  }),
+const apiQueryResponseSchema = z.object({
+  matches: z.array(
+    z.object({
+      id: z.string(),
+      score: z.number(),
+      metadata: z.object({
+        page_number: z.number(),
+        bounding_box: z.array(
+          z.array(
+            z.object({
+              x: z.number(),
+              y: z.number(),
+            })
+          )
+        ),
+        file_name: z.string(),
+        content: z.string(),
+      }),
+    })
+  ),
 });
 
-const promptResSchema = z.object({
-  matches: z.array(matchSchema),
-});
+export type PromptMatch = {
+  id: string;
+  score: number;
+  pageNumber: number;
+  highlightBoundingBox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  fileName: string;
+  content: string;
+};
 
-export type PromptMatch = z.infer<typeof matchSchema>;
+export const transfromApiMatchesV1 = (
+  data: z.infer<typeof apiQueryResponseSchema>
+) => {
+  const inchToPixel = (x: number) => x * 96;
+  return data.matches.map((match) => ({
+    id: match.id,
+    score: match.score,
+    pageNumber: match.metadata.page_number,
+    highlightBoundingBox: {
+      x: inchToPixel(match.metadata.bounding_box[0][0].x),
+      y: inchToPixel(match.metadata.bounding_box[0][0].y),
+      width: inchToPixel(
+        match.metadata.bounding_box[0][1].x -
+          match.metadata.bounding_box[0][0].x
+      ),
+      height: inchToPixel(
+        match.metadata.bounding_box[0][2].y -
+          match.metadata.bounding_box[0][0].y
+      ),
+    },
+    fileName: match.metadata.file_name,
+    content: match.metadata.content,
+  }));
+};
 
 export const searchProjectWithPromptReq = async (
   prompt: string,
   project: string,
   uid: string
-) => {
+): Promise<PromptMatch[]> => {
   const res = await azureAxios.post(URLS.query, {
     prompt,
     project,
@@ -50,7 +88,12 @@ export const searchProjectWithPromptReq = async (
     user_id: uid,
   });
 
-  return promptResSchema.parse(res.data).matches;
+  const parsed = apiQueryResponseSchema.parse(res.data);
+
+  // API returns data in inches, we need to convert to pixels
+
+  // Transform data from api to match PromptMatch type
+  return transfromApiMatchesV1(parsed);
 };
 
 const startProcessingResult = z.object({
@@ -72,7 +115,6 @@ export const startProcessingReq = async (
   return startProcessingResult.parse(res.data);
 };
 
-
 const processingStatus = createManyUnion([
   "Completed",
   "Running",
@@ -86,7 +128,7 @@ const getProcessingStatusResult = z.object({
     .object({
       error: z.string().optional(),
     })
-    .optional(),
+    .nullable(),
 });
 
 export const getProcessingStatusReq = async (
@@ -139,16 +181,18 @@ export const getProjects = async (uid: string) => {
 
 export const getFiles = async () => {
   const res = await azureAxios.get(URLS.getFiles("michael"));
+  console.log(res);
+
+  const apiReturnSchema = z.object({
+    files: z.array(z.string()),
+  });
 
   // TODO: fetch file metadata from api
-  return z
-    .array(z.string())
-    .parse(res.data)
-    .map((name) => ({
-      name: name.split("/").slice(-1)[0],
-      url: URLS.getBlobUri + `?blobName=michael/michael/${name}`, //TODO: this is hardcoded for michael project
-      size: "0",
-      type: "pdf",
-      pages: 10,
-    }));
+  return apiReturnSchema.parse(res.data).files.map((name) => ({
+    name: name,
+    url: URLS.getBlobUri + `?blobName=michael/michael/${name}`, //TODO: this is hardcoded for michael project
+    size: "0",
+    type: "pdf",
+    pages: 10,
+  }));
 };

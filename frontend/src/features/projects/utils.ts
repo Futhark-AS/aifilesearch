@@ -1,3 +1,4 @@
+import { HighlightBoundingBox } from "@/components/PdfViewer/types";
 import { Primitive, ZodLiteral, z } from "zod";
 
 export const extractFileName = (filePath: string) =>
@@ -29,7 +30,6 @@ export function setIntervalX(
   return () => window.clearInterval(intervalID);
 }
 
-
 // helper for creating zod unions out of lists
 export type MappedZodLiterals<T extends readonly Primitive[]> = {
   -readonly [K in keyof T]: ZodLiteral<T[K]>;
@@ -42,4 +42,24 @@ export function createManyUnion<
   return z.union(
     literals.map((value) => z.literal(value)) as MappedZodLiterals<A>
   );
+}
+
+export function highlightBoundingBox(
+  bb: HighlightBoundingBox,
+  ctx: CanvasRenderingContext2D,
+  ratio: number
+) {
+  const { x, y, width, height } = bb;
+  console.log(bb, ratio, ratio);
+
+  ctx.save();
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = "yellow";
+  console.log(x * ratio, y * ratio, width * ratio, height * ratio)
+
+  ctx.fillRect(x * ratio, y * ratio, width * ratio, height * ratio);
+
+  ctx.restore();
+
+  // ctx.fillRect(140, 140, 30, 30);
 }

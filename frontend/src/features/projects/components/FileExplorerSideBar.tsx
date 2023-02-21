@@ -1,6 +1,7 @@
 import { Spinner } from "@/components/Spinner";
 import React, { useState } from "react";
 import { SideBar } from "./SideBar";
+import { extractFileName } from "../utils";
 
 type FileT = {
   name: string;
@@ -13,7 +14,7 @@ type FileT = {
 interface Props {
   files: FileT[];
   loadingFiles: string[];
-  fileOnClick: (file: string) => void;
+  fileOnClick: (fileName: string) => void;
   initialSelectedFile: string;
 }
 
@@ -39,7 +40,7 @@ function File({
         } ${loading && "animate-pulse"}`}
       >
         <div className="mx-4">
-          <span>{file.name}</span>
+          <span>{extractFileName(file.name)}</span>
           {loading && <Spinner size="sm" className=" ml-2 inline" />}
         </div>
       </button>

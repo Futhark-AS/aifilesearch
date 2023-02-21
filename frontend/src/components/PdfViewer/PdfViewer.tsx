@@ -12,78 +12,86 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
 
-type ViewPort = RenderParameters["viewport"];
-
 import { PromptMatch } from "@/features/projects/requests";
-import {
-  PDFDocumentProxy,
-  RenderParameters,
-} from "pdfjs-dist/types/src/display/api";
-import { showNotification } from "@mantine/notifications";
+import { highlightBoundingBox } from "@/features/projects/utils";
+import { showError } from "@/utils/showError";
+import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
+import { PDFPageProxy } from "react-pdf";
 import { useMeasure } from "react-use";
+import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
 
+const FALLBACK_WIDTH = 600;
 interface Props {
   file: string;
-  promptResult: PromptMatch;
-}
-
-type BoundingBox = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  x3: number;
-  y3: number;
-  x4: number;
-  y4: number;
-};
-
-function highlightBoundingBox(bb: BoundingBox, ctx: CanvasRenderingContext2D) {
-  const { x1, x2, y1, y3 } = bb;
-
-  const inchToPixel = 96;
-
-  const x = x1 * inchToPixel;
-  const y = y1 * inchToPixel;
-  const width = (x2 - x1) * inchToPixel;
-  const height = (y3 - y1) * inchToPixel;
-  ctx.save();
-  ctx.globalAlpha = 0.2;
-  ctx.fillStyle = "yellow";
-  ctx.fillRect(x, y, width, height);
-  ctx.restore();
+  highlightedBox: {
+    boundingBox: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+    pageNumber: number;
+  } | null;
 }
 
 export const PdfViewer = forwardRef(function PdfViewer(
-  { file, promptResult }: Props,
-  ref
+  { file, highlightedBox }: Props,
+  parentRef: Ref<HTMLElement>
 ) {
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [pageViewports, setPageViewports] = useState<ViewPort[] | null>(null);
-  const listRef = useRef<List | null>(null);
-  const [rendered, setRendered] = useState(false);
-  const [hasScrolled, setHasScrolled] = useState(false);
-
   const canvasElementsRef = useRef<(HTMLCanvasElement | null)[]>([]);
-
   const [setRef, { width: parentWidth, height: parentHeight }] = useMeasure();
 
-  useEffect(() => {
-    if (!ref) return;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    setRef(ref.current);
-  }, [ref, setRef]);
+  const getWidth = useCallback(
+    () => parentWidth || FALLBACK_WIDTH,
+    [parentWidth]
+  );
+  const getHeight = useCallback(
+    () => parentHeight || FALLBACK_WIDTH * 1.5,
+    [parentHeight]
+  );
 
+  // Scroll to the page that contains the prompt result if a prompt is given, when the list is loaded
+  const onListRendered = useCallback(
+    (listElem: List) => {
+      if (highlightedBox) {
+        listElem.scrollToItem(highlightedBox.pageNumber - 1, "start");
+      }
+    },
+    [highlightedBox]
+  );
+
+  const onPdfPageRenderSuccess = useCallback(
+    (page: PDFPageProxy) => {
+      // If given a result to highlight If the page is the one that contains the prompt result, highlight the text
+      if (
+        highlightedBox &&
+        page.pageNumber == highlightedBox.pageNumber // highlight on same page
+      ) {
+        console.log(canvasElementsRef);
+
+        //BRING BACK!
+        const canvas = canvasElementsRef.current[highlightedBox.pageNumber-1];
+
+        const ctx = canvas?.getContext("2d");
+
+        console.log(canvas)
+
+        if (!ctx) return showError("Could not highlight text");
+
+        highlightBoundingBox(highlightedBox.boundingBox, ctx, 1);
+      }
+    },
+    [highlightedBox]
+  );
+
+  // Use ref for deciding width if its given.
   useEffect(() => {
-    if (listRef.current && !hasScrolled) {
-      listRef.current.scrollToItem(
-        promptResult.metadata.page_number - 1,
-        "start"
-      );
-      setHasScrolled(true);
+    if (isDefinedHTMLObjectRef(parentRef)) {
+      setRef(parentRef.current);
     }
-  }, [rendered, hasScrolled, promptResult.metadata.page_number]);
+  }, [parentRef, setRef]);
 
   /**
    * React-Window cannot get item size using async getter, therefore we need to
@@ -91,24 +99,14 @@ export const PdfViewer = forwardRef(function PdfViewer(
    */
   useEffect(() => {
     setPageViewports(null);
-
-    if (!pdf) {
-      return;
+    if (pdf) {
+      getPageViewports(pdf)
+        .then((data) => setPageViewports(data))
+        .catch((error) => {
+          console.log(error);
+          showError("Could not load PDF");
+        });
     }
-
-    (async () => {
-      const pageNumbers = Array.from(new Array(pdf.numPages)).map(
-        (_, index) => index + 1
-      );
-
-      const nextPageViewports: ViewPort[] = [];
-      for (const pageNumber of pageNumbers) {
-        const page = await pdf.getPage(pageNumber);
-        nextPageViewports.push(page.getViewport({ scale: 1 }));
-      }
-
-      setPageViewports(nextPageViewports);
-    })();
   }, [pdf]);
 
   function onDocumentLoadSuccess(nextPdf: PDFDocumentProxy) {
@@ -121,63 +119,30 @@ export const PdfViewer = forwardRef(function PdfViewer(
     }
 
     const pageViewport = pageViewports[pageIndex];
-    const scale = parentWidth / pageViewport.width;
+    const scale = getWidth() / pageViewport.width;
     const actualHeight = pageViewport.height * scale;
 
     return actualHeight;
   }
 
   return (
-    <div>
+    <div className="mx-auto w-[80ch] border-2 border-sky-500">
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
         {pdf && pageViewports ? (
           <List
-            width={parentWidth}
-            height={parentHeight}
-            estimatedItemSize={parentHeight}
+            width={getWidth()}
+            height={getHeight()}
+            estimatedItemSize={getHeight()}
             itemCount={pdf.numPages}
             itemSize={getPageHeight}
-            ref={listRef}
-            onItemsRendered={() => setRendered(true)}
+            ref={(listRef) => listRef && onListRendered(listRef)}
           >
             {({ index, style }) => (
               <div style={style}>
                 <Page
-                  onRenderSuccess={(page) => {
-                    console.log(`Page ${page.pageNumber} rendered`);
-
-                    if (index == promptResult.metadata.page_number - 1) {
-                      const canvas =
-                        canvasElementsRef.current[
-                          promptResult.metadata.page_number - 1
-                        ];
-                      const ctx = canvas?.getContext("2d");
-                      const boundingBox = promptResult.metadata.bounding_box[0];
-
-                      if (ctx) {
-                        highlightBoundingBox(
-                          {
-                            x1: boundingBox[0].x,
-                            y1: boundingBox[0].y,
-                            x2: boundingBox[1].x,
-                            y2: boundingBox[1].y,
-                            x3: boundingBox[2].x,
-                            y3: boundingBox[2].y,
-                            x4: boundingBox[3].x,
-                            y4: boundingBox[3].y,
-                          },
-                          ctx
-                        );
-                      } else {
-                        showNotification({
-                          message: "Could not highlight text",
-                          color: "red",
-                        });
-                      }
-                    }
-                  }}
+                  onRenderSuccess={onPdfPageRenderSuccess}
                   pageIndex={index}
-                  width={parentWidth}
+                  width={getWidth()}
                   canvasRef={(el) => {
                     canvasElementsRef.current[index] = el;
                   }}
@@ -185,7 +150,9 @@ export const PdfViewer = forwardRef(function PdfViewer(
               </div>
             )}
           </List>
-        ) : null}
+        ) : (
+          <div>There was an error</div>
+        )}
       </Document>
     </div>
   );

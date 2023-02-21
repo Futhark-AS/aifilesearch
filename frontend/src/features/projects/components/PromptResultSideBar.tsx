@@ -13,20 +13,20 @@ interface Props {
 export function PromptResultSideBar({ items, itemOnClick }: Props) {
   return (
     <SideBar title="Search results" side="right">
-      <>
+      <div className="px-2">
         {items.map((result) => (
           <Card key={result.id} className="mb-2 w-full">
             <h4 className="text-md">
-              {extractFileName(result.metadata.file_name)}
+              {extractFileName(result.fileName)}
             </h4>
-            <p className="text-sm">{result.metadata.content}</p>
-            <i className="mb-2 block">Page: {result.metadata.page_number}</i>
+            <p className="text-sm">{result.content}</p>
+            <i className="mb-2 block">Page: {result.pageNumber}</i>
             <Button size="sm" onClick={() => itemOnClick(result)}>
               Show in PDF viewer
             </Button>
           </Card>
         ))}
-      </>
+      </div>
     </SideBar>
   );
 }
