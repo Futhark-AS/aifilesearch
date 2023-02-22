@@ -3,7 +3,7 @@ import { PdfViewer } from "@/components/PdfViewer";
 import { Spinner } from "@/components/Spinner";
 import { selectUser } from "@/features/auth/authSlice";
 import { useAppSelector } from "@/redux/hooks";
-import { showError } from "@/utils/showError";
+import { showError, showSuccess } from "@/utils/showError";
 import { FileValidated } from "@dropzone-ui/react";
 import { TextInput } from "@mantine/core";
 import React, { useState } from "react";
@@ -63,7 +63,7 @@ const Project = () => {
     e.preventDefault();
     setResultsLoading(true);
 
-    searchProjectWithPromptReq(searchValue, projectName, user.uid)
+    searchProjectWithPromptReq(searchValue, projectName)
       .then((res) => {
         setSearchResults(res);
       })
@@ -87,6 +87,7 @@ const Project = () => {
     )
       .then((data) => {
         refetchFiles();
+        showSuccess("File uploaded successfully!")
       })
       .catch((e) => {
         console.error(e);
@@ -141,7 +142,6 @@ const Project = () => {
                 boundingBox: activeResult.fileSearchResult.highlightBoundingBox,
                 pageNumber: activeResult.fileSearchResult.pageNumber,
               }}
-              ref={ref}
             />
           ) : (
             <div>No active PDF</div>

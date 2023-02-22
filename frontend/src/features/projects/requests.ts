@@ -55,6 +55,7 @@ export const transfromApiMatchesV1 = (
   data: z.infer<typeof apiQueryResponseSchema>
 ) => {
   const inchToPixel = (x: number) => x * 96;
+  console.log("MATCHES", data.matches)
   return data.matches.map((match) => ({
     id: match.id,
     score: match.score,
@@ -79,13 +80,11 @@ export const transfromApiMatchesV1 = (
 export const searchProjectWithPromptReq = async (
   prompt: string,
   project: string,
-  uid: string
 ): Promise<PromptMatch[]> => {
   const res = await azureAxios.post(URLS.query, {
     prompt,
     project,
     topK: 10,
-    user_id: uid,
   });
 
   const parsed = apiQueryResponseSchema.parse(res.data);
@@ -109,8 +108,6 @@ export const startProcessingReq = async (
     file_names: filenames,
     project: project,
   });
-
-  console.log(res);
 
   return startProcessingResult.parse(res.data);
 };

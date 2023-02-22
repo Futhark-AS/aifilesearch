@@ -7,3 +7,11 @@ export const showError = (message?: string) => {
         color: "red",
       });
     }
+
+export const showSuccess = (message?: string) => {
+    showNotification({
+        title: "Success",
+        message: message || "Success!",
+        color: "green",
+      });
+    }

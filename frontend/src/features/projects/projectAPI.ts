@@ -20,8 +20,9 @@ export const startProcessing = async (
 ) => {
   const res = await startProcessingReq(filenames, project);
 
-  const STATUS_RETRIES = 20;
-  const STATUS_RETRY_DELAY = 2500;
+  // Azure function timeout is 10 minutes, so we will check the status every minute 11 times for good measure
+  const STATUS_RETRIES = 11;
+  const STATUS_RETRY_DELAY = 60*1000; // 60 seconds
 
   // Check the status of the processing until recieved completed, and no error
   const clearInterval = setIntervalX(

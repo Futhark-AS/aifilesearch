@@ -19,6 +19,7 @@ import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { PDFPageProxy } from "react-pdf";
 import { useMeasure } from "react-use";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
+import { HighlightBoundingBox } from './types';
 
 const FALLBACK_WIDTH = 600;
 interface Props {
@@ -69,17 +70,29 @@ export const PdfViewer = forwardRef(function PdfViewer(
         highlightedBox &&
         page.pageNumber == highlightedBox.pageNumber // highlight on same page
       ) {
-        console.log(canvasElementsRef);
-
-        //BRING BACK!
-        const canvas = canvasElementsRef.current[highlightedBox.pageNumber-1];
+        console.log(canvasElementsRef.current)
+        const canvas = canvasElementsRef.current[page.pageNumber - 1];
 
         const ctx = canvas?.getContext("2d");
 
-        console.log(canvas)
+        if (!canvas || !ctx) return showError("Could not highlight text");
 
-        if (!ctx) return showError("Could not highlight text");
+        const xPercent = highlightedBox.boundingBox.x / page.originalWidth
+        const yPercent = highlightedBox.boundingBox.y / page.originalHeight
 
+        const x = xPercent * page.width
+        const y = yPercent * page.height
+
+        const width = xPercent * highlightedBox.boundingBox.width
+        const height = xPercent * highlightedBox.boundingBox.height
+
+console.log("xPercent" + xPercent, "yPercent" + yPercent, "x" + x, "y" + y, "width" + width, "height" + height)
+
+        const ratio = canvas.width / page.originalWidth;
+
+        console.log("ratio" + ratio)
+
+        // highlightBoundingBox({ x, y, width: highlightedBox.boundingBox.width, height: highlightedBox.boundingBox.height }, ctx, 1);
         highlightBoundingBox(highlightedBox.boundingBox, ctx, 1);
       }
     },
@@ -128,9 +141,9 @@ export const PdfViewer = forwardRef(function PdfViewer(
   return (
     <div className="mx-auto w-[80ch] border-2 border-sky-500">
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-        {pdf && pageViewports ? (
+        {/* {pdf && pageViewports ? (
           <List
-            width={getWidth()}
+            width={}
             height={getHeight()}
             estimatedItemSize={getHeight()}
             itemCount={pdf.numPages}
@@ -138,21 +151,21 @@ export const PdfViewer = forwardRef(function PdfViewer(
             ref={(listRef) => listRef && onListRendered(listRef)}
           >
             {({ index, style }) => (
-              <div style={style}>
+              <div style={style}> */}
                 <Page
                   onRenderSuccess={onPdfPageRenderSuccess}
-                  pageIndex={index}
-                  width={getWidth()}
+                  pageIndex={((highlightedBox?.pageNumber || 1) - 1) || 0}
+                  // width={getWidth()}
                   canvasRef={(el) => {
-                    canvasElementsRef.current[index] = el;
+                    canvasElementsRef.current[((highlightedBox?.pageNumber || 1) - 1) || 0] = el;
                   }}
                 />
-              </div>
+              {/* </div>
             )}
           </List>
         ) : (
           <div>There was an error</div>
-        )}
+        )} */}
       </Document>
     </div>
   );

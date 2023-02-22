@@ -9,6 +9,7 @@ import { useQuery } from "react-query";
 import { Link } from "@/components/Link";
 import { Button } from "@/components/Button";
 import { FileDropzone } from "@/components/FileDropzone";
+import { Spinner } from "@/components/Spinner";
 
 export const Dashboard: React.FC = () => {
   const user = useUser();
@@ -48,9 +49,6 @@ export const Dashboard: React.FC = () => {
                 files.map((file) => file.file),
                 user.uid,
                 uploadProject!,
-                () => {
-                  null;
-                }
               );
               setFiles([]);
             }}
@@ -61,7 +59,7 @@ export const Dashboard: React.FC = () => {
       )}
       <h3 className="mt-8 text-lg font-semibold">Recent Projects</h3>
       <Divider className="my-2" />
-      {data &&
+      {data ?
         data.map((project) => (
           <Link to={`./projects/${project}`} key={project}>
             <Card shadow="sm" radius="md" className="my-2 cursor-pointer p-8">
@@ -74,7 +72,10 @@ export const Dashboard: React.FC = () => {
               </p>
             </Card>
           </Link>
-        ))}
+        ))
+      : <Spinner size="md" />
+      
+      }
     </ContentLayout>
   );
 };
