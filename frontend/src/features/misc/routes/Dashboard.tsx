@@ -14,7 +14,7 @@ import { Spinner } from "@/components/Spinner";
 export const Dashboard: React.FC = () => {
   const user = useUser();
   const [files, setFiles] = useState<FileValidated[]>([]);
-  const [uploadProject, setUploadProject] = useState<string | null>(null);
+  const [uploadProject, setUploadProject] = useState<string>("");
 
   const { data } = useQuery({
     queryKey: ["projects", user.uid],
@@ -43,12 +43,12 @@ export const Dashboard: React.FC = () => {
           />
           <Button
             variant="primary"
-            disabled={uploadProject === null}
+            disabled={uploadProject === ""}
             onClick={() => {
               handleFileUpload(
                 files.map((file) => file.file),
                 user.uid,
-                uploadProject!,
+                uploadProject,
               );
               setFiles([]);
             }}

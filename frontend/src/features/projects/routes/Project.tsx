@@ -29,6 +29,8 @@ const Project = () => {
   );
 
   const [searchValue, setSearchValue] = useState("");
+  const searchRef = React.useRef<HTMLInputElement>(null);
+
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
 
   const [filesUploading, setFilesUploading] = useState(false);
@@ -63,7 +65,7 @@ const Project = () => {
     e.preventDefault();
     setResultsLoading(true);
 
-    searchProjectWithPromptReq(searchValue, projectName)
+    searchProjectWithPromptReq(searchRef.current?.value || "", projectName)
       .then((res) => {
         setSearchResults(res);
       })
@@ -73,7 +75,7 @@ const Project = () => {
       })
       .finally(() => {
         setResultsLoading(false);
-        setSearchValue("");
+        searchRef.current!.value = "";
       });
   };
 
@@ -87,7 +89,7 @@ const Project = () => {
     )
       .then((data) => {
         refetchFiles();
-        showSuccess("File uploaded successfully!")
+        showSuccess("File uploaded successfully!");
       })
       .catch((e) => {
         console.error(e);
@@ -116,9 +118,9 @@ const Project = () => {
           className="container mx-auto max-h-screen overflow-y-scroll p-4"
           ref={ref}
         >
-          {/* <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
+          <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
             {projectName}
-          </h2> */}
+          </h2>
           <FileDropzonePassive
             files={!filesUploading ? filesUpload : []}
             setFiles={setFilesUpload}
@@ -130,29 +132,25 @@ const Project = () => {
               label="Search"
               placeholder="Eks: Hvor mye må jeg betale i skatt om jeg tjener 400 000?"
               className="input input-bordered mt-5 w-full"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
               rightSection={resultsLoading && <Spinner size="sm" />}
+              ref={searchRef}
             />
           </form>
           {activeResult ? (
             <PdfViewer
               file={activeResult.fileUrl}
-              highlightedBox={activeResult.fileSearchResult && {
-                boundingBox: activeResult.fileSearchResult.highlightBoundingBox,
-                pageNumber: activeResult.fileSearchResult.pageNumber,
-              }}
+              highlightedBox={
+                activeResult.fileSearchResult && {
+                  boundingBox:
+                    activeResult.fileSearchResult.highlightBoundingBox,
+                  pageNumber: activeResult.fileSearchResult.pageNumber,
+                }
+              }
+              ref={ref}
             />
           ) : (
             <div>No active PDF</div>
           )}
-          {/* <PdfViewer
-            file={
-              "https://nlpsearchapi.blob.core.windows.net/users/sid%3Aeb29ffbd4835f17f59814309696889de/michael/enfatizar.pdf?st=2023-02-20T20%3A34%3A18Z&se=2023-02-20T22%3A34%3A18Z&sp=r&sv=2018-03-28&sr=b&sig=2X8k79FuCJ3ACtTZCgUPipvygyeRttVu7TejtCVNyvQ%3D"
-            }
-            promptResult={testing[0]}
-            ref={ref}
-          /> */}
         </section>
         <PromptResultSideBar
           items={searchResults}

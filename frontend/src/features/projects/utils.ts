@@ -46,28 +46,15 @@ export function createManyUnion<
 
 export function highlightBoundingBox(
   bb: HighlightBoundingBox,
-  ctx: CanvasRenderingContext2D,
-  ratio: number
+  ctx: CanvasRenderingContext2D
 ) {
   const { x, y, width, height } = bb;
-  console.log(bb, ratio, ratio);
-
-  console.log(ratio);
-  const newRatio = 1.5
-  const minusRatio = (num: number) => num * 0.5;
 
   ctx.save();
   ctx.globalAlpha = 0.2;
   ctx.fillStyle = "yellow";
 
-  console.log("FINAL", x*newRatio, y*newRatio, width*newRatio, height*newRatio)
-
-  ctx.fillRect(
-    x * newRatio, //- minusRatio(x),
-    y * newRatio, //- minusRatio(y),
-    width * newRatio, //- minusRatio(width),
-    height * newRatio, //- minusRatio(height),
-  );
+  ctx.fillRect(x, y, width, height);
 
   ctx.restore();
 

@@ -12,14 +12,12 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
 
-import { PromptMatch } from "@/features/projects/requests";
 import { highlightBoundingBox } from "@/features/projects/utils";
 import { showError } from "@/utils/showError";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { PDFPageProxy } from "react-pdf";
 import { useMeasure } from "react-use";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
-import { HighlightBoundingBox } from './types';
 
 const FALLBACK_WIDTH = 600;
 interface Props {
@@ -48,10 +46,6 @@ export const PdfViewer = forwardRef(function PdfViewer(
     () => parentWidth || FALLBACK_WIDTH,
     [parentWidth]
   );
-  const getHeight = useCallback(
-    () => parentHeight || FALLBACK_WIDTH * 1.5,
-    [parentHeight]
-  );
 
   // Scroll to the page that contains the prompt result if a prompt is given, when the list is loaded
   const onListRendered = useCallback(
@@ -70,30 +64,27 @@ export const PdfViewer = forwardRef(function PdfViewer(
         highlightedBox &&
         page.pageNumber == highlightedBox.pageNumber // highlight on same page
       ) {
-        console.log(canvasElementsRef.current)
         const canvas = canvasElementsRef.current[page.pageNumber - 1];
 
         const ctx = canvas?.getContext("2d");
 
         if (!canvas || !ctx) return showError("Could not highlight text");
 
-        const xPercent = highlightedBox.boundingBox.x / page.originalWidth
-        const yPercent = highlightedBox.boundingBox.y / page.originalHeight
+        const CONSTANT_RATIO = 1.5;
 
-        const x = xPercent * page.width
-        const y = yPercent * page.height
-
-        const width = xPercent * highlightedBox.boundingBox.width
-        const height = xPercent * highlightedBox.boundingBox.height
-
-console.log("xPercent" + xPercent, "yPercent" + yPercent, "x" + x, "y" + y, "width" + width, "height" + height)
-
-        const ratio = canvas.width / page.originalWidth;
-
-        console.log("ratio" + ratio)
+        const ratio = CONSTANT_RATIO * (page.width / page.originalWidth);
+        const { x, y, width, height } = highlightedBox.boundingBox;
 
         // highlightBoundingBox({ x, y, width: highlightedBox.boundingBox.width, height: highlightedBox.boundingBox.height }, ctx, 1);
-        highlightBoundingBox(highlightedBox.boundingBox, ctx, 1);
+        highlightBoundingBox(
+          {
+            x: x * ratio,
+            y: y * ratio,
+            width: width * ratio,
+            height: height * ratio,
+          },
+          ctx
+        );
       }
     },
     [highlightedBox]
@@ -128,10 +119,14 @@ console.log("xPercent" + xPercent, "yPercent" + yPercent, "x" + x, "y" + y, "wid
 
   function getPageHeight(pageIndex: number) {
     if (!pageViewports) {
-      throw new Error("getPageHeight() called too early");
+      return 0 // called to early, before pageViewports are calculated
     }
 
     const pageViewport = pageViewports[pageIndex];
+
+
+    if(!pageViewport) return 0
+
     const scale = getWidth() / pageViewport.width;
     const actualHeight = pageViewport.height * scale;
 
@@ -139,33 +134,33 @@ console.log("xPercent" + xPercent, "yPercent" + yPercent, "x" + x, "y" + y, "wid
   }
 
   return (
-    <div className="mx-auto w-[80ch] border-2 border-sky-500">
+    <div>
       <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-        {/* {pdf && pageViewports ? (
+        {pdf && pageViewports ? (
           <List
-            width={}
-            height={getHeight()}
-            estimatedItemSize={getHeight()}
+            width={getWidth()}
+            height={getPageHeight(0)}
+            estimatedItemSize={getPageHeight(0)}
             itemCount={pdf.numPages}
             itemSize={getPageHeight}
             ref={(listRef) => listRef && onListRendered(listRef)}
           >
             {({ index, style }) => (
-              <div style={style}> */}
+              <div style={style}>
                 <Page
                   onRenderSuccess={onPdfPageRenderSuccess}
-                  pageIndex={((highlightedBox?.pageNumber || 1) - 1) || 0}
-                  // width={getWidth()}
+                  pageIndex={index}
+                  width={getWidth()}
                   canvasRef={(el) => {
-                    canvasElementsRef.current[((highlightedBox?.pageNumber || 1) - 1) || 0] = el;
+                    canvasElementsRef.current[index] = el;
                   }}
                 />
-              {/* </div>
+              </div>
             )}
           </List>
         ) : (
           <div>There was an error</div>
-        )} */}
+        )}
       </Document>
     </div>
   );
