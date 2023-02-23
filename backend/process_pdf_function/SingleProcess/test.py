@@ -1,13 +1,14 @@
+import os
 from azure.cosmos import CosmosClient
 #----------- COsmos DB ----------
 cosmos_endpoint = "https://nlpcosmos.documents.azure.com:443/"
-cosmos_key = "jCgpIdmAvXDnfejPm8s9V4APkk2lnDDErFUVhVXVabfbXA15efbzeNzYwmIK8B2KyLyQ6fBuRhMKACDbqEB3ew=="
+cosmos_key = os.getenv("COSMOS_KEY")
 cosmos_client = CosmosClient(url=cosmos_endpoint, credential=cosmos_key)
 cosmos_database = cosmos_client.get_database_client("nlp-search") 
 cosmos_container = cosmos_database.get_container_client("users")
 
 # Retrieve the connection string for use with the application. The blob storage
-connect_str = "DefaultEndpointsProtocol=https;AccountName=nlpsearchapi;AccountKey=E3hMExwQh1j50yYeW/KUA5tPkZLf0VwEu3/jlz7NRGgCmElfjpiBbnTRN5LxrN77warRvknuP9bM+AStWj3EGA==;EndpointSuffix=core.windows.net"
+connect_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
 
 #test data
 price = 0.01

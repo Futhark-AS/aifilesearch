@@ -25,7 +25,7 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 # ---------- OCR ----------
 endpoint = "https://jorgen-receipt-recognizer.cognitiveservices.azure.com/"
-key = "ce4f6273acf642888e33b283c7481323"
+key = os.getenv("OCR_KEY")
 
 def analyze_read(pdf, blob_name):
     document_analysis_client = DocumentAnalysisClient(
@@ -186,10 +186,10 @@ def split_long_paragraphs(paragraphs):
     
 
 # ---------- Embed paragraphs ----------
-openai.api_key = "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"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 pinecone.init(
-    api_key="4af86256-76e3-4317-9343-964fb445a00a",
-    environment="us-east1-gcp"
+    api_key=os.getenv("PINECONE_API_KEY"),
+    environment=os.getenv("PINECONE_ENVIRONMENT")
 )
 
 def embed_paragraphs(paragraphs, namespace, index_name):
@@ -246,14 +246,14 @@ def embed_paragraphs(paragraphs, namespace, index_name):
 
 #----------- COsmos DB ----------
 cosmos_endpoint = "https://nlpcosmos.documents.azure.com:443/"
-cosmos_key = "jCgpIdmAvXDnfejPm8s9V4APkk2lnDDErFUVhVXVabfbXA15efbzeNzYwmIK8B2KyLyQ6fBuRhMKACDbqEB3ew=="
+cosmos_key = os.getenv("COSMOS_KEY")
 cosmos_client = CosmosClient(url=cosmos_endpoint, credential=cosmos_key)
 logging.info("Cosmos DB client created")
 cosmos_database = cosmos_client.get_database_client("nlp-search") 
 cosmos_container = cosmos_database.get_container_client("users")
 
 # Retrieve the connection string for use with the application. The blob storage
-connect_str = "DefaultEndpointsProtocol=https;AccountName=nlpsearchapi;AccountKey=E3hMExwQh1j50yYeW/KUA5tPkZLf0VwEu3/jlz7NRGgCmElfjpiBbnTRN5LxrN77warRvknuP9bM+AStWj3EGA==;EndpointSuffix=core.windows.net"
+connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 
 def main(settings) -> str:
     # Create the BlobServiceClient object

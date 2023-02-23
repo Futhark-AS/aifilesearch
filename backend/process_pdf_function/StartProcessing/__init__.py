@@ -8,6 +8,7 @@
 
 import logging
 import json
+import os
 
 import azure.functions as func
 import azure.durable_functions as df
@@ -15,7 +16,7 @@ import azure.durable_functions as df
 from azure.storage.blob import BlobServiceClient
 
 # Retrieve the connection string for use with the application. The storage
-connect_str = "DefaultEndpointsProtocol=https;AccountName=nlpsearchapi;AccountKey=E3hMExwQh1j50yYeW/KUA5tPkZLf0VwEu3/jlz7NRGgCmElfjpiBbnTRN5LxrN77warRvknuP9bM+AStWj3EGA==;EndpointSuffix=core.windows.net"
+connect_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     try:
