@@ -8,11 +8,11 @@ const httpTrigger: AzureFunction = async function (
   context.log("HTTP trigger function processed a request.");
 
   // Get pinecone index name from azure env
-  const pineconeIndexName = process.env["PINECONE_INDEX_NAME"];
+  const pineconeIndexName = process.env["ENV_PINECONE_INDEX_NAME"];
 
   if (!pineconeIndexName) {
     context.log(
-      "Pinecone index name not found in environment variables. Expected key: PINECONE_INDEX_NAME. Found: ", process.env
+      "Pinecone index name not found in environment variables. Expected key: ENV_PINECONE_INDEX_NAME. Found: ", process.env
     );
     context.res = {
       status: 500,

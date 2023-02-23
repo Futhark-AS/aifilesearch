@@ -2,7 +2,7 @@ import os
 from azure.cosmos import CosmosClient
 #----------- COsmos DB ----------
 cosmos_endpoint = "https://nlpcosmos.documents.azure.com:443/"
-cosmos_key = os.getenv("COSMOS_KEY")
+cosmos_key = os.getenv("ENV_COSMOS_KEY")
 cosmos_client = CosmosClient(url=cosmos_endpoint, credential=cosmos_key)
 cosmos_database = cosmos_client.get_database_client("nlp-search") 
 cosmos_container = cosmos_database.get_container_client("users")

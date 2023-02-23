@@ -1,8 +1,8 @@
 const axios = require("axios");
 
-const apiKey = process.env["PINECONE_API_KEY"]
-const project_name = process.env["PINECONE_PROJECT_NAME"]
-const environment = process.env["PINECONE_ENVIRONMENT"]
+const apiKey = process.env["ENV_PINECONE_API_KEY"]
+const project_name = process.env["ENV_PINECONE_PROJECT_NAME"]
+const environment = process.env["ENV_PINECONE_ENVIRONMENT"]
 
 const baseUrl = (index_name, project_name, environment) => `https://${index_name}-${project_name}.svc.${environment}.pinecone.io/`
 
@@ -80,7 +80,7 @@ const getEmbedding = async (context, text) => {
   const url = "https://api.openai.com/v1/embeddings";
   const headers = {
     "Content-Type": "application/json",
-    Authorization: "Bearer " + process.env["OPENAI_API_KEY"],
+    Authorization: "Bearer " + process.env["ENV_OPENAI_API_KEY"],
   };
   const data = {
     input: text,
