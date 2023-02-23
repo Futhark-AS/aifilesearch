@@ -12,12 +12,13 @@ const httpTrigger: AzureFunction = async function (
 
   if (!pineconeIndexName) {
     context.log(
-      "Pinecone index name not found in environment variables. Expected key: PINECONE_INDEX_NAME"
+      "Pinecone index name not found in environment variables. Expected key: PINECONE_INDEX_NAME. Found: ", process.env
     );
     context.res = {
       status: 500,
       body: "The server is not configured correctly",
     };
+    return
   }
 
   const newProjectName = req.body?.projectName;
@@ -82,7 +83,7 @@ const httpTrigger: AzureFunction = async function (
     context.res = {
       status: 500,
       body: "An error occurred while getting projects",
-      error: err,
+      error: err, // TODO: Remove this in production
     };
   }
 };
