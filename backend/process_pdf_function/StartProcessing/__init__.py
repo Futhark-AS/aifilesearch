@@ -36,6 +36,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         user_id = req_body.get('user_id') 
         blob_names = req_body.get('file_names')
         namespace = req_body.get('namespace')
+        index_name = req_body.get('index_name')
         #cosmos_result_id = req_body.get("cosmos_result_id")
 
         # make sure cosmos_result_id is a string
@@ -68,8 +69,6 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
             if blob_name.split("/")[:-1] != blob_names[0].split("/")[:-1]:
                 return return_err("All blobs must be in the same directory")
 
-
-        index_name = "michael" # TODO: get this from cosmos db or something. Check if it is full or not. If it is full, create a new index name and add it to cosmos db
 
         first_retry_interval_in_milliseconds = 5000
         max_number_of_attempts = 1

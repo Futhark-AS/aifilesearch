@@ -14,6 +14,16 @@
       "type": "http",
       "direction": "out",
       "name": "res"
+    },
+    {
+      "type": "cosmosDB",
+      "name": "document",
+      "direction": "in",
+      "connectionStringSetting": "COSMOS_CONNECTION_STRING",
+      "databaseName": "nlp-search",
+      "collectionName": "users",
+      "Id": "{headers.x-ms-client-principal-id}",
+      "PartitionKey": "{headers.x-ms-client-principal-id}"
     }
   ]
 }
