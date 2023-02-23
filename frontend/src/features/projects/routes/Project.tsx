@@ -24,11 +24,10 @@ const Project = () => {
   const ref = React.useRef<HTMLDivElement>(null);
 
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
-  const { data: projectFiles, refetch: refetchFiles } = useQuery("files", () =>
-    getFiles()
+  const { data: projectFiles, refetch: refetchFiles } = useQuery(["files", projectName], () =>
+    getFiles(projectName)
   );
 
-  const [searchValue, setSearchValue] = useState("");
   const searchRef = React.useRef<HTMLInputElement>(null);
 
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);

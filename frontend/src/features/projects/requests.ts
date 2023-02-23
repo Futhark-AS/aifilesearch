@@ -1,7 +1,7 @@
 import { azureAxios, baseAxios } from "@/lib/axios";
 import { z } from "zod";
 import { uploadFile } from "./azure-storage-blob";
-import { createManyUnion, extractFileName } from './utils';
+import { createManyUnion, extractFileName } from "./utils";
 import { c } from "msw/lib/glossary-de6278a9";
 
 export const URLS = {
@@ -55,7 +55,7 @@ export const transfromApiMatchesV1 = (
   data: z.infer<typeof apiQueryResponseSchema>
 ) => {
   const inchToPixel = (x: number) => x * 96;
-  console.log("MATCHES", data.matches)
+  console.log("MATCHES", data.matches);
   return data.matches.map((match) => ({
     id: match.id,
     score: match.score,
@@ -79,7 +79,7 @@ export const transfromApiMatchesV1 = (
 
 export const searchProjectWithPromptReq = async (
   prompt: string,
-  project: string,
+  project: string
 ): Promise<PromptMatch[]> => {
   const res = await azureAxios.post(URLS.query, {
     prompt,
@@ -176,8 +176,8 @@ export const getProjects = async (uid: string) => {
   return z.object({ projects: z.array(z.string()) }).parse(res.data).projects;
 };
 
-export const getFiles = async () => {
-  const res = await azureAxios.get(URLS.getFiles("michael"));
+export const getFiles = async (project: string) => {
+  const res = await azureAxios.get(URLS.getFiles(project));
   console.log(res);
 
   const apiReturnSchema = z.object({
@@ -187,7 +187,7 @@ export const getFiles = async () => {
   // TODO: fetch file metadata from api
   return apiReturnSchema.parse(res.data).files.map((name) => ({
     name: name,
-    url: URLS.getBlobUri + `?blobName=michael/michael/${name}`, //TODO: this is hardcoded for michael project
+    url: URLS.getBlobUri + `?blobName=${project}/${project}/${name}`, 
     size: "0",
     type: "pdf",
     pages: 10,
