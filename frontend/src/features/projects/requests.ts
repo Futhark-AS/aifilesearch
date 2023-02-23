@@ -13,6 +13,7 @@ export const URLS = {
   postFile: "/api/postFile",
   getFiles: (project: string) => `/api/projects/${project}`,
   getProjects: "/api/getProjects",
+  createProject: "/api/createProject",
 } as const;
 
 const apiQueryResponseSchema = z.object({
@@ -193,3 +194,10 @@ export const getFiles = async (project: string) => {
     pages: 10,
   }));
 };
+
+export const createProject = async (name: string) => {
+  const res = await azureAxios.post(URLS.createProject, {
+    projectName: name,
+  });
+  return res.data;
+}
