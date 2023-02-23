@@ -7,6 +7,19 @@ const httpTrigger: AzureFunction = async function (
 ): Promise<void> {
   context.log("HTTP trigger function processed a request.");
 
+  // Get pinecone index name from azure env
+  const pineconeIndexName = process.env["PINECONE_INDEX_NAME"];
+
+  if (!pineconeIndexName) {
+    context.log(
+      "Pinecone index name not found in environment variables. Expected key: PINECONE_INDEX_NAME"
+    );
+    context.res = {
+      status: 500,
+      body: "The server is not configured correctly",
+    };
+  }
+
   const newProjectName = req.body?.projectName;
 
   if (!newProjectName) {
@@ -38,7 +51,7 @@ const httpTrigger: AzureFunction = async function (
 
     const newProject = {
       namespace: uid + "/" + newProjectName,
-      index_name: newProjectName,
+      index_name: pineconeIndexName,
       cost: 0,
       files: [],
     };
