@@ -9,18 +9,21 @@ module.exports = async function (context, req, document) {
     // add namespace to file_names
     file_names = file_names.map((name) => namespace + "/" + name);
 
-    // Check if project exists in cosmosdb
-    if (!document?.projects?.includes(project)) {
+    // Get project from cosmosdb
+    const cosmosProject = document?.projects?.find(
+      (p) => p.namespace === namespace
+    );
+
+    if (!cosmosProject) {
       context.res = {
         status: 404,
         body: "Project does not exist",
       };
+      return
     }
 
     // Get pinecone index name from project in cosmosdb
-    const indexName = document.projects.find(
-      (p) => p.name === project
-    ).index_name;
+    const indexName = cosmosProject.index_name
 
     // check if all file_names start with uid
     if (file_names.some((name) => !name.startsWith(user_id))) {
