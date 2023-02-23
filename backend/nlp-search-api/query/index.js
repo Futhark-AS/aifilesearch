@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const apiKey = '4af86256-76e3-4317-9343-964fb445a00a';
 //const index_name = "michael"
-const project_name = "cb61165"
+const project_name = "72e7a0d"
 const environment = "us-east1-gcp"
 
 const baseUrl = (index_name, project_name, environment) => `https://${index_name}-${project_name}.svc.${environment}.pinecone.io/`

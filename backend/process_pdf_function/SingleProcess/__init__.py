@@ -8,6 +8,7 @@
 from azure.cosmos import CosmosClient
 import logging
 import json
+import time
 import io
 import datetime
 import uuid
