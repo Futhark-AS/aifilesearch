@@ -61,7 +61,7 @@ const query = async (namespace, vector, topK, index_name, project_name, environm
             ...match,
             metadata: {
                 ...match.metadata,
-                bounding_box: JSON.parse(match.metadata.bounding_box),
+                bounding_box: match.metadata.bounding_box ? JSON.parse(match.metadata.bounding_box): null,
                 //file_name: blob_name[blob_name.length - 1]
             }
         }
@@ -104,6 +104,17 @@ module.exports = async function (context, req, document) {
     const uid = req.headers["x-ms-client-principal-id"];
     //const client_principal_name = req.headers["x-ms-client-principal-name"];
 
+    
+    const price = 0.0004*8000/1000
+    const price_credits = process.env["ENV_DOLLAR_TO_CREDIT"]*price
+    
+    if (context.bindings.document.credits < price_credits){
+      context.res = {
+        status: 402,
+        body: "Not enough credits",
+      };
+      return;
+    }
 
     const projects = context.bindings.document.projects
     const prompt = req.body.prompt;
@@ -150,6 +161,11 @@ module.exports = async function (context, req, document) {
     const body = JSON.stringify({matches}, { encoding: "utf8" });
     
 
+    // update credits
+    context.bindings.document.credits -= price_credits
+
+    context.bindings.outputDocument = context.bindings.document;
+    
     context.res = { 
       body
     };

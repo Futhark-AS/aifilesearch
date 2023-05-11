@@ -43,6 +43,7 @@ module.exports = async function (context, req, document) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-functions-key": process.env["ENV_PROCESS_FUNCTION_KEY"],
           },
           body: JSON.stringify({
             file_names,
