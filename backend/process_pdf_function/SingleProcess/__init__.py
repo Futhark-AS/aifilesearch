@@ -23,11 +23,69 @@ from azure.storage.blob import BlobServiceClient
 from PyPDF2 import PdfWriter, PdfReader
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
+
+class NotEnoughCreditsError(Exception):
+    pass
+
+
+
+
+DOLLAR_TO_CREDIT = float(os.getenv("ENV_DOLLAR_TO_CREDIT"))
+PRICE_PER_1000_PAGES = float(os.getenv("ENV_PRICE_PER_1000_PAGES"))
+
 # ---------- OCR ----------
 endpoint = "https://jorgen-receipt-recognizer.cognitiveservices.azure.com/"
 key = os.getenv("ENV_OCR_KEY")
+from langchain.document_loaders import PyPDFLoader
 
-def analyze_read(pdf, blob_name):
+
+def get_paragraphs(page):
+    if page["page_content"] is None:
+        return []
+    paragraphs = page["page_content"].split("\n\n")
+    # remove empty paragraphs
+    paragraphs = [paragraph for paragraph in paragraphs if paragraph]
+
+    paragraphs_meta = [
+        {
+            "page_number": page["page_number"],
+            "file_name": page["file_name"],
+            "content": paragraph,
+        }
+        for paragraph in paragraphs
+    ]
+    return paragraphs_meta
+
+def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
+    reader = PdfReader(pdf)
+
+    num_pages = len(reader.pages)
+    price = PRICE_PER_1000_PAGES * num_pages / 1000
+    if user_credits < price*DOLLAR_TO_CREDIT:
+        raise NotEnoughCreditsError("Not enough credits to process this pdf: price is " + str(price*DOLLAR_TO_CREDIT) + " credits and you have " + str(user_credits) + " credits")
+
+    pages = [
+                {
+                    "page_content": page.extract_text(),
+                    "file_name": blob_name,
+                    "page_number": i,
+                }
+                for i, page in enumerate(reader.pages)
+            ]
+
+    paragraphs = []
+    for page in pages:
+        paragraphs.extend(get_paragraphs(page))
+
+    # Check total length of all paragraphs.
+    # If it is less than 100 chars, assume images and go on
+    total_length = sum([len(paragraph["content"]) for paragraph in paragraphs])
+    if total_length >= 100:
+        return paragraphs, 0, len(pages)
+    # else move on
+    
+
+
     document_analysis_client = DocumentAnalysisClient(
         endpoint=endpoint, credential=AzureKeyCredential(key)
     )
@@ -82,7 +140,7 @@ def analyze_read(pdf, blob_name):
         # # close the pdf
         # pdf.close()
             
-    return all_paragraphs, price
+    return all_paragraphs, price, len(result.pages)
 
 
 
@@ -125,7 +183,7 @@ def combine_and_clean_paragraphs(paragraphs):
                 # append next_content to content
                 logging.info(f"Appending paragraph on page {page_number} of file {file_name} with paragraph on page {next_page_number} of file {next_file_name}")
                 cleaned_paragraphs[i]["content"] = content + " " + next_content
-                cleaned_paragraphs[i]["bounding_box"] = bounding_box + next_bounding_box #makes sense to have one array for each bounding box
+                cleaned_paragraphs[i]["bounding_box"] = bounding_box + next_bounding_box if bounding_box else None #makes sense to have one array for each bounding box
                 cleaned_paragraphs.pop(i+1)
         i += 1
 
@@ -219,7 +277,7 @@ def embed_paragraphs(paragraphs, namespace, index_name):
         meta = [
             {
             "page_number": paragraph["page_number"], 
-            "bounding_box": json.dumps(paragraph["bounding_box"]),
+            "bounding_box": json.dumps(paragraph["bounding_box"]) if paragraph["bounding_box"] else None,
             "file_name": paragraph["file_name"],
             "content": paragraph["content"]
             } for paragraph in paragraphs_batch]
@@ -289,7 +347,14 @@ def main(settings) -> str:
 
     #test_pdf = small_pdfs[:2]
 
-    paragraphs, price = analyze_read(pdf, blob_name)
+    user = cosmos_container.read_item(item=user_id, partition_key=user_id)
+    user_credits = user["credits"]
+    logging.info(f"User has {user_credits} credits")
+    # price_to_pay = num_pages / 1000 * PRICE_PER_1000_PAGES
+
+
+    paragraphs, price, num_pages = analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits)
+
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
 
@@ -314,9 +379,12 @@ def main(settings) -> str:
     logging.info(f"Price for blob {blob_name}: ${price}")
 
     # update projects total cost and files in prpoject in cosmos db
-    user = cosmos_container.read_item(item=user_id, partition_key=user_id)
     projects = user["projects"]
     logging.info(projects)
+
+    # subtract price from user credits
+    user["credits"] = user_credits - price * DOLLAR_TO_CREDIT
+
     for project in projects:
         if project["namespace"] == namespace:
             # update cost
@@ -334,4 +402,3 @@ def main(settings) -> str:
     cosmos_container.upsert_item(user)
 
     return price
-
