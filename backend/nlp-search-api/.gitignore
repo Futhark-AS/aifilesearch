@@ -4,6 +4,7 @@ csx
 .vs
 edge
 Publish
+deploy.sh
 
 *.user
 *.suo

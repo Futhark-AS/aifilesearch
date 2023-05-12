@@ -34,3 +34,4 @@ urllib3==1.26.13
 azure-cosmos==4.3.0
 uuid==1.30
 azure-functions-durable
+stripe
