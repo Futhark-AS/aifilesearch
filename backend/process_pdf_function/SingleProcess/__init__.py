@@ -60,9 +60,9 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
     reader = PdfReader(pdf)
 
     num_pages = len(reader.pages)
-    price = PRICE_PER_1000_PAGES * num_pages / 1000
-    if user_credits < price*DOLLAR_TO_CREDIT:
-        raise NotEnoughCreditsError("Not enough credits to process this pdf: price is " + str(price*DOLLAR_TO_CREDIT) + " credits and you have " + str(user_credits) + " credits")
+    credits_to_pay = PRICE_PER_1000_PAGES * num_pages / 1000* DOLLAR_TO_CREDIT
+    if user_credits < credits_to_pay:
+        raise NotEnoughCreditsError("Not enough credits to process this pdf: price is " + str(credits_to_pay) + " credits and you have " + str(user_credits) + " credits")
 
     pages = [
                 {
@@ -81,7 +81,7 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
     # If it is less than 100 chars, assume images and go on
     total_length = sum([len(paragraph["content"]) for paragraph in paragraphs])
     if total_length >= 100:
-        return paragraphs, 0, len(pages)
+        return paragraphs, 0, credits_to_pay
     # else move on
     
 
@@ -140,7 +140,7 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
         # # close the pdf
         # pdf.close()
             
-    return all_paragraphs, price, len(result.pages)
+    return all_paragraphs, price, credits_to_pay
 
 
 
@@ -230,7 +230,7 @@ def split_long_paragraphs(paragraphs):
         paragraph = paragraphs[i]
         if len(paragraph["content"]) > 250*6: #250 words ish
             logging.info(f"...Splitting paragraph with length {len(paragraph['content'])} on page {paragraph['page_number']} of file {paragraph['file_name']}")
-            segments = split_paragraph(paragraph["content"], segment_length=Math.min(len(paragraph["content"])/2, 250*5), overlap_length=100)
+            segments = split_paragraph(paragraph["content"], segment_length=min(len(paragraph["content"])/2, 250*5), overlap_length=100)
             logging.info("Length of new segments: "+ str([len(segment) for segment in segments]))
             # add segments as new paragraphs
             for segment in segments:
@@ -353,7 +353,7 @@ def main(settings) -> str:
     # price_to_pay = num_pages / 1000 * PRICE_PER_1000_PAGES
 
 
-    paragraphs, price, num_pages = analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits)
+    paragraphs, price, credits_to_pay = analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits)
 
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
@@ -383,7 +383,7 @@ def main(settings) -> str:
     logging.info(projects)
 
     # subtract price from user credits
-    user["credits"] = user_credits - price * DOLLAR_TO_CREDIT
+    user["credits"] = user_credits - credits_to_pay
 
     for project in projects:
         if project["namespace"] == namespace:
