@@ -6,6 +6,8 @@ import { CosmosClient } from "@azure/cosmos";
 const documentSchema = z.object({
   id: z.string(),
   credits: z.number(),
+  email: z.string().optional(),
+  name: z.string().optional(),
   projects: z.array(
     z.object({
       namespace: z.string(),
