@@ -168,8 +168,13 @@ def combine_and_clean_paragraphs(paragraphs):
     while i < len(cleaned_paragraphs):
         content = cleaned_paragraphs[i]["content"]
         page_number = cleaned_paragraphs[i]["page_number"]
-        bounding_box = cleaned_paragraphs[i]["bounding_box"]
         file_name = cleaned_paragraphs[i]["file_name"]
+
+        if "bounding_box" in cleaned_paragraphs[i]:
+            bounding_box = cleaned_paragraphs[i]["bounding_box"]
+        else:
+            bounding_box = None
+
         if i < len(cleaned_paragraphs) - 1:
             next_file_name = cleaned_paragraphs[i+1]["file_name"]
             if file_name != next_file_name: # only combine paragraphs from the same file
