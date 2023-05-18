@@ -90,19 +90,29 @@ const httpTrigger: AzureFunction = async function (
         break;
       case "PATCH":
         const body = documentSchema.deepPartial().parse(req.body);
+
+        // Remove credit field from body if it exists
+        if (body.credits) {
+          delete body.credits;
+        }
+
         const newObject = Object.assign({}, doc, body);
         updateById(uid, newObject);
         createResponse(context, 200, newObject);
         break;
       case "POST":
         const body2 = documentSchema.partial().parse(req.body);
+        // Remove credit field from body if it exists
+        
+        body2.credits = 0;
+        body2.projects = []
+
         const inserted = await insert(body2);
         createResponse(context, 200, inserted);
       default:
         createResponse(context, 405, "Method not supported" + req.method);
         break;
     }
-    
   } catch (error) {
     const err = JSON.stringify(
       Object.assign({}, error, {
