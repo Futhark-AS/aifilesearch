@@ -81,7 +81,7 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
     # If it is less than 100 chars, assume images and go on
     total_length = sum([len(paragraph["content"]) for paragraph in paragraphs])
     if total_length >= 100:
-        return paragraphs, 0, credits_to_pay
+        return paragraphs, 0, credits_to_pay, num_pages
     # else move on
     
 
@@ -240,7 +240,7 @@ def split_long_paragraphs(paragraphs):
             logging.info("Length of new segments: "+ str([len(segment) for segment in segments]))
             # add segments as new paragraphs
             for segment in segments:
-                new_paragraphs.append({"page_number": paragraph["page_number"], "content": segment, "bounding_box": paragraph["bounding_box"], "file_name": paragraph["file_name"]})
+                new_paragraphs.append({"page_number": paragraph["page_number"], "content": segment, "bounding_box": paragraph.get("bounding_box"), "file_name": paragraph["file_name"]})
 
         else:
             new_paragraphs.append(paragraph)
