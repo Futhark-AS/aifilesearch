@@ -1,71 +1,113 @@
-import { FileDropzonePassive } from "@/components/FileDropzone";
 import { PdfViewer } from "@/components/PdfViewer";
-import { Spinner } from "@/components/Spinner";
-import { selectUser } from "@/features/auth/authSlice";
-import { useAppSelector } from "@/redux/hooks";
-import { showError, showSuccess } from "@/utils/showError";
-import { FileValidated } from "@dropzone-ui/react";
-import { TextInput } from "@mantine/core";
-import React, { useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { showError } from "@/utils/showError";
+import { FolderIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Divider } from "@mantine/core";
+import { showNotification } from "@mantine/notifications";
+import React, { Ref, forwardRef, useState } from "react";
 import { useQuery } from "react-query";
-import { useParams } from "react-router-dom";
-import { PromptResultSideBar } from "../components";
-import { FileExplorerSideBar } from "../components/FileExplorerSideBar";
-import { handleFileUpload } from "../projectAPI";
+import { Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { ProjectChat, ProjectSearchSidebar } from "../components";
+import { ProjectFilesSidebar } from "../components/ProjectFilesSidebar";
+import {
+  leftBarShowing,
+  selectHighlightedResult,
+  selectLeftPanelChosen,
+  setHighlightedResult,
+  toggleFilesPane,
+  toggleSearchPane,
+} from "../projectSlice";
 import {
   PromptMatch,
   getBlobUri,
   getFiles,
+  getNewChatMessage,
   searchProjectWithPromptReq,
 } from "../requests";
+import { UploadFilesBox } from "../components/UploadFilesBox";
+import { ErrorPage } from "@/features/errors";
+
+// get pdf from url
+// => get blob url from pdf
+// get highlighted box from state
+// render pdf viewer
+interface Props {
+  _: null;
+}
+
+function useFileUrl(blobName: string) {
+  const queryKey = ["fileUrl", blobName];
+  return useQuery(queryKey, () => getBlobUri(blobName));
+}
+
+const PdfView = forwardRef(function PdfView(
+  { _ }: Props,
+  parentRef: Ref<HTMLElement>
+) {
+  const { pdf: blobName } = useParams();
+  const { data: fileUrl, isError } = useFileUrl(decodeURIComponent(blobName!));
+
+  const highlightedResult = useAppSelector((state) =>
+    selectHighlightedResult(state)
+  );
+
+  return (
+    <div>
+      {!blobName && <div>no pdf</div>}
+      {isError ? (
+        <div>error</div>
+      ) : fileUrl ? (
+        <PdfViewer
+          file={fileUrl}
+          highlightedBox={highlightedResult}
+          ref={parentRef}
+        />
+      ) : (
+        <div>loading</div>
+      )}
+    </div>
+  );
+});
 
 const Project = () => {
-  const user = useAppSelector((state) => selectUser(state));
+  const leftPane = useAppSelector((state) => selectLeftPanelChosen(state));
   const ref = React.useRef<HTMLDivElement>(null);
+  const dispatch = useAppDispatch();
+  const [uploadFilesOpen, setUploadFilesOpen] = useState(false);
+  const navigate = useNavigate();
+  const { pdf } = useParams<{ pdf: string }>();
+  console.log(pdf);
 
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
-  const { data: projectFiles, refetch: refetchFiles } = useQuery(["files", projectName], () =>
+
+  const { data: projectFiles } = useQuery(["files", projectName], () =>
     getFiles(projectName)
   );
 
-  const searchRef = React.useRef<HTMLInputElement>(null);
-
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
-
-  const [filesUploading, setFilesUploading] = useState(false);
-
-  const [filesUpload, setFilesUpload] = useState<FileValidated[]>([]);
-
-  // The currently showing result in the pdf viewer
-  const [activeResult, setActiveResult] = useState<{
-    fileUrl: string;
-    fileSearchResult: PromptMatch | null; // highlight info
-  } | null>(null);
 
   const [resultsLoading, setResultsLoading] = useState(false);
 
-  const showResultInPdf = async (blobName: string, result?: PromptMatch) => {
-    let fileUrl;
-    try {
-      fileUrl = await getBlobUri(blobName);
-    } catch (e) {
-      console.error(e);
-      showError();
-      return;
-    }
-
-    setActiveResult({
-      fileUrl,
-      fileSearchResult: result || null,
-    });
+  const showResultInPdf = async (
+    fileBlobName: string,
+    result?: PromptMatch
+  ) => {
+    const name = encodeURIComponent(fileBlobName);
+    navigate(`pdf/${name}`);
+    dispatch(setHighlightedResult(result?.highlightedBox || null));
   };
 
-  const onSearch = async (e: React.ChangeEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSearch = async (searchValue: string) => {
     setResultsLoading(true);
 
-    searchProjectWithPromptReq(searchRef.current?.value || "", projectName)
+    searchProjectWithPromptReq(searchValue, projectName)
       .then((res) => {
+        if (res.length === 0) {
+          showNotification({
+            title: "No results",
+            message: "No files matched your search",
+          });
+        }
         setSearchResults(res);
       })
       .catch((e) => {
@@ -74,87 +116,66 @@ const Project = () => {
       })
       .finally(() => {
         setResultsLoading(false);
-        searchRef.current!.value = "";
-      });
-  };
-
-  const handleFileUploadOnClick = async () => {
-    setFilesUploading(true);
-
-    handleFileUpload(
-      filesUpload.map((file) => file.file),
-      user.uid,
-      projectName
-    )
-      .then((data) => {
-        refetchFiles();
-        showSuccess("File uploaded successfully!");
-      })
-      .catch((e) => {
-        console.error(e);
-        showError(
-          "Unfortunately, there occured an error while uploading the file. Please try again later."
-        );
-      })
-      .finally(() => {
-        setFilesUpload([]);
-        setFilesUploading(false);
       });
   };
 
   return (
     <>
-      <main className="col flex h-full w-full">
-        <FileExplorerSideBar
-          files={projectFiles || []}
-          fileOnClick={(file) => showResultInPdf(file)}
-          initialSelectedFile=""
-          loadingFiles={
-            filesUploading ? filesUpload.map((file) => file.file.name) : []
-          }
-        />
-        <section
-          className="container mx-auto max-h-screen overflow-y-scroll p-4"
-          ref={ref}
-        >
-          <h2 className="text-left text-4xl font-extrabold leading-normal text-gray-700">
-            {projectName}
-          </h2>
-          <FileDropzonePassive
-            files={!filesUploading ? filesUpload : []}
-            setFiles={setFilesUpload}
-            handleFileUpload={handleFileUploadOnClick}
+      <main className="flex h-full w-full">
+        <div className="flex h-full w-12 flex-col border border-r-gray-200">
+          <div className="flex h-16 flex-col justify-center">
+            <MagnifyingGlassIcon
+              onClick={() => {
+                dispatch(toggleSearchPane());
+              }}
+              fontWeight="bold"
+              className="mx-auto w-5 text-gray-500 hover:cursor-pointer"
+            />
+            {leftPane == leftBarShowing.search && (
+              <Divider className="mx-auto mt-1 w-5 font-semibold" />
+            )}
+          </div>
+          <div className="flex h-16 flex-col justify-center">
+            <FolderIcon
+              onClick={() => {
+                dispatch(toggleFilesPane());
+              }}
+              className="mx-auto w-5 text-gray-500 hover:cursor-pointer"
+            />
+            {leftPane == leftBarShowing.files && (
+              <Divider className="mx-auto mt-1 w-5 font-semibold" />
+            )}
+          </div>
+        </div>
+        {leftPane == leftBarShowing.search && (
+          <ProjectSearchSidebar
+            items={searchResults}
+            itemOnClick={(match) => showResultInPdf(match.fileName, match)}
+            itemsLoading={resultsLoading}
+            onSubmit={onSearch}
+            onClose={() => dispatch(toggleSearchPane())}
           />
-
-          <form onSubmit={onSearch} className="mb-4">
-            <TextInput
-              label="Search"
-              placeholder="Eks: Hvor mye må jeg betale i skatt om jeg tjener 400 000?"
-              className="input input-bordered mt-5 w-full"
-              rightSection={resultsLoading && <Spinner size="sm" />}
-              ref={searchRef}
+        )}
+        {leftPane == leftBarShowing.files && (
+          <ProjectFilesSidebar
+            onClose={() => dispatch(toggleFilesPane())}
+            files={projectFiles || []}
+            fileOnActivate={(file) => showResultInPdf(file.blobName)}
+            fileOnDeactivate={() => navigate(-1)}
+            initialSelectedFile=""
+            onUploadFileClick={() => setUploadFilesOpen(true)}
+          />
+        )}
+        <section className="container mx-auto max-h-full flex-1 p-4" ref={ref}>
+          <Routes>
+            <Route path="pdf/:pdf" element={<PdfView _={null} ref={ref} />} />
+            <Route
+              path=""
+              element={<ProjectChat getAiResponse={getNewChatMessage} />}
             />
-          </form>
-          {activeResult ? (
-            <PdfViewer
-              file={activeResult.fileUrl}
-              highlightedBox={
-                activeResult.fileSearchResult && {
-                  boundingBox:
-                    activeResult.fileSearchResult.highlightBoundingBox,
-                  pageNumber: activeResult.fileSearchResult.pageNumber,
-                }
-              }
-              ref={ref}
-            />
-          ) : (
-            <div>No active PDF</div>
-          )}
+          </Routes>
         </section>
-        <PromptResultSideBar
-          items={searchResults}
-          itemOnClick={(match) => showResultInPdf(match.fileName, match)}
-        />
+        <UploadFilesBox open={uploadFilesOpen} setOpen={setUploadFilesOpen} />
       </main>
     </>
   );

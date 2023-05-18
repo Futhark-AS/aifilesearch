@@ -1,9 +1,15 @@
 import { ContentLayout } from "@/components/Layout";
-import React from "react";
+import React, { useEffect } from "react";
 
+import { getUser } from "@/features/projects/requests";
 import { useUser } from "@/redux/hooks";
-import { UpdateProfile } from "../components/UpdateProfile";
+import { useQuery } from "react-query";
+import { useLocation } from "react-router-dom";
 import { useIsAuthenticated } from "../../../redux/hooks";
+import { BuyCredits } from "../components/BuyCredits";
+import { UpdateProfile } from "../components/UpdateProfile";
+
+import { showNotification } from "@mantine/notifications";
 
 type EntryProps = {
   label: string;
@@ -19,29 +25,81 @@ const Entry = ({ label, value }: EntryProps) => (
 );
 
 export const Profile = () => {
-  const { firstName, email } = useUser();
+  const { email, name } = useUser();
   const isAuthenticated = useIsAuthenticated();
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => getUser(),
+  });
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const isSuccess = searchParams.get("success");
+    const credits = searchParams.get("credits");
+
+    if (isSuccess) {
+      console.log(searchParams);
+      showNotification({
+        title: "Payment successful!",
+        message:
+          "You have bought " +
+          credits +
+          " credits. They will be added to your account shortly. Thank you for your purchase!",
+        color: "teal",
+      });
+
+      console.log(location.pathname);
+      history.pushState(null, "", location.pathname);
+    }
+  }, [location]);
 
   if (!isAuthenticated) return null;
 
+  const formatCredits = (credits: undefined | number): string => {
+    if (credits === undefined) {
+      return "Could not get credits";
+    } else {
+      return Math.floor(credits).toString();
+    }
+  };
+
   return (
     <ContentLayout title="Profile">
-      <div className="overflow-hidden mt-4 bg-white shadow sm:rounded-lg">
+      <div className="mt-4 overflow-hidden bg-white shadow sm:rounded-lg">
+        <div className="px-4 py-5 sm:px-6">
+          <div className="flex justify-between">
+            <h3 className="text-lg font-medium text-gray-900">
+            Balance
+            </h3>
+            <BuyCredits />
+          </div>
+        </div>
+        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
+          <dl className="sm:divide-y sm:divide-gray-200">
+            <Entry
+              label="Credits left"
+              value={isLoading ? "Loading..." : formatCredits(user?.credits)}
+            />
+          </dl>
+        </div>
+      </div>
+      <div className="mt-4 overflow-hidden bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <div className="flex justify-between">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
               User Information
             </h3>
-            <UpdateProfile />
           </div>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Personal details of the user.
+          Your profile information.
           </p>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
           <dl className="sm:divide-y sm:divide-gray-200">
-            <Entry label="First Name" value={firstName} />
-            <Entry label="Email Address" value={email} />
+            <Entry label="Name" value={name || "None"} />
+            <Entry label="Email Address" value={email || "None"} />
           </dl>
         </div>
       </div>

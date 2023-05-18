@@ -1,21 +1,29 @@
-import { useAppSelector } from "@/redux/hooks";
+import { Button } from "@/components/Button";
+import { Form, InputField } from "@/components/Form";
 import { selectUser } from "@/features/auth/authSlice";
+import { useAppSelector } from "@/redux/hooks";
+import { showError } from "@/utils/showError";
 import { Card, Divider } from "@mantine/core";
 import React from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
-import { createProject, getProjects } from "../requests";
-import { Button } from "@/components/Button";
-import { Form, InputField } from "@/components/Form";
-import { showError } from "@/utils/showError";
+import { createProject, getUser } from "../requests";
 
 export default function Projects() {
-  const { uid } = useAppSelector((state) => selectUser(state));
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error, isError } = useQuery({
+  const { data: projects } = useQuery({
     queryKey: ["projects"],
-    queryFn: () => getProjects(uid),
+    queryFn: () => getUser().then((user) => user.projects),
+  });
+
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => getUser(),
   });
 
   const newProjectMutation = useMutation({
@@ -26,14 +34,15 @@ export default function Projects() {
       await queryClient.cancelQueries({ queryKey: ["projects"] });
 
       // Snapshot the previous value
-      const prevProjects = queryClient.getQueryData<string[]>(["projects"]);
-
+      const prevProjects = queryClient.getQueryData<{ name: string }[]>([
+        "projects",
+      ]);
 
       if (prevProjects) {
         // Optimistically update to the new value
-        queryClient.setQueryData<string[]>(
+        queryClient.setQueryData<{ name: string }[]>(
           ["projects"],
-          [...prevProjects, project]
+          [...prevProjects, { name: project }]
         );
       }
 
@@ -48,7 +57,7 @@ export default function Projects() {
     onError: (error, newProject, context) => {
       if (context?.prevProjects) {
         showError("There was an error creating your project");
-        queryClient.setQueryData<string[]>(["projects"], context.prevProjects);
+        queryClient.setQueryData(["projects"], context.prevProjects);
       }
     },
 
@@ -61,49 +70,43 @@ export default function Projects() {
     <div>
       <main className="mx-auto px-4 md:mx-0">
         <h1 className="mt-8 text-3xl font-semibold">Your projects</h1>
-        <Divider className="mt-2 mb-4"/>
+        <Divider className="mt-2 mb-4" />
 
-        <ul className="auto-responsive-lg grid">
+
+        {/* <div className="mt-4 flex-1 overflow-y-scroll" ref={chatBoxRef}> */}
+        <ul className="overflow-y-scroll max-h-72">
           {isError ? (
             <div className="text-red-500">
               There was an error loading your projects
-              <i>{error instanceof Error && error.message}</i>
             </div>
           ) : isLoading ? (
             <div>Loading...</div>
           ) : (
-            data &&
-            data.map((project) => (
-              <Link to={`./${project}`} key={project}>
+            projects &&
+            projects.map((project) => (
+              <Link to={`./projects/${project.name}`} key={project.name}>
                 <Card
                   shadow="sm"
                   radius="md"
-                  className="my-2 cursor-pointer p-8"
+                  className="my-2 transform cursor-pointer p-4 px-4 transition duration-100 hover:scale-105 hover:cursor-pointer w-11/12 mx-auto"
                 >
-                  <div className="text-lg">{project}</div>
-                  <p className="text-gray-500">
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                    Optio beatae illum magni aperiam eos consequuntur corporis
-                    deleniti nesciunt, unde impedit?
-                  </p>
+                  <div className="text-md">{project.name}</div>
                 </Card>
               </Link>
             ))
           )}
         </ul>
-        <h3 className="text-lg mt-8 font-semibold">New project</h3>
-        <Divider className="mt-2 mb-4" />
         <Form<{ name: string }>
           onSubmit={(values) => {
             newProjectMutation.mutate(values.name);
-            values = { name: "" };
           }}
-          className="space-y-2"
+          className="flex flex-col sm:flex-row mt-4"
         >
           {(methods) => (
             <>
               <InputField
-                label="Project name"
+                label="New project"
+                wrapperClassname="flex-1 mr-2"
                 registration={methods.register("name", {
                   required: "This field is required",
                 })}

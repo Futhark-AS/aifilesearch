@@ -1,3 +1,3 @@
 export const UsersApiUrls = {
-    updateProfile: '/users/profile',
+    updateProfile: 'api/user',
 }

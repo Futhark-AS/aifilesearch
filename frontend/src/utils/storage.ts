@@ -1,4 +1,5 @@
 import { AuthSchema, UserState } from "@/features/auth/authSlice";
+import { getUser } from "@/features/projects/requests";
 
 const storagePrefix = "aisearch";
 
@@ -21,6 +22,11 @@ const storage = {
   clearUser: () => {
     window.localStorage.removeItem(`${storagePrefix}user`);
   },
+  refetchStorage: () => {
+    const user = getUser()
+    const newUser = Object.assign({}, storage.getUser(), user)
+    storage.setUser(newUser)
+    }
 };
 
 export default storage;

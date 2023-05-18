@@ -5,13 +5,12 @@ import Authenticate from "@/features/auth/routes/Authenticate";
 import { ErrorPage } from "@/features/errors";
 import { About, Landing } from "@/features/misc";
 import { protectedRoutes } from "./protected";
-import { PdfViewerTest } from "@/components/PdfViewer/PdfViewerTest";
+import { PaymentSuccess } from "../features/misc/routes/PaymentSuccess";
 
 const Root = () => {
   return (
     <div>
       <Outlet />
-      {/* <PdfViewerTest /> */}
     </div>
   );
 };
@@ -37,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: "about",
         element: <About />,
+      },
+      {
+        path: "payment-success",
+        element: <PaymentSuccess />,
       },
     ],
   },

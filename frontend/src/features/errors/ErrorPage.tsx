@@ -13,7 +13,6 @@ const errorSchema = z.object({
 export type PageError = z.infer<typeof errorSchema>;
 
 export function ErrorPage() {
-  const navigate = useNavigate();
   const error = useRouteError();
 
   const parsedError = useMemo(() => errorSchema.safeParse(error), [error]);

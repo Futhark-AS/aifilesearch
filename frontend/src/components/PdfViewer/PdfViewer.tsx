@@ -20,17 +20,27 @@ import { useMeasure } from "react-use";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
 
 const FALLBACK_WIDTH = 600;
+export type HighlightedBox =
+  | {
+      pageNumber: number;
+      type: "text";
+      content: string;
+    }
+  | {
+      pageNumber: number;
+      type: "image";
+      content: string;
+      boundingBox: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      };
+    };
+
 interface Props {
   file: string;
-  highlightedBox: {
-    boundingBox: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    };
-    pageNumber: number;
-  } | null;
+  highlightedBox: HighlightedBox | null;
 }
 
 export const PdfViewer = forwardRef(function PdfViewer(
@@ -62,6 +72,7 @@ export const PdfViewer = forwardRef(function PdfViewer(
       // If given a result to highlight If the page is the one that contains the prompt result, highlight the text
       if (
         highlightedBox &&
+        highlightedBox.type == "image" &&
         page.pageNumber == highlightedBox.pageNumber // highlight on same page
       ) {
         const canvas = canvasElementsRef.current[page.pageNumber - 1];
@@ -119,13 +130,12 @@ export const PdfViewer = forwardRef(function PdfViewer(
 
   function getPageHeight(pageIndex: number) {
     if (!pageViewports) {
-      return 0 // called to early, before pageViewports are calculated
+      return 0; // called to early, before pageViewports are calculated
     }
 
     const pageViewport = pageViewports[pageIndex];
 
-
-    if(!pageViewport) return 0
+    if (!pageViewport) return 0;
 
     const scale = getWidth() / pageViewport.width;
     const actualHeight = pageViewport.height * scale;

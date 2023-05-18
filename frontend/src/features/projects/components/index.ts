@@ -1,2 +1,3 @@
-export * from "./FileExplorerSideBar"
-export * from "./PromptResultSideBar"
+export * from "./ProjectFilesSidebar"
+export * from "./ProjectSearchSidebar"
+export * from "./ProjectChat"

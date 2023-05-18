@@ -2,33 +2,33 @@ import { useDisclosure } from "@/hooks/useDisclosure";
 import { ArrowRightCircleIcon } from "@heroicons/react/24/outline";
 import React, { useRef, useState } from "react";
 import "./SideBar.css";
+import { clsx } from "@mantine/core";
 
 interface Props {
   title: string;
   children: JSX.Element;
   side: "left" | "right";
+  className?: string;
+  onClose: () => void;
+  initialSize?: number;
 }
 
-export function SideBar({ title, children, side }: Props) {
-  const { isOpen, close: c, open: o } = useDisclosure(true);
-
-  const MINSIZE = 100;
-  const CLOSEDSIZE = null;
+export function SideBar({
+  title,
+  children,
+  side,
+  className,
+  onClose,
+  initialSize,
+}: Props) {
+  const MINSIZE = 20;
   const OPENSIZE = 268;
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState<number | null>(200);
-
-  const close = () => {
-    setSidebarWidth(CLOSEDSIZE);
-    c();
-  };
-
-  const open = () => {
-    setSidebarWidth(OPENSIZE);
-    o();
-  };
+  const [sidebarWidth, setSidebarWidth] = useState<number | null>(
+    OPENSIZE ?? initialSize
+  );
 
   const startResizing = React.useCallback(() => {
     setIsResizing(true);
@@ -49,9 +49,8 @@ export function SideBar({ title, children, side }: Props) {
               mouseMoveEvent.clientX;
 
         if (newWidth < MINSIZE) {
-          close();
+          onClose();
         } else {
-          open();
           setSidebarWidth(newWidth);
         }
       }
@@ -79,17 +78,7 @@ export function SideBar({ title, children, side }: Props) {
             ? { borderRight: borderStyle }
             : { borderLeft: borderStyle }
         }
-      >
-        {!isOpen && (
-          <>
-            {side === "left" ? (
-              <ArrowRightCircleIcon className="w-4 text-gray-500" />
-            ) : (
-              <ArrowRightCircleIcon className="w-4 rotate-180 transform text-gray-500" />
-            )}
-          </>
-        )}
-      </div>
+      ></div>
     );
   }
 
@@ -98,20 +87,14 @@ export function SideBar({ title, children, side }: Props) {
       ref={sidebarRef}
       className="app-sidebar"
       style={{ width: sidebarWidth || "auto" }}
-      onMouseDown={(e) => e.preventDefault()}
     >
       {side === "right" && <ResizeBar />}
-      {isOpen ? (
-        <section className="max-w-3xl flex-1 overflow-auto bg-slate-600 pt-4 text-white">
-          <div className="my-4 text-center text-lg font-semibold">{title}</div>
-          {children}
-        </section>
-      ) : (
-        <section
-          className="app-sidebar-content max-w-3xl overflow-auto bg-slate-600 pt-4 text-white"
-          onClick={open}
-        ></section>
-      )}
+      <section
+        className={clsx("max-w-3xl flex-1 overflow-auto px-4 pt-4", className)}
+      >
+        <div className="my-4 text-xl font-semibold">{title}</div>
+        {children}
+      </section>
       {side === "left" && <ResizeBar />}
     </div>
   );

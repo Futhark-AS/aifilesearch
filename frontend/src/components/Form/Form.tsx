@@ -36,13 +36,26 @@ export const Form = <
 }: FormProps<TFormValues, Schema>) => {
   const methods = useForm<TFormValues>({
     ...options,
-    resolver: schema && zodResolver(schema),
+    resolver:
+      schema &&
+      (async (data, context, options) => {
+        // you can debug your validation schema here
+        console.log("formData", data);
+        console.log(
+          "validation result",
+          await zodResolver(schema)(data, context, options)
+        );
+        return zodResolver(schema)(data, context, options);
+      }),
   });
 
   return (
     <form
       className={clsx("space-y-6", className)}
-      onSubmit={methods.handleSubmit(onSubmit)}
+      onSubmit={(e) => {
+        methods.handleSubmit(onSubmit)(e);
+        methods.reset();
+      }}
       id={id}
     >
       {children(methods)}

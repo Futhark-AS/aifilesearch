@@ -5,5 +5,5 @@ import Projects from "./Projects";
 
 export const ProjectRoutes: RouteObject[] = [
   { index: true, element: <Projects /> },
-  { path: ":id", element: <Project /> },
+  { path: ":id/*", element: <Project /> },
 ];

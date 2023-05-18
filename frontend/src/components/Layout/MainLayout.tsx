@@ -1,17 +1,16 @@
-import React from "react";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import {
   Bars2Icon,
-  FolderIcon,
-  HomeIcon,
   UserIcon,
-  XCircleIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { Link, NavLink } from "react-router-dom";
+import React from "react";
+import { Link, NavLink, useParams } from "react-router-dom";
 
-import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/features/auth/authSlice";
+import { queryClient } from "@/lib/react-query";
+import { useAppDispatch } from "@/redux/hooks";
 import { Logo } from "../Logo";
 
 type SideNavigationItem = {
@@ -20,37 +19,7 @@ type SideNavigationItem = {
   icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
 };
 
-const SideNavigation = () => {
-  const navigation = [
-    { name: "Dashboard", to: "", icon: HomeIcon },
-    { name: "Projects", to: "projects", icon: FolderIcon },
-  ].filter(Boolean) as SideNavigationItem[];
-
-  return (
-    <>
-      {navigation.map((item, index) => (
-        <NavLink
-          end={index === 0}
-          key={item.name}
-          to={item.to}
-          className={clsx(
-            "text-gray-300 hover:bg-gray-700 hover:text-white",
-            "group flex items-center rounded-md px-2 py-2 text-base font-medium"
-          )}
-        >
-          <item.icon
-            className={clsx(
-              "text-gray-400 group-hover:text-gray-300",
-              "mr-4 h-6 w-6 flex-shrink-0"
-            )}
-            aria-hidden="true"
-          />
-          {item.name}
-        </NavLink>
-      ))}
-    </>
-  );
-};
+const navigation = [].filter(Boolean) as SideNavigationItem[];
 
 type UserNavigationItem = {
   name: string;
@@ -67,6 +36,7 @@ const UserNavigation = () => {
       name: "Sign out",
       to: "/",
       onClick: () => {
+        queryClient.clear();
         dispatch(logout());
       },
     },
@@ -155,7 +125,7 @@ const MobileSidebar = ({ sidebarOpen, setSidebarOpen }: MobileSidebarProps) => {
           leaveFrom="translate-x-0"
           leaveTo="-translate-x-full"
         >
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-gray-800 pt-5 pb-4">
+          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-gray-100 pt-5 pb-4">
             <Transition.Child
               as={React.Fragment}
               enter="ease-in-out duration-300"
@@ -183,7 +153,23 @@ const MobileSidebar = ({ sidebarOpen, setSidebarOpen }: MobileSidebarProps) => {
             </div>
             <div className="mt-5 h-0 flex-1 overflow-y-auto">
               <nav className="space-y-1 px-2">
-                <SideNavigation />
+                <>
+                  {navigation.map((item, index) => (
+                    <NavLink
+                      end={index === 0}
+                      key={item.name}
+                      to={item.to}
+                      className="group flex items-center rounded-md px-2 py-2 text-base font-medium"
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <item.icon
+                        className={clsx("mr-4 h-6 w-6 flex-shrink-0")}
+                        aria-hidden="true"
+                      />
+                      {item.name}
+                    </NavLink>
+                  ))}
+                </>
               </nav>
             </div>
           </div>
@@ -194,20 +180,24 @@ const MobileSidebar = ({ sidebarOpen, setSidebarOpen }: MobileSidebarProps) => {
   );
 };
 
-const Sidebar = () => {
+const Navigation = () => {
   return (
-    <div className="hidden md:flex md:flex-shrink-0">
-      <div className="flex w-64 flex-col">
-        <div className="flex h-0 flex-1 flex-col">
-          <div className="flex h-16 flex-shrink-0 items-center bg-gray-900 px-4">
-            <Logo />
-          </div>
-          <div className="flex flex-1 flex-col overflow-y-auto">
-            <nav className="flex-1 space-y-1 bg-gray-800 px-2 py-4">
-              <SideNavigation />
-            </nav>
-          </div>
-        </div>
+    <div className="hidden h-16 px-4 md:flex">
+      <Logo />
+      <div className="ml-4 flex items-center">
+        {navigation.map((item, index) => (
+          <NavLink
+            end={index === 0}
+            key={item.name}
+            to={item.to}
+            className={clsx(
+              "hover:font-bold",
+              "group flex items-center rounded-md px-2 py-2 text-base font-medium"
+            )}
+          >
+            {item.name}
+          </NavLink>
+        ))}
       </div>
     </div>
   );
@@ -219,6 +209,7 @@ type MainLayoutProps = {
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const { id: projectName } = useParams<{ id: string }>() as { id: string };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
@@ -226,7 +217,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       />
-      <Sidebar />
       <div className="flex w-0 flex-1 flex-col overflow-hidden">
         <div className="relative z-10 flex h-16 flex-shrink-0 bg-white shadow">
           <button
@@ -236,9 +226,20 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             <span className="sr-only">Open sidebar</span>
             <Bars2Icon className="h-6 w-6" aria-hidden="true" />
           </button>
-          <div className="flex flex-1 justify-end px-4">
-            <div className="ml-4 flex items-center md:ml-6">
-              <UserNavigation />
+          <div className="mx-auto flex w-full max-w-7xl px-4 sm:px-6 md:px-8">
+            <Navigation />
+            {projectName && (
+              <div className="flex items-center justify-center">
+                <h1 className="text-sm italic text-gray-700">
+                  {"> "}
+                  {projectName}
+                </h1>
+              </div>
+            )}
+            <div className="flex flex-1 justify-end px-4">
+              <div className="ml-4 flex items-center md:ml-6">
+                <UserNavigation />
+              </div>
             </div>
           </div>
         </div>

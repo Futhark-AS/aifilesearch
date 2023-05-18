@@ -6,6 +6,7 @@ import { login } from "../authSlice";
 import { parseJwt } from "../parseJwt";
 import { z } from "zod";
 import { baseAxios } from "@/lib/axios";
+import { postUser } from "../requests";
 
 const AzureAuthResult = z.object({
   authenticationToken: z.string(),
@@ -25,7 +26,7 @@ async function handleCredentialResponse(googleAuthToken: string) {
     }
   );
 
-  console.log("accesst oken", res)
+  console.log("accesst oken", res);
 
   return AzureAuthResult.safeParse(res.data);
 }
@@ -46,6 +47,9 @@ export default function GoogleSignInButton() {
 
           const azureAuth = await handleCredentialResponse(credentials);
 
+          console.log("google", parsedGoogleJwt)
+          console.log("azure", azureAuth)
+
           if (!azureAuth.success) {
             alert("Could not authenticate with Azure");
             return;
@@ -64,6 +68,12 @@ export default function GoogleSignInButton() {
               azureAuthToken: azureAuth.data.authenticationToken,
             })
           );
+
+          postUser({
+            id: azureAuth.data.user.userId,
+            email: parsedGoogleJwt.email,
+            name: parsedGoogleJwt.name,
+          });
         } catch (e) {
           alert(`Could not authenticate with Google (${e})`);
         }

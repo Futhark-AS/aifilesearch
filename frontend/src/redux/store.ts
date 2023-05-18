@@ -4,10 +4,12 @@ import {
   Action,
   combineReducers,
 } from "@reduxjs/toolkit";
-import authReducer from "../features/auth/authSlice";
+import authReducer from "@/features/auth/authSlice";
+import projectReducer from "@/features/projects/projectSlice";
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  project: projectReducer,
 });
 
 export const store = configureStore({
