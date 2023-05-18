@@ -140,7 +140,7 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
         # # close the pdf
         # pdf.close()
             
-    return all_paragraphs, price, credits_to_pay
+    return all_paragraphs, price, credits_to_pay, num_pages
 
 
 
@@ -170,10 +170,7 @@ def combine_and_clean_paragraphs(paragraphs):
         page_number = cleaned_paragraphs[i]["page_number"]
         file_name = cleaned_paragraphs[i]["file_name"]
 
-        if "bounding_box" in cleaned_paragraphs[i]:
-            bounding_box = cleaned_paragraphs[i]["bounding_box"]
-        else:
-            bounding_box = None
+        bounding_box = cleaned_paragraphs[i].get("bounding_box")
 
         if i < len(cleaned_paragraphs) - 1:
             next_file_name = cleaned_paragraphs[i+1]["file_name"]
@@ -184,11 +181,15 @@ def combine_and_clean_paragraphs(paragraphs):
             next_page_number = cleaned_paragraphs[i+1]["page_number"]
             if page_number != next_page_number and not content.endswith("."):
                 next_content = cleaned_paragraphs[i+1]["content"]
-                next_bounding_box = cleaned_paragraphs[i+1]["bounding_box"]
+                next_bounding_box = cleaned_paragraphs[i+1].get("bounding_box")
                 # append next_content to content
                 logging.info(f"Appending paragraph on page {page_number} of file {file_name} with paragraph on page {next_page_number} of file {next_file_name}")
                 cleaned_paragraphs[i]["content"] = content + " " + next_content
-                cleaned_paragraphs[i]["bounding_box"] = bounding_box + next_bounding_box if bounding_box else None #makes sense to have one array for each bounding box
+                # if bounding_box and next_bounding_box, combine them. else leave it as None
+                if bounding_box and next_bounding_box:
+                    cleaned_paragraphs[i]["bounding_box"] = bounding_box + next_bounding_box
+                else:
+                    cleaned_paragraphs[i]["bounding_box"] = None
                 cleaned_paragraphs.pop(i+1)
         i += 1
 
@@ -279,13 +280,19 @@ def embed_paragraphs(paragraphs, namespace, index_name):
         # prep metadata and upsert batch
         #for paragraph in paragraphs:
             #logging.info(paragraph["content"][:6])
-        meta = [
-            {
-            "page_number": paragraph["page_number"], 
-            "bounding_box": json.dumps(paragraph["bounding_box"]) if paragraph["bounding_box"] else None,
+        meta = []
+        for paragraph in paragraphs_batch:
+            temp = {
+            "page_number": paragraph["page_number"],
             "file_name": paragraph["file_name"],
             "content": paragraph["content"]
-            } for paragraph in paragraphs_batch]
+            }
+
+            if paragraph["bounding_box"]:
+                temp["bounding_box"] = json.dumps(paragraph["bounding_box"])
+
+            meta.append(temp)
+
         #logging.info(meta)
 
         content_batch = [paragraph["content"] for paragraph in paragraphs_batch]
@@ -358,7 +365,7 @@ def main(settings) -> str:
     # price_to_pay = num_pages / 1000 * PRICE_PER_1000_PAGES
 
 
-    paragraphs, price, credits_to_pay = analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits)
+    paragraphs, price, credits_to_pay, num_pages = analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits)
 
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
@@ -398,11 +405,20 @@ def main(settings) -> str:
             else:
                 project["cost"] = price
 
-            # update files
+            # save info of file
+            file_info = {
+                "blob_name": blob_name,
+                "paragraphs": split_paragraphs,
+                "price": price,
+                "credits": credits_to_pay,
+                "num_pages": num_pages,
+                "file_name": blob_name.split("/")[-1]
+            }
+
             if "files" in project:
-                project["files"].append(blob_name)
+                project["files"].append(file_info)
             else:
-                project["files"] = [blob_name]
+                project["files"] = [file_info]
 
     cosmos_container.upsert_item(user)
 
