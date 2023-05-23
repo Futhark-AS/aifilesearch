@@ -63,27 +63,27 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
     if user_credits < credits_to_pay:
         raise NotEnoughCreditsError("Not enough credits to process this pdf: price is " + str(credits_to_pay) + " credits and you have " + str(user_credits) + " credits")
 
-    pages = [
-                {
-                    "page_content": page.extract_text().encode("ascii", "ignore").decode("ascii"),
-                    "file_name": blob_name,
-                    "page_number": i,
-                }
-                for i, page in enumerate(reader.pages)
-            ]
+    # pages = [
+    #             {
+    #                 "page_content": page.extract_text().encode("ascii", "ignore").decode("ascii"),
+    #                 "file_name": blob_name,
+    #                 "page_number": i,
+    #             }
+    #             for i, page in enumerate(reader.pages)
+    #         ]
 
-    logging.info("Test page 10: " + pages[10]["page_content"])
-    paragraphs = []
-    for page in pages:
-        paragraphs.extend(get_paragraphs(page))
+    # logging.info("Test page 10: " + pages[10]["page_content"])
+    # paragraphs = []
+    # for page in pages:
+    #     paragraphs.extend(get_paragraphs(page))
 
-    # Check total length of all paragraphs.
-    # If it is less than 100 chars, assume images and go on
-    total_length = sum([len(paragraph["content"]) for paragraph in paragraphs])
-    if total_length >= 100:
-        return paragraphs, 0, credits_to_pay, num_pages
-    # else move on
-    logging.info("Total length of all paragraphs is less than 100 chars, assuming images and moving on")
+    # # Check total length of all paragraphs.
+    # # If it is less than 100 chars, assume images and go on
+    # total_length = sum([len(paragraph["content"]) for paragraph in paragraphs])
+    # if total_length >= 100:
+    #     return paragraphs, 0, credits_to_pay, num_pages
+    # # else move on
+    # logging.info("Total length of all paragraphs is less than 100 chars, assuming images and moving on")
     
 
 
@@ -127,6 +127,7 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
         if len(paragraph.bounding_regions) > 1:
             # throw exception
             logging.info("Error: more than one bounding region")
+
 
         all_paragraphs.append({
             "content": paragraph.content,
@@ -281,18 +282,26 @@ def embed_paragraphs(paragraphs, namespace, index_name):
         # prep metadata and upsert batch
         #for paragraph in paragraphs:
             #logging.info(paragraph["content"][:6])
+
         meta = []
         for paragraph in paragraphs_batch:
             temp = {
-            "page_number": paragraph["page_number"],
-            "file_name": paragraph["file_name"],
-            "content": paragraph["content"]
+                "page_number": paragraph["page_number"],
+                "file_name": paragraph["file_name"],
+                "content": paragraph["content"]
             }
+
+            if "---split---" in paragraph["file_name"]:
+                split_file_name, page_numbers = paragraph["file_name"].split("---split---")
+                start_page, end_page = page_numbers.replace(".pdf", "").split("-")
+                temp["file_name"] = split_file_name
+                temp["page_number"] += int(start_page)  # Adding the starting page number to the current page number
 
             if paragraph["bounding_box"]:
                 temp["bounding_box"] = json.dumps(paragraph["bounding_box"])
 
             meta.append(temp)
+
 
         #logging.info(meta)
 
