@@ -15,7 +15,7 @@ import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
 import { highlightBoundingBox } from "@/features/projects/utils";
 import { showError } from "@/utils/showError";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { PDFPageProxy } from "react-pdf";
+import { PDFPageProxy, TextLayerItemInternal } from "react-pdf";
 import { useMeasure } from "react-use";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
 
@@ -42,6 +42,16 @@ interface Props {
   file: string;
   highlightedBox: HighlightedBox | null;
 }
+
+// const TEMP = {
+//   type: "text",
+//   content: `
+//   Briefly answer the following questions (with a maximum of 50 words per answer):
+//   a) What is availability? What factors affect availability?
+//   b) What are fault-­‐tolerant systems? 
+//   `,
+//   pageNumber: 2
+// } as const
 
 export const PdfViewer = forwardRef(function PdfViewer(
   { file, highlightedBox }: Props,
@@ -101,6 +111,21 @@ export const PdfViewer = forwardRef(function PdfViewer(
     [highlightedBox]
   );
 
+  const customTextRenderer = useCallback(
+    (layer: TextLayerItemInternal, pageIndex: number) => {
+      if (highlightedBox && highlightedBox.type == "text" && pageIndex == highlightedBox.pageNumber - 1) {
+        console.log(layer.str)
+        if (layer.str.includes(highlightedBox.content) || highlightedBox.content.includes(layer.str)) {
+          return `<mark>${layer.str}</mark>`;
+        }
+      }
+      return layer.str;
+    },
+    [highlightedBox]
+  );
+
+
+
   // Use ref for deciding width if its given.
   useEffect(() => {
     if (isDefinedHTMLObjectRef(parentRef)) {
@@ -159,6 +184,7 @@ export const PdfViewer = forwardRef(function PdfViewer(
               <div style={style}>
                 <Page
                   onRenderSuccess={onPdfPageRenderSuccess}
+                  customTextRenderer={layer => customTextRenderer(layer, index )}
                   pageIndex={index}
                   width={getWidth()}
                   canvasRef={(el) => {
