@@ -3,6 +3,16 @@ import { z } from "zod";
 import { createResponse } from "./common";
 import { CosmosClient } from "@azure/cosmos";
 
+// "files": [
+//   {
+//       "blob_name": "sid:53dc3748787d48b74d937ec95256a515/ekte-prosjekt/3d modelling.pdf",
+//       "paragraphs": 10,
+//       "price": 0.15,
+//       "credits": 1,
+//       "num_pages": 20,
+//       "file_name": "3d modelling.pdf"
+//   }
+
 const documentSchema = z.object({
   id: z.string(),
   credits: z.number(),
@@ -13,7 +23,16 @@ const documentSchema = z.object({
       namespace: z.string(),
       index_name: z.string(),
       cost: z.number(),
-      files: z.array(z.string()),
+      files: z.array(
+        z.object({
+          blob_name: z.string(),
+          paragraphs: z.number(),
+          price: z.number(),
+          credits: z.number(),
+          num_pages: z.number(),
+          file_name: z.string(),
+        })
+      ),
     })
   ),
 });
