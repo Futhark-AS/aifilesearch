@@ -102,6 +102,7 @@ const Project = () => {
 
     searchProjectWithPromptReq(searchValue, projectName)
       .then((res) => {
+        console.log(res)
         if (res.length === 0) {
           showNotification({
             title: "No results",
@@ -171,7 +172,9 @@ const Project = () => {
             <Route path="pdf/:pdf" element={<PdfView _={null} ref={ref} />} />
             <Route
               path=""
-              element={<ProjectChat getAiResponse={getNewChatMessage} />}
+              element={<ProjectChat getAiResponse={getNewChatMessage} projectName={projectName} setSearchResults={
+                setSearchResults
+              }/>}
             />
           </Routes>
         </section>

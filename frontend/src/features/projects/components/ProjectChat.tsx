@@ -5,29 +5,62 @@ import { TrashIcon } from "@heroicons/react/24/outline";
 import { useLocalStorage } from "@mantine/hooks";
 import { set } from "zod";
 import { Loader } from "@mantine/core";
+import { PromptMatch, searchProjectWithPromptReq } from "../requests";
+import { doc } from "prettier";
+import { useAppDispatch } from "@/redux/hooks";
+import { toggleFilesPane } from "../projectSlice";
 export type Message = {
   role: "user" | "assistant" | "system";
   content: string;
 };
 
 interface Props {
-  uniqueKey?: string;
+  projectName: string;
   getAiResponse: (Message: Message[]) => Promise<string>;
+  setSearchResults: (results: PromptMatch[]) => void;
 }
 
 const DEFAULT_MESSAGES = [
+  {
+    role: "system",
+    content: `You are a helpful assistant that accurately answers queries based on documents provided by the user. You will recieve a list of relevant documents to the users query. Your answer should be rooted in these documents. If the provided documents do not contain sufficient information to answer the query, you can answer to your best ability - but in this case you will inform the user that you did not find info in the project about the query.
+    
+    In your answer, you should cite what provided document you are basing your answer on. For each document, you will be given an ID. You can cite the document by writing:
+    [document_id]
+
+    Example: 
+
+    documents: [{
+      id: 1,
+      text: "Paris is the capital of France"
+    }, {
+      id: 2,
+      text: "Norway is a country in Europe"
+    }]
+    query: What is the capital of France?
+
+
+    Your answer:
+    Paris is the capital of France [1]
+    `,
+  },
   {
     role: "assistant",
     content: "Hello, how can I help you?",
   },
 ] as Message[];
 
-export function ProjectChat({ getAiResponse, uniqueKey }: Props) {
+export function ProjectChat({
+  getAiResponse,
+  projectName,
+  setSearchResults,
+}: Props) {
   const chatBoxRef = useRef<HTMLDivElement>(null);
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
 
   const [messages, setMessages] = useLocalStorage({
-    key: "project-chat" + uniqueKey || "project-chat",
+    key: "project-chat" + projectName || "project-chat",
     defaultValue: DEFAULT_MESSAGES,
   });
 
@@ -58,7 +91,7 @@ export function ProjectChat({ getAiResponse, uniqueKey }: Props) {
 
       <div className="mt-4 flex-1 overflow-y-scroll" ref={chatBoxRef}>
         <Chat
-          messages={messages.map((msg, i) => ({
+          messages={messages.slice(1).map((msg, i) => ({
             type: "text",
             id: i,
             position: msg.role === "user" ? "right" : "left",
@@ -77,7 +110,7 @@ export function ProjectChat({ getAiResponse, uniqueKey }: Props) {
         />
         {loading && (
           <div className="flex justify-center">
-          <Loader size="xl" />
+            <Loader size="xl" />
           </div>
         )}
       </div>
@@ -85,18 +118,53 @@ export function ProjectChat({ getAiResponse, uniqueKey }: Props) {
         <Form<{ value: string }>
           id="submit-chat"
           onSubmit={async (values) => {
+            const matches = await searchProjectWithPromptReq(
+              values.value,
+              projectName
+            );
+
+            const userPrompt = `
+            documents: [${matches.map(
+              (match, i) =>
+                `{id: ${i}, text: "${match.highlightedBox.content}"}`
+            )}]
+            query: ${values.value}
+            `;
+
             const msg = {
               role: "user",
-              content: values.value,
+              content: userPrompt,
             } as const;
 
             const newMessages = [...messages, msg];
 
-            setMessages(newMessages);
+            setMessages([...messages, {
+              role: "user",
+              content: values.value,
+            }]);
 
             setLoading(true);
 
             const newMessage = await getAiResponse(newMessages);
+
+            // get citation matches
+            const citationMatches = newMessage.match(/\[\d+\]/g);
+
+            // extract number
+            const citations = citationMatches?.map((match) =>
+              parseInt(match.replace(/\D/g, ""))
+            );
+
+            // get matches used in citations
+            const usedMatches = citations?.map((citation) => ({
+              ...matches[citation],
+              citation: "[" + citation.toString() + "]",
+            }));
+
+            if (usedMatches) {
+              dispatch(toggleFilesPane());
+              setSearchResults(usedMatches);
+            }
 
             setLoading(false);
 

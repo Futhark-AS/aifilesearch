@@ -61,6 +61,7 @@ export type PromptMatch = {
   score: number;
   fileName: string;
   highlightedBox: HighlightedBox;
+  citation?: string;
 };
 
 export const transfromApiMatchesV1 = (

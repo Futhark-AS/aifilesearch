@@ -19,7 +19,7 @@ export function ProjectSearchSidebar({
   itemOnClick,
   itemsLoading,
   onSubmit,
-  onClose
+  onClose,
 }: Props) {
   return (
     <SideBar title="Search in files" side="left" onClose={onClose}>
@@ -57,9 +57,16 @@ export function ProjectSearchSidebar({
                   onClick={() => itemOnClick(result)}
                 >
                   <h4 className="text-md">
+                    {result.citation && (
+                      <span className="text-xs text-gray-500">
+                        {result.citation} -
+                      </span>
+                    )}
                     {extractFileName(result.fileName)}
                   </h4>
-                  <i className="mb-2 block text-xs">p. {result.highlightedBox.pageNumber}</i>
+                  <i className="mb-2 block text-xs">
+                    p. {result.highlightedBox.pageNumber}
+                  </i>
                   <p className="overflow-hidden overflow-ellipsis whitespace-nowrap text-sm">
                     {result.highlightedBox.content}
                   </p>
