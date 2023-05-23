@@ -26,7 +26,6 @@ export const documentSchema = z.object({
           .array(
             z.object({
               blob_name: z.string(),
-              paragraphs: z.number(),
               price: z.number(),
               credits: z.number(),
               num_pages: z.number(),

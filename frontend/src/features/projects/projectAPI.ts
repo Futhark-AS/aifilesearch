@@ -90,7 +90,7 @@ export const startProcessing = async (
           
           const pdfBytes = await subDocument.save();
           const blob = new Blob([pdfBytes], {type: "application/pdf"});
-          const smallFile = new File([blob], `${file.name}---split---${i}-${i + pagesPerChunk}.pdf`);
+          const smallFile = new File([blob], `${file.name.replace(".pdf", "")}---split---${i}-${i + pagesPerChunk}.pdf`);
           arr.push(smallFile);
       }
       return arr;
@@ -103,16 +103,26 @@ export const startProcessing = async (
     return new Promise((resolve, reject) => {
         (async () => {
             try {
+              const file_names = []
                 for (const file of files) {
-                    const smallerFiles = await splitPdf(file, 5);
+                  if (file.name.includes("/")) {
+                    reject("File name cannot contain '/'");
+                  }
+
+                  await postFile(uid, file, project).catch(e => {
+                      reject(e);
+                  });
+                    const smallerFiles = await splitPdf(file, 15);
                     for (const smallerFile of smallerFiles) {
+                      file_names.push(smallerFile.name)
+                      console.log(smallerFile.name)
                         await postFile(uid, smallerFile, project).catch(e => {
                             reject(e);
                         });
                     }
                 }
                 startProcessing(
-                    files.map(file => file.name),
+                    file_names,
                     project,
                     resolve,
                     reject
