@@ -58,7 +58,6 @@ def get_paragraphs(page):
 def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
     reader = PdfReader(io.BytesIO(blob))
     logging.info("Number of pages: " + str(len(reader.pages)))
-    logging.info("Page 1 content: " + reader.pages[0])
 
     num_pages = len(reader.pages)
     credits_to_pay = PRICE_PER_1000_PAGES * num_pages / 1000* DOLLAR_TO_CREDIT
@@ -111,7 +110,7 @@ def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
 
     
     poller = document_analysis_client.begin_analyze_document(
-        "prebuilt-read", document=pdf
+        "prebuilt-read", document=blob
     )
     result = poller.result()
     logging.info("Document contains {} pages: ".format(len(result.pages)))
@@ -410,6 +409,8 @@ def main(settings) -> str:
     # subtract price from user credits
     user["credits"] = user_credits - credits_to_pay
 
+    # COSMOS RACE CONDITIONS PROBLEMATIC, TODO: FIX
+
     for project in projects:
         if project["namespace"] == namespace:
             # update cost
@@ -446,4 +447,9 @@ def main(settings) -> str:
 
     cosmos_container.upsert_item(user)
 
+
+    # TODO: delete all small pdfs
+
     return price
+
+
