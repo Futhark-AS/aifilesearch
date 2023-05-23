@@ -36,7 +36,6 @@ PRICE_PER_1000_PAGES = float(os.getenv("ENV_PRICE_PER_1000_PAGES"))
 # ---------- OCR ----------
 endpoint = "https://jorgen-receipt-recognizer.cognitiveservices.azure.com/"
 key = os.getenv("ENV_OCR_KEY")
-from langchain.document_loaders import PyPDFLoader
 
 
 def get_paragraphs(page):
@@ -66,13 +65,14 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
 
     pages = [
                 {
-                    "page_content": page.extract_text(),
+                    "page_content": page.extract_text().encode("ascii", "ignore").decode("ascii"),
                     "file_name": blob_name,
                     "page_number": i,
                 }
                 for i, page in enumerate(reader.pages)
             ]
 
+    logging.info("Test page 10: " + pages[10]["page_content"])
     paragraphs = []
     for page in pages:
         paragraphs.extend(get_paragraphs(page))
@@ -83,6 +83,7 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
     if total_length >= 100:
         return paragraphs, 0, credits_to_pay, num_pages
     # else move on
+    logging.info("Total length of all paragraphs is less than 100 chars, assuming images and moving on")
     
 
 
