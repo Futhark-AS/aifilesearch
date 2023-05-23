@@ -61,6 +61,8 @@ def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
 
     num_pages = len(reader.pages)
     credits_to_pay = PRICE_PER_1000_PAGES * num_pages / 1000* DOLLAR_TO_CREDIT
+    logging.info("Price to pay: " + str(credits_to_pay) + " credits")
+    logging.info("User credits: " + str(user_credits) + " credits")
     if user_credits < credits_to_pay:
         raise NotEnoughCreditsError("Not enough credits to process this pdf: price is " + str(credits_to_pay) + " credits and you have " + str(user_credits) + " credits")
 
@@ -297,7 +299,7 @@ def embed_paragraphs(paragraphs, namespace, index_name):
             if "---split---" in paragraph["file_name"]:
                 split_file_name, page_numbers = paragraph["file_name"].split("---split---")
                 start_page, end_page = page_numbers.replace(".pdf", "").split("-")
-                temp["file_name"] = split_file_name
+                temp["file_name"] = split_file_name + ".pdf"
                 temp["page_number"] += int(start_page)  # Adding the starting page number to the current page number
 
             if paragraph["bounding_box"]:
@@ -311,7 +313,17 @@ def embed_paragraphs(paragraphs, namespace, index_name):
         content_batch = [paragraph["content"] for paragraph in paragraphs_batch]
 
         # create embeddings for batch
-        res = openai.Embedding.create(input=content_batch, engine="text-embedding-ada-002")
+        retry = True
+        while retry:
+            try:
+                res = openai.Embedding.create(input=content_batch, engine="text-embedding-ada-002")
+                retry = False
+            except Exception as e:
+                logging.info("Error in embedding: "+ str(e))
+                logging.info("Retrying...")
+                time.sleep(10)
+                retry = True
+
         embeds = [record['embedding'] for record in res['data']]
         #logging.info(lines_batch["ada_search"])
         to_upsert = list(zip(ids_batch, embeds, meta))
@@ -339,6 +351,18 @@ cosmos_container = cosmos_database.get_container_client("users")
 connect_str = os.getenv("ENV_AZURE_STORAGE_CONNECTION_STRING")
 
 def main(settings) -> str:
+    retry = True
+    while retry:
+        try:
+            res = openai.Embedding.create(input="Test", engine="text-embedding-ada-002")
+            retry = False
+        except Exception as e:
+            logging.info("OPENAI NOT WORKING: "+ str(e))
+            logging.info("WAITING TO START PROCESSING... retrying in 10 seconds...")
+            time.sleep(10)
+            retry = True
+
+
     # Create the BlobServiceClient object
     blob_service_client = BlobServiceClient.from_connection_string(connect_str)
 

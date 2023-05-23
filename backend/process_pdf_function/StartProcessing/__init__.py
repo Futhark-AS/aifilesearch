@@ -107,6 +107,13 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
             "error": str(e)
         }
     except Exception as e:
+        # e not instance of NotEnoughCreditsError
+        if type(e) == NotEnoughCreditsError:
+            logging.info("Not enough credits")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
         logging.info("Error in orchestrator function: " + str(e))
         return {
             "status": "error",
