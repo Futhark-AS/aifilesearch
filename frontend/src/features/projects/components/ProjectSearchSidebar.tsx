@@ -59,7 +59,7 @@ export function ProjectSearchSidebar({
                   <h4 className="text-md">
                     {result.citation && (
                       <span className="text-xs text-gray-500">
-                        {result.citation} -
+                        {result.citation}
                       </span>
                     )}
                     {extractFileName(result.fileName)}
