@@ -84,6 +84,17 @@ const httpTrigger: AzureFunction = async function (
         let doc: Document;
         try {
           const _docRaw = await readById(uid);
+
+          if (_docRaw == undefined) {
+            // the user document does not exist
+            createResponse(
+              context,
+              404,
+              "User document not found. UID:" + uid
+            );
+            return;
+          }
+
           const _docParsed = documentSchema.safeParse(_docRaw);
 
           if (_docParsed.success == false) {
