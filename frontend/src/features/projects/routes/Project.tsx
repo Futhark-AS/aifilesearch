@@ -75,8 +75,6 @@ const Project = () => {
   const dispatch = useAppDispatch();
   const [uploadFilesOpen, setUploadFilesOpen] = useState(false);
   const navigate = useNavigate();
-  const { pdf } = useParams<{ pdf: string }>();
-  console.log(pdf);
 
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
 

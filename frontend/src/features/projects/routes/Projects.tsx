@@ -12,18 +12,9 @@ import { createProject, getUser } from "../requests";
 export default function Projects() {
   const queryClient = useQueryClient();
 
-  const { data: projects } = useQuery({
+  const { data: projects, isLoading, isError } = useQuery({
     queryKey: ["projects"],
     queryFn: () => getUser().then((user) => user.projects),
-  });
-
-  const {
-    data: user,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["user"],
-    queryFn: () => getUser(),
   });
 
   const newProjectMutation = useMutation({

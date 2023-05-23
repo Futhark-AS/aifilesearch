@@ -1,6 +1,5 @@
-import { azureAxios, baseAxios } from "@/lib/axios";
+import { azureAxios } from "@/lib/axios";
 import { z } from "zod";
-import { UserState } from "./authSlice";
 
 export const URLS = {
   user: "/api/user",
@@ -12,18 +11,35 @@ type PostUserDTO = {
   name: string;
 };
 
-const documentSchema = z.object({
+export const documentSchema = z.object({
   id: z.string(),
+  credits: z.number(),
   email: z.string().optional(),
   name: z.string().optional(),
-  credits: z.number(),
   projects: z.array(
-    z.object({
-      namespace: z.string(),
-      index_name: z.string(),
-      cost: z.number(),
-      files: z.array(z.string()),
-    })
+    z
+      .object({
+        namespace: z.string(),
+        index_name: z.string(),
+        cost: z.number(),
+        files: z
+          .array(
+            z.object({
+              blob_name: z.string(),
+              paragraphs: z.number(),
+              price: z.number(),
+              credits: z.number(),
+              num_pages: z.number(),
+              file_name: z.string(),
+            })
+          )
+          .optional(),
+      })
+      .transform((val) => ({
+        ...val,
+        name: val.namespace.split("/")?.[1] ?? val.namespace,
+        files: val.files ? val.files : [],
+      }))
   ),
 });
 
@@ -35,6 +51,6 @@ export const postUser = async (dto: PostUserDTO) => {
 };
 
 export const patchUser = async (newUser: UserDocument) => {
-    const res = await azureAxios.patch(URLS.user, newUser);
-    return documentSchema.parse(res.data);
-  };
+  const res = await azureAxios.patch(URLS.user, newUser);
+  return documentSchema.parse(res.data);
+};
