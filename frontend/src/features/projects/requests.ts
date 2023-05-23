@@ -5,6 +5,7 @@ import { createManyUnion, highlightBoundingBox } from "./utils";
 import axios from "axios";
 import { Message } from "./components";
 import { HighlightedBox } from "@/components/PdfViewer";
+import { documentSchema } from "../auth/requests";
 
 export const URLS = {
   query: "/api/query",
@@ -61,6 +62,7 @@ export type PromptMatch = {
   score: number;
   fileName: string;
   highlightedBox: HighlightedBox;
+  citation?: string;
 };
 
 export const transfromApiMatchesV1 = (
@@ -210,28 +212,8 @@ export const postFile = async (uid: string, file: File, project: string) => {
 };
 
 export const getUser = async () => {
-  const schema = z.object({
-    id: z.string(),
-    credits: z.number(),
-    email: z.string().optional(),
-    name: z.string().optional(),
-    projects: z.array(
-      z
-        .object({
-          namespace: z.string(),
-          index_name: z.string(),
-          cost: z.number(),
-          files: z.array(z.string()),
-        })
-        .transform((data) => ({
-          ...data,
-          name: data.namespace.split("/")[1],
-        }))
-    ),
-  });
   const res = await azureAxios.get(URLS.user);
-  console.log(res);
-  return schema.parse(res.data);
+  return documentSchema.parse(res.data);
 };
 
 export type ProjectFile = {
@@ -251,7 +233,7 @@ export const getFiles = async (project: string): Promise<ProjectFile[]> => {
         num_pages: z.number(),
         file_name: z.string(),
       })
-    ),
+    ).optional().default([]),
   });
 
   // TODO: fetch file metadata from api
