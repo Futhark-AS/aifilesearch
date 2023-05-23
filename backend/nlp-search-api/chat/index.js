@@ -52,13 +52,5 @@ module.exports = async function (context, req, document) {
       status: 500,
       body: "Internal server error while calling OpenAI",
     };
-
-    if (context.bindings.document.credits < price_credits) {
-      context.res = {
-        status: 402,
-        body: "Not enough credits",
-      };
-      return;
-    }
   }
 };
