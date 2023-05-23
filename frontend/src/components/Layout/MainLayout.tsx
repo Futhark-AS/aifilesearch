@@ -229,12 +229,12 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           <div className="mx-auto flex w-full max-w-7xl px-4 sm:px-6 md:px-8">
             <Navigation />
             {projectName && (
-              <div className="flex items-center justify-center">
+              <Link to={`/app/projects/${projectName}`} className="flex items-center justify-center">
                 <h1 className="text-sm italic text-gray-700">
                   {"> "}
                   {projectName}
                 </h1>
-              </div>
+              </Link>
             )}
             <div className="flex flex-1 justify-end px-4">
               <div className="ml-4 flex items-center md:ml-6">
