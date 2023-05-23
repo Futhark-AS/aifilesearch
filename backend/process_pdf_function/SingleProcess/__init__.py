@@ -55,8 +55,10 @@ def get_paragraphs(page):
     ]
     return paragraphs_meta
 
-def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
-    reader = PdfReader(pdf)
+def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
+    reader = PdfReader(io.BytesIO(blob))
+    logging.info("Number of pages: " + str(len(reader.pages)))
+    logging.info("Page 1 content: " + reader.pages[0])
 
     num_pages = len(reader.pages)
     credits_to_pay = PRICE_PER_1000_PAGES * num_pages / 1000* DOLLAR_TO_CREDIT
@@ -106,6 +108,8 @@ def analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits):
     # buf = io.BytesIO()
     # pdf.write(buf)
     # buf.seek(0)
+
+    
     poller = document_analysis_client.begin_analyze_document(
         "prebuilt-read", document=pdf
     )
@@ -356,7 +360,6 @@ def main(settings) -> str:
     # small_pdfs = []
     logging.info("\nDownloading blob " + blob_name)
     blob = container_client.download_blob(blob_name).readall()
-    pdf = io.BytesIO(blob)
     # pdf = PdfReader(on_fly)
     # for i in range(0, len(pdf.pages), 2):
     #     output = PdfWriter()
@@ -375,7 +378,7 @@ def main(settings) -> str:
     # price_to_pay = num_pages / 1000 * PRICE_PER_1000_PAGES
 
 
-    paragraphs, price, credits_to_pay, num_pages = analyze_read(pdf, blob_name, PRICE_PER_1000_PAGES, user_credits)
+    paragraphs, price, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
 
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
@@ -416,17 +419,28 @@ def main(settings) -> str:
                 project["cost"] = price
 
             # save info of file
+
+            blob_name = blob_name.split("---split---")[0] + ".pdf" if "---split---" in blob_name else blob_name
+
             file_info = {
                 "blob_name": blob_name,
-                "paragraphs": split_paragraphs,
                 "price": price,
                 "credits": credits_to_pay,
                 "num_pages": num_pages,
-                "file_name": blob_name.split("/")[-1]
+                "file_name": blob_name.split("/")[-1],
             }
 
             if "files" in project:
-                project["files"].append(file_info)
+                if file_info["blob_name"] not in [file["blob_name"] for file in project["files"]]:
+                    project["files"].append(file_info)
+                else:
+                    # add price, credits, num_pages to existing file
+                    for file in project["files"]:
+                        if file["blob_name"] == file_info["blob_name"]:
+                            file["price"] += price
+                            file["credits"] += credits_to_pay
+                            file["num_pages"] += num_pages
+                        
             else:
                 project["files"] = [file_info]
 
