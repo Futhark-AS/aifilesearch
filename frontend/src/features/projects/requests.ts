@@ -60,7 +60,7 @@ const queryResponseSchema = z.object({
 export type PromptMatch = {
   id: string;
   score: number;
-  fileName: string;
+  blobName: string;
   highlightedBox: HighlightedBox;
   citation?: string;
 };
@@ -91,7 +91,7 @@ export const transfromApiMatchesV1 = (
       type: "image",
       content: match.metadata.content,
     },
-    fileName: match.metadata.file_name,
+    blobName: match.metadata.file_name,
   }));
 };
 
@@ -106,7 +106,7 @@ export const transfromApiMatchesV2 = (
       pageNumber: match.metadata.page_number,
       type: "text",
     },
-    fileName: match.metadata.file_name,
+    blobName: match.metadata.file_name,
   }));
 };
 

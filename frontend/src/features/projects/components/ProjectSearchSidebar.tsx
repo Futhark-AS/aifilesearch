@@ -62,7 +62,7 @@ export function ProjectSearchSidebar({
                         {result.citation}
                       </span>
                     )}
-                    {extractFileName(result.fileName)}
+                    {extractFileName(result.blobName)}
                   </h4>
                   <i className="mb-2 block text-xs">
                     p. {result.highlightedBox.pageNumber}

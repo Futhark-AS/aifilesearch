@@ -149,7 +149,7 @@ const Project = () => {
         {leftPane == leftBarShowing.search && (
           <ProjectSearchSidebar
             items={searchResults}
-            itemOnClick={(match) => showResultInPdf(match.fileName, match)}
+            itemOnClick={(match) => showResultInPdf(match.blobName, match)}
             itemsLoading={resultsLoading}
             onSubmit={onSearch}
             onClose={() => dispatch(toggleSearchPane())}
