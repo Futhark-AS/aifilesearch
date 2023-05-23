@@ -71,9 +71,15 @@ export function UploadFilesBox({ open, setOpen }: Props) {
     };
   }, []);
 
+
+  
+
   const handleFilesUpload = async () => {
     // call backend with files to upload
 
+
+
+  
     try {
       handleFileUpload(
         files.map((file) => file.file),

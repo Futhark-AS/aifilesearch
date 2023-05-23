@@ -4,6 +4,7 @@ import {
   startProcessingReq,
 } from "./requests";
 import { setIntervalX } from "./utils";
+import { PDFDocument } from 'pdf-lib'
 
 /**
  * Start processing a given list of files (uploading)
@@ -67,23 +68,58 @@ export const startProcessing = async (
   );
 };
 
-export const handleFileUpload = async (
-  files: File[],
-  uid: string,
-  project: string
+  async function splitPdf(file: File, pagesPerChunk: number): Promise<File[]> {
+      // Load your PDFDocument
+      const documentAsBytes = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(documentAsBytes)
+  
+      const numberOfPages = pdfDoc.getPages().length;
+  
+      const arr: File[] = []
+      for (let i = 0; i < numberOfPages; i += pagesPerChunk) {
+  
+          // Create a new "sub" document
+          const subDocument = await PDFDocument.create();
+          
+          // Get the indices for next n pages or till the end, whichever is smaller
+          const pageIndices = Array.from({length: Math.min(pagesPerChunk, numberOfPages - i)}, (_, k) => k + i);
+  
+          // copy the pages at current indices
+          const copiedPages = await subDocument.copyPages(pdfDoc, pageIndices);
+          copiedPages.forEach(page => subDocument.addPage(page));
+          
+          const pdfBytes = await subDocument.save();
+          const blob = new Blob([pdfBytes], {type: "application/pdf"});
+          const smallFile = new File([blob], `${file.name}---split---${i}-${i + pagesPerChunk}.pdf`);
+          arr.push(smallFile);
+      }
+      return arr;
+  }
+  export const handleFileUpload = (
+    files: File[],
+    uid: string,
+    project: string
 ) => {
-  return new Promise((resolve, reject) => {
-    for (const file of files) {
-      postFile(uid, file, project).catch((e) => {
-        reject(e);
-      });
-    }
-
-    startProcessing(
-      files.map((file) => file.name),
-      project,
-      resolve,
-      reject
-    );
-  });
+    return new Promise((resolve, reject) => {
+        (async () => {
+            try {
+                for (const file of files) {
+                    const smallerFiles = await splitPdf(file, 5);
+                    for (const smallerFile of smallerFiles) {
+                        await postFile(uid, smallerFile, project).catch(e => {
+                            reject(e);
+                        });
+                    }
+                }
+                startProcessing(
+                    files.map(file => file.name),
+                    project,
+                    resolve,
+                    reject
+                );
+            } catch (e) {
+                reject(e);
+            }
+        })();
+    });
 };
