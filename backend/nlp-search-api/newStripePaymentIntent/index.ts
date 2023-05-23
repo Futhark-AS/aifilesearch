@@ -97,6 +97,8 @@ const httpTrigger: AzureFunction = async function (
   req: HttpRequest
 ): Promise<void> {
   context.log("HTTP trigger function processed a request.");
+  context.log(JSON.stringify(req, null, 2))
+
   try {
     const reqData = extractRequestData(req);
 

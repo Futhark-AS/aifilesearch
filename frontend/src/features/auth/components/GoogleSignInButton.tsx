@@ -58,9 +58,9 @@ export default function GoogleSignInButton() {
 
           const user = await getUser();
 
-          const isSigningIn = user == null;
+          const isSigningUp = user == null;
 
-          if (isSigningIn) {
+          if (isSigningUp) {
             await postUser({
               id: azureAuth.data.user.userId,
               email: parsedGoogleJwt.email,
@@ -74,7 +74,7 @@ export default function GoogleSignInButton() {
                 uid: azureAuth.data.user.userId,
                 name: parsedGoogleJwt.name,
                 azureAuthToken: azureAuth.data.authenticationToken,
-                credtis: 0
+                credits: 0
               })
             );
           } else {
@@ -86,7 +86,7 @@ export default function GoogleSignInButton() {
                 uid: azureAuth.data.user.userId,
                 name: parsedGoogleJwt.name,
                 azureAuthToken: azureAuth.data.authenticationToken,
-                credtis: user.credits
+                credits: user.credits
               })
             );
 

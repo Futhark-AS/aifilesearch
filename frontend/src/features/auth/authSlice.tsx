@@ -49,7 +49,7 @@ export const authSlice = createSlice({
         googleAuthToken: string;
         uid: string;
         azureAuthToken: string;
-        credtis: number;
+        credits: number;
       }>
     ) => {
       // return initialState
@@ -63,7 +63,7 @@ export const authSlice = createSlice({
         isLoggedIn: true,
         isLoading: false,
         azureAuthToken: action.payload.azureAuthToken,
-        credits: action.payload.credtis,
+        credits: action.payload.credits,
       };
     },
     logout: () => {
