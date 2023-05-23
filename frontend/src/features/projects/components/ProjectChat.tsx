@@ -1,14 +1,12 @@
 import { Chat } from "@/components/Chat/Chat";
 import { Form, InputField } from "@/components/Form";
-import React, { useRef, useState } from "react";
-import { TrashIcon } from "@heroicons/react/24/outline";
-import { useLocalStorage } from "@mantine/hooks";
-import { set } from "zod";
-import { Loader } from "@mantine/core";
-import { PromptMatch, searchProjectWithPromptReq } from "../requests";
-import { doc } from "prettier";
 import { useAppDispatch } from "@/redux/hooks";
-import { toggleFilesPane, toggleSearchPane } from "../projectSlice";
+import { TrashIcon } from "@heroicons/react/24/outline";
+import { Loader } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
+import React, { useRef, useState } from "react";
+import { toggleSearchPane } from "../projectSlice";
+import { PromptMatch, searchProjectWithPromptReq } from "../requests";
 export type Message = {
   role: "user" | "assistant" | "system";
   content: string;
@@ -118,10 +116,13 @@ export function ProjectChat({
         <Form<{ value: string }>
           id="submit-chat"
           onSubmit={async (values) => {
-            setMessages([...messages, {
-              role: "user",
-              content: values.value,
-            }]);
+            setMessages([
+              ...messages,
+              {
+                role: "user",
+                content: values.value,
+              },
+            ]);
 
             const matches = await searchProjectWithPromptReq(
               values.value,
@@ -143,7 +144,6 @@ export function ProjectChat({
 
             const newMessages = [...messages, msg];
 
-
             setLoading(true);
 
             const newMessage = await getAiResponse(newMessages);
@@ -162,9 +162,20 @@ export function ProjectChat({
               citation: "[" + citation.toString() + "]",
             }));
 
-            if (usedMatches) {
+            // reomve matches with duplicate citation
+            const usedMatchesSet = new Set();
+            const usedMatchesNoDuplicates = usedMatches?.filter((match) => {
+              if (usedMatchesSet.has(match.citation)) {
+                return false;
+              } else {
+                usedMatchesSet.add(match.citation);
+                return true;
+              }
+            });
+
+            if (usedMatchesNoDuplicates) {
               dispatch(toggleSearchPane());
-              setSearchResults(usedMatches);
+              setSearchResults(usedMatchesNoDuplicates);
             }
 
             setLoading(false);

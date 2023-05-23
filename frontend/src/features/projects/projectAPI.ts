@@ -68,6 +68,13 @@ export const startProcessing = async (
   );
 };
 
+export const pdfNumberOfPages = async (file: File) => {
+  const documentAsBytes = await file.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(documentAsBytes)
+
+  return pdfDoc.getPages().length;
+}
+
   async function splitPdf(file: File, pagesPerChunk: number): Promise<File[]> {
       // Load your PDFDocument
       const documentAsBytes = await file.arrayBuffer();

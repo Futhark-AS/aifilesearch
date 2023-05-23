@@ -6,16 +6,16 @@ import Axios, { AxiosRequestConfig } from "axios";
 // const API_URL = process.env.REACT_APP_API_URL;
 
 function authRequestInterceptor(config: AxiosRequestConfig) {
-  const user = storage.getUser();
+  const token = storage.getAzureToken()
 
   const authHeaders = {
     "Content-Type": "application/json",
-    "X-ZUMO-AUTH": user?.azureAuthToken,
+    "X-ZUMO-AUTH": token,
   };
 
   let headers = config.headers;
 
-  if (user?.azureAuthToken && headers) {
+  if (token && headers) {
     headers = Object.assign(headers, authHeaders);
   }
 

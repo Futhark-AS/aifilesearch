@@ -1,11 +1,13 @@
+import { getUser } from "@/features/projects/requests";
+import { baseAxios } from "@/lib/axios";
+import storage from "@/utils/storage";
 import { GoogleLogin } from "@react-oauth/google";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { z } from "zod";
 import { useAppDispatch } from "../../../redux/hooks";
 import { login } from "../authSlice";
 import { parseJwt } from "../parseJwt";
-import { z } from "zod";
-import { baseAxios } from "@/lib/axios";
 import { postUser } from "../requests";
 
 const AzureAuthResult = z.object({
@@ -47,34 +49,53 @@ export default function GoogleSignInButton() {
 
           const azureAuth = await handleCredentialResponse(credentials);
 
-          console.log("google", parsedGoogleJwt)
-          console.log("azure", azureAuth)
-
           if (!azureAuth.success) {
             alert("Could not authenticate with Azure");
             return;
           }
 
+          storage.setAzureToken(azureAuth.data.authenticationToken);
+
+          const user = await getUser();
+
+          const isSigningIn = user == null;
+
+          if (isSigningIn) {
+            await postUser({
+              id: azureAuth.data.user.userId,
+              email: parsedGoogleJwt.email,
+              name: parsedGoogleJwt.name,
+            });
+            dispatch(
+              login({
+                email: parsedGoogleJwt.email,
+                firstName: parsedGoogleJwt.given_name,
+                googleAuthToken: credentials,
+                uid: azureAuth.data.user.userId,
+                name: parsedGoogleJwt.name,
+                azureAuthToken: azureAuth.data.authenticationToken,
+                credtis: 0
+              })
+            );
+          } else {
+            dispatch(
+              login({
+                email: parsedGoogleJwt.email,
+                firstName: parsedGoogleJwt.given_name,
+                googleAuthToken: credentials,
+                uid: azureAuth.data.user.userId,
+                name: parsedGoogleJwt.name,
+                azureAuthToken: azureAuth.data.authenticationToken,
+                credtis: user.credits
+              })
+            );
+
+          }
+
           // TODO: get token
           navigate("/app");
-
-          dispatch(
-            login({
-              email: parsedGoogleJwt.email,
-              firstName: parsedGoogleJwt.given_name,
-              googleAuthToken: credentials,
-              uid: azureAuth.data.user.userId,
-              name: parsedGoogleJwt.name,
-              azureAuthToken: azureAuth.data.authenticationToken,
-            })
-          );
-
-          postUser({
-            id: azureAuth.data.user.userId,
-            email: parsedGoogleJwt.email,
-            name: parsedGoogleJwt.name,
-          });
         } catch (e) {
+          console.log(e)
           alert(`Could not authenticate with Google (${e})`);
         }
       }}

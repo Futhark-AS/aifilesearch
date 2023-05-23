@@ -7,22 +7,22 @@ import { FileValidated } from "@dropzone-ui/react";
 import { Modal } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { handleFileUpload } from "../projectAPI";
+import { handleFileUpload, pdfNumberOfPages } from "../projectAPI";
 
 type FileInfo = {
   name: string;
-  size: number;
   pages: number;
   price: number;
 };
 
-const extractFileInfo = (file: FileValidated): FileInfo => {
+const extractFileInfo = async (file: FileValidated): Promise<FileInfo> => {
   // talk with backend to get the price and pages
+  const pages = await pdfNumberOfPages(file.file);
+  const price = pages * 2 * 100;
   return {
-    name: "File 1",
-    size: 1200,
-    pages: 10,
-    price: 10,
+    name: file.file.name,
+    pages: pages,
+    price: price,
   };
 };
 
@@ -39,8 +39,11 @@ export function UploadFilesBox({ open, setOpen }: Props) {
 
   const close = () => {
     setOpen(false);
-    setConfirmationOpened(false)
+    setConfirmationOpened(false);
     setFiles([]);
+  };
+  const getFilePrice = () => {
+    return fileInfo.reduce((acc, file) => acc + file.price, 0);
   };
 
   const updateFiles = (incomingFile: FileValidated[]) => {
@@ -71,15 +74,9 @@ export function UploadFilesBox({ open, setOpen }: Props) {
     };
   }, []);
 
-
-  
-
   const handleFilesUpload = async () => {
     // call backend with files to upload
 
-
-
-  
     try {
       handleFileUpload(
         files.map((file) => file.file),
@@ -99,70 +96,51 @@ export function UploadFilesBox({ open, setOpen }: Props) {
   return (
     <Modal
       centered
-      onClose={() => setOpen(false)}
+      onClose={() => {
+        setOpen(false);
+        // remove files
+        setFiles([]);
+      }}
       opened={open}
       title={<div className="text-lg font-semibold">Upload files</div>}
     >
       <Modal
         onClose={() => setConfirmationOpened(false)}
         opened={confirmationOpened}
-        title={
-          <div className="text-lg font-semibold">
-            Do you really want to upload these files?
-          </div>
-        }
+        title={<div className="text-lg font-semibold">Confirmation</div>}
         centered={true}
       >
         <div>
-          {/* <div>
-            Total price: {fileInfo.reduce((acc, file) => acc + file.price, 0)}
+          <div className="text-sm text-gray-600">
+            Total price: {getFilePrice()} credits
           </div>
-          <div>Remaining balance: 100</div> */}
-          Your balance will be updated after the files are uploaded.
+          {
+            user.credits < getFilePrice() ? (
+              <div className="text-sm text-red-600">
+                You dont have enough credits to buy these files. 
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                Your remaining balance after buying: {user.credits.toFixed(0)}
+              </div>
+            ) 
+          }
         </div>
         <div className="mt-2 flex">
           <Button
             className="mr-2"
             variant="primary"
             onClick={handleFilesUpload}
+            disabled={user.credits < getFilePrice()}
           >
-            Yes
+            Upload
           </Button>
           <Button variant="danger" onClick={() => setConfirmationOpened(false)}>
-            No
+            Cancel
           </Button>
         </div>
       </Modal>
       <FileDropzone setFiles={updateFiles} files={files} />
-      {/* <div className="my-4 rounded-md p-4 shadow-md">
-        <h4 className="mt-4 text-sm font-semibold">File info</h4>
-        <Table verticalSpacing="xs" fontSize="xs">
-          <thead>
-            <tr>
-              <th>File Name</th>
-              <th>Pages</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {fileInfo.map((file, i) => (
-              <tr key={file.name}>
-                <td>{file.name}</td>
-                <td>{file.pages}</td>
-                <td>{file.price}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-        {files.length == 0 && (
-          <div className="mb-4 text-center text-sm italic text-gray-500">
-            No files uploaded yet
-          </div>
-        )}
-      </div> */}
-
-      {/* For each file, show number of pages and total price */}
       <Button
         onClick={() => {
           setConfirmationOpened(true);

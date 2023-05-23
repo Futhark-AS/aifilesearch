@@ -26,7 +26,14 @@ const storage = {
     const user = getUser()
     const newUser = Object.assign({}, storage.getUser(), user)
     storage.setUser(newUser)
-    }
+    },
+  setAzureToken: (token: string) => {
+    window.localStorage.setItem(`${storagePrefix}azureToken`, token);
+  },
+  getAzureToken: () => {
+    return window.localStorage.getItem(`${storagePrefix}azureToken`);
+  }
+
 };
 
 export default storage;

@@ -212,28 +212,41 @@ export const postFile = async (uid: string, file: File, project: string) => {
 };
 
 export const getUser = async () => {
-  const res = await azureAxios.get(URLS.user);
-  return documentSchema.parse(res.data);
+  return azureAxios
+    .get(URLS.user)
+    .then((res) => {
+      return documentSchema.parse(res.data);
+    })
+    .catch((err) => {
+      if (err.response.status === 404) {
+        return null;
+      }
+
+      return null
+    });
 };
 
 export type ProjectFile = {
   name: string;
   blobName: string;
   numPages: number;
-}
+};
 export const getFiles = async (project: string): Promise<ProjectFile[]> => {
   const res = await azureAxios.get(URLS.getFiles(project));
   console.log(res.data);
 
   const apiReturnSchema = z.object({
-    files: z.array(
-      z.object({
-        blob_name: z.string(),
-        credits: z.number(),
-        num_pages: z.number(),
-        file_name: z.string(),
-      })
-    ).optional().default([]),
+    files: z
+      .array(
+        z.object({
+          blob_name: z.string(),
+          credits: z.number(),
+          num_pages: z.number(),
+          file_name: z.string(),
+        })
+      )
+      .optional()
+      .default([]),
   });
 
   // TODO: fetch file metadata from api
