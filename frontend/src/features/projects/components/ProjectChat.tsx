@@ -7,13 +7,20 @@ import { Loader } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import React, { useRef, useState } from "react";
 import { PromptMatch, searchProjectWithPromptReq } from "../requests";
-export type Message = {
-  role: "user" | "assistant" | "system";
-  content: string;
-  citationMapping?: {
-    [id: number]: string;
-  };
-};
+import { useAppDispatch } from "@/redux/hooks";
+import { setHighlightedResult } from "../projectSlice";
+export type Message =
+  | {
+      role: "user" | "system";
+      content: string;
+    }
+  | {
+      role: "assistant";
+      content: string;
+      citationMapping: {
+        [id: number]: PromptMatch;
+      };
+    };
 
 interface Props {
   projectName: string;
@@ -32,15 +39,9 @@ const getCitations = (text: string, matches: PromptMatch[]) => {
   // get unique citations
   const uniqueCitations = Array.from(new Set(citations));
 
-  const citationMapping = uniqueCitations?.map((citation) => ({
-    id: citation,
-    // only get last part after / of blob name
-    name: matches[citation].blobName.split("/").pop() || "",
-  }));
-
-  const map: { [id: number]: string } = {};
-  for (const citation of citationMapping) {
-    map[citation.id] = citation.name;
+  const map: { [id: number]: PromptMatch } = {};
+  for (const citation of uniqueCitations) {
+    map[citation] = matches[citation];
   }
 
   return map;
@@ -53,6 +54,7 @@ const ChatMessage = ({
   message: Message;
   project: string;
 }) => {
+  const dispatch = useAppDispatch();
   // [1] => <Link to="/projects/1">1</Link>
   // [3] [1] => <Link to="/projects/3">3</Link> <Link to="/projects/1">1</Link>
 
@@ -61,44 +63,60 @@ const ChatMessage = ({
   // normal text is mapped to span elements
   // citations are added to a Link elements
   // consequtive citations are seperated by a span element with a space
-
   const elements = [];
-  let currentText = "";
-  let i = 0;
-  const text = message.content;
-  while (i < text.length) {
-    const char = text[i];
-    if (char === "[") {
-      let citation = 0;
-      // if in one or two places after there is a closing, then it is a citation of respective 1 or 2 digits
-      const nextChar = text[i + 1];
-      const nextNextChar = text[i + 2];
-      const nextNextNextChar = text[i + 3];
 
-      if (nextNextChar == "]") {
-        citation = parseInt(nextChar);
-        i += 3;
-      } else if (nextNextNextChar == "]") {
-        citation = parseInt(nextChar + nextNextChar);
-        i += 4;
+  if (message.role === "assistant") {
+    let currentText = "";
+    let i = 0;
+    const text = message.content;
+    while (i < text.length) {
+      const char = text[i];
+      if (char === "[") {
+        let citation = 0;
+        // if in one or two places after there is a closing, then it is a citation of respective 1 or 2 digits
+        const nextChar = text[i + 1];
+        const nextNextChar = text[i + 2];
+        const nextNextNextChar = text[i + 3];
+
+        if (nextNextChar == "]") {
+          citation = parseInt(nextChar);
+          i += 3;
+        } else if (nextNextNextChar == "]") {
+          citation = parseInt(nextChar + nextNextChar);
+          i += 4;
+        } else {
+          currentText += char;
+          i++;
+          continue;
+        }
+        elements.push(<span key={i}>{currentText}</span>);
+        currentText = "";
+
+        const blobName = message.citationMapping[citation].blobName;
+
+        elements.push(
+          <Link
+            key={"link" + i}
+            to={`/app/projects/${project}/pdf/${encodeURIComponent(blobName)}`}
+            onClick={() =>
+              dispatch(setHighlightedResult(message.citationMapping[citation]))
+            }
+          >
+            {`[`}
+            {blobName.split("/").pop() || citation}
+            {`]`}
+          </Link>
+        );
+        continue;
       } else {
         currentText += char;
-        continue;
+        i++;
       }
-      elements.push(<span>{currentText}</span>);
-      elements.push(
-        <Link to={`/projects/${project}/pdf/${citation}`}>
-          {`[`}
-          {message.citationMapping && message.citationMapping[citation]}
-          {`]`}
-        </Link>
-      );
-    } else {
-      currentText += char;
-      i++;
     }
+    elements.push(<span key={i}>{currentText}</span>);
+  } else {
+    elements.push(<span key={"key"}>{message.content}</span>);
   }
-  elements.push(<span>{currentText}</span>);
 
   return <div>{elements}</div>;
 };
@@ -135,10 +153,7 @@ const DEFAULT_MESSAGES = [
   },
 ] as Message[];
 
-export function ProjectChat({
-  getAiResponse,
-  projectName,
-}: Props) {
+export function ProjectChat({ getAiResponse, projectName }: Props) {
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
 

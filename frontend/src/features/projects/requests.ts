@@ -5,6 +5,7 @@ import { documentSchema } from "../auth/requests";
 import { uploadFile } from "./azure-storage-blob";
 import { Message } from "./components";
 import { createManyUnion } from "./utils";
+import { mappings } from "./components/exampleResp";
 
 export const URLS = {
   query: "/api/query",
@@ -113,11 +114,15 @@ export const searchProjectWithPromptReq = async (
   prompt: string,
   project: string
 ): Promise<PromptMatch[]> => {
-  const res = await azureAxios.post(URLS.query, {
-    prompt,
-    project,
-    topK: 10,
-  });
+  let res = { data: mappings };
+
+  if (!window.devMode) {
+    res = await azureAxios.post(URLS.query, {
+      prompt,
+      project,
+      topK: 10,
+    });
+  }
 
   // if response has property .matches and has length 1 and matches[0] has property .metadata and .metadata has property .bounding_box, it is a bounding box type
   if (

@@ -15,6 +15,8 @@ import storage from "./utils/storage";
 
 const container = document.getElementById("root");
 
+window.devMode = false;
+
 if (!container) throw new Error("Could not find root element with id 'root'");
 
 const root = createRoot(container);
