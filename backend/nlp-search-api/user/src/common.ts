@@ -47,3 +47,20 @@ export const zodError = (zodError, rawObject) => {
     rawObject: rawObject,
   };
 };
+
+export const notifyOfEvent = async (messages: string[]) => {
+  const url = process.env["ENV_NOTIFY_URL_ENDPOINT"];
+  if (!url) {
+    return;
+  }
+  fetch(url, {
+    method: "POST",
+    body: JSON.stringify({
+      to: process.env["ENV_NOTIFIER_DESTINATION"],
+      messages,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+};

@@ -6,6 +6,7 @@ import {
   extractReqHeaderUID,
   ErrorResponse,
   zodError,
+  notifyOfEvent,
 } from "./common";
 import { CosmosWrapper } from "./cosmos";
 
@@ -141,6 +142,8 @@ export const handlePOST = async (
   }
 
   createResponse(context, 200, dbUserResp.data);
+
+  notifyOfEvent(["Signed up new user: " + body.name + ", " + body.email])
 };
 
 export const handleInsupported = async (
