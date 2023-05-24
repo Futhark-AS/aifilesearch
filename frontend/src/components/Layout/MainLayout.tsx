@@ -12,6 +12,7 @@ import { logout } from "@/features/auth/authSlice";
 import { queryClient } from "@/lib/react-query";
 import { useAppDispatch } from "@/redux/hooks";
 import { Logo } from "../Logo";
+import storage from "@/utils/storage";
 
 type SideNavigationItem = {
   name: string;
@@ -36,7 +37,9 @@ const UserNavigation = () => {
       name: "Sign out",
       to: "/",
       onClick: () => {
+        queryClient.getQueryCache().clear();
         queryClient.clear();
+        storage.setAzureToken("")
         dispatch(logout());
       },
     },

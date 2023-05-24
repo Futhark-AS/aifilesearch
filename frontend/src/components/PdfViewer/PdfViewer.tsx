@@ -16,7 +16,7 @@ import { highlightBoundingBox } from "@/features/projects/utils";
 import { showError } from "@/utils/showError";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { PDFPageProxy, TextLayerItemInternal } from "react-pdf";
-import { useMeasure } from "react-use";
+import useMeasure from "@/hooks/useMeasure";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
 
 const FALLBACK_WIDTH = 600;
@@ -48,7 +48,7 @@ interface Props {
 //   content: `
 //   Briefly answer the following questions (with a maximum of 50 words per answer):
 //   a) What is availability? What factors affect availability?
-//   b) What are fault-­‐tolerant systems? 
+//   b) What are fault-­‐tolerant systems?
 //   `,
 //   pageNumber: 2
 // } as const
@@ -113,9 +113,16 @@ export const PdfViewer = forwardRef(function PdfViewer(
 
   const customTextRenderer = useCallback(
     (layer: TextLayerItemInternal, pageIndex: number) => {
-      if (highlightedBox && highlightedBox.type == "text" && pageIndex == highlightedBox.pageNumber - 1) {
-        console.log(layer.str)
-        if (layer.str.includes(highlightedBox.content) || highlightedBox.content.includes(layer.str)) {
+      if (
+        highlightedBox &&
+        highlightedBox.type == "text" &&
+        pageIndex == highlightedBox.pageNumber - 1
+      ) {
+        console.log(layer.str);
+        if (
+          layer.str.includes(highlightedBox.content) ||
+          highlightedBox.content.includes(layer.str)
+        ) {
           return `<mark>${layer.str}</mark>`;
         }
       }
@@ -123,8 +130,6 @@ export const PdfViewer = forwardRef(function PdfViewer(
     },
     [highlightedBox]
   );
-
-
 
   // Use ref for deciding width if its given.
   useEffect(() => {
@@ -184,7 +189,9 @@ export const PdfViewer = forwardRef(function PdfViewer(
               <div style={style}>
                 <Page
                   onRenderSuccess={onPdfPageRenderSuccess}
-                  customTextRenderer={layer => customTextRenderer(layer, index )}
+                  customTextRenderer={(layer) =>
+                    customTextRenderer(layer, index)
+                  }
                   pageIndex={index}
                   width={getWidth()}
                   canvasRef={(el) => {

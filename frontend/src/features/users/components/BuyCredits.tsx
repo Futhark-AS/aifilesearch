@@ -5,7 +5,6 @@ import { FormDrawer } from "@/components/Form";
 
 import { PencilIcon } from "@heroicons/react/24/outline";
 import { loadStripe } from "@stripe/stripe-js";
-import { useUpdateProfile } from "../api/updateProfile";
 
 import { StripeCheckoutForm } from "@/components/StripeCheckoutForm";
 import { creditsPaymentIntent } from "@/features/projects/requests";
@@ -23,7 +22,6 @@ const stripePromise = loadStripe(
 
 export const BuyCredits = () => {
   const [clientSecret, setClientSecret] = useState("");
-  const updateProfileMutation = useUpdateProfile();
   const [credits, setCredits] = useState(0);
 
   const appearance = {
@@ -36,7 +34,7 @@ export const BuyCredits = () => {
 
   return (
     <FormDrawer
-      isDone={updateProfileMutation.isSuccess}
+    isDone={false}
       triggerButton={
         <Button startIcon={<PencilIcon className="h-4 w-4" />} size="sm">
           Buy Credits
@@ -49,7 +47,6 @@ export const BuyCredits = () => {
             form="payment-form"
             type="submit"
             size="sm"
-            isLoading={updateProfileMutation.isLoading}
           >
             Confirm Payment
           </Button>
@@ -58,7 +55,6 @@ export const BuyCredits = () => {
             form="buy-credits"
             type="submit"
             size="sm"
-            isLoading={updateProfileMutation.isLoading}
           >
             Check out
           </Button>

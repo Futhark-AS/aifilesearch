@@ -7,7 +7,6 @@ import { useQuery } from "react-query";
 import { useLocation } from "react-router-dom";
 import { useIsAuthenticated } from "../../../redux/hooks";
 import { BuyCredits } from "../components/BuyCredits";
-import { UpdateProfile } from "../components/UpdateProfile";
 
 import { showNotification } from "@mantine/notifications";
 

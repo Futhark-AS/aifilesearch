@@ -1,17 +1,17 @@
 import React from "react";
 import { Provider } from "react-redux";
-import { store } from "./redux/store";
 import "./index.css";
+import { store } from "./redux/store";
 
+import { NotificationsProvider } from "@mantine/notifications";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "react-query";
 import { RouterProvider } from "react-router-dom";
 import { hydrate } from "./features/auth/authSlice";
+import { queryClient } from "./lib/react-query";
 import { router } from "./routes";
 import storage from "./utils/storage";
-import { QueryClient, QueryClientProvider } from "react-query";
-import { initMocks } from "./testing/server";
-import { NotificationsProvider } from "@mantine/notifications";
 
 const container = document.getElementById("root");
 
@@ -34,19 +34,6 @@ store.subscribe(() => {
     storage.clearUser();
   }
 });
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      refetchOnMount: false,
-    },
-  },
-});
-
-await initMocks();
 
 root.render(
   <React.StrictMode>

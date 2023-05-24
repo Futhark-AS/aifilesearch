@@ -70,10 +70,8 @@ export default function GoogleSignInButton() {
               login({
                 email: parsedGoogleJwt.email,
                 firstName: parsedGoogleJwt.given_name,
-                googleAuthToken: credentials,
                 uid: azureAuth.data.user.userId,
                 name: parsedGoogleJwt.name,
-                azureAuthToken: azureAuth.data.authenticationToken,
                 credits: 0
               })
             );
@@ -82,10 +80,8 @@ export default function GoogleSignInButton() {
               login({
                 email: parsedGoogleJwt.email,
                 firstName: parsedGoogleJwt.given_name,
-                googleAuthToken: credentials,
                 uid: azureAuth.data.user.userId,
                 name: parsedGoogleJwt.name,
-                azureAuthToken: azureAuth.data.authenticationToken,
                 credits: user.credits
               })
             );

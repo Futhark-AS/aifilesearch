@@ -14,7 +14,7 @@ export default function Projects() {
 
   const { data: projects, isLoading, isError } = useQuery({
     queryKey: ["projects"],
-    queryFn: () => getUser().then((user) => user.projects),
+    queryFn: () => getUser().then((user) => user?.projects),
   });
 
   const newProjectMutation = useMutation({

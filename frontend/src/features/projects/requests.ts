@@ -1,11 +1,10 @@
+import { HighlightedBox } from "@/components/PdfViewer";
 import { azureAxios, baseAxios } from "@/lib/axios";
 import { z } from "zod";
-import { uploadFile } from "./azure-storage-blob";
-import { createManyUnion, highlightBoundingBox } from "./utils";
-import axios from "axios";
-import { Message } from "./components";
-import { HighlightedBox } from "@/components/PdfViewer";
 import { documentSchema } from "../auth/requests";
+import { uploadFile } from "./azure-storage-blob";
+import { Message } from "./components";
+import { createManyUnion } from "./utils";
 
 export const URLS = {
   query: "/api/query",
@@ -222,7 +221,7 @@ export const getUser = async () => {
         return null;
       }
 
-      return null
+      return null;
     });
 };
 
