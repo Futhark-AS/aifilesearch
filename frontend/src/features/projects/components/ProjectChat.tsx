@@ -1,22 +1,109 @@
 import { Chat } from "@/components/Chat/Chat";
 import { Form, InputField } from "@/components/Form";
-import { useAppDispatch } from "@/redux/hooks";
+import { Link } from "@/components/Link";
+import { showError } from "@/utils/showError";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { Loader } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import React, { useRef, useState } from "react";
-import { toggleSearchPane } from "../projectSlice";
 import { PromptMatch, searchProjectWithPromptReq } from "../requests";
 export type Message = {
   role: "user" | "assistant" | "system";
   content: string;
+  citationMapping?: {
+    [id: number]: string;
+  };
 };
 
 interface Props {
   projectName: string;
   getAiResponse: (Message: Message[]) => Promise<string>;
-  setSearchResults: (results: PromptMatch[]) => void;
 }
+
+const getCitations = (text: string, matches: PromptMatch[]) => {
+  // get citation matches
+  const citationMatches = text.match(/\[\d+\]/g);
+
+  // extract number
+  const citations = citationMatches?.map((match) =>
+    parseInt(match.replace(/\D/g, ""))
+  );
+
+  // get unique citations
+  const uniqueCitations = Array.from(new Set(citations));
+
+  const citationMapping = uniqueCitations?.map((citation) => ({
+    id: citation,
+    // only get last part after / of blob name
+    name: matches[citation].blobName.split("/").pop() || "",
+  }));
+
+  const map: { [id: number]: string } = {};
+  for (const citation of citationMapping) {
+    map[citation.id] = citation.name;
+  }
+
+  return map;
+};
+
+const ChatMessage = ({
+  message,
+  project,
+}: {
+  message: Message;
+  project: string;
+}) => {
+  // [1] => <Link to="/projects/1">1</Link>
+  // [3] [1] => <Link to="/projects/3">3</Link> <Link to="/projects/1">1</Link>
+
+  // only support citations of two digits max
+
+  // normal text is mapped to span elements
+  // citations are added to a Link elements
+  // consequtive citations are seperated by a span element with a space
+
+  const elements = [];
+  let currentText = "";
+  let i = 0;
+  const text = message.content;
+  while (i < text.length) {
+    const char = text[i];
+    if (char === "[") {
+      let citation = 0;
+      // if in one or two places after there is a closing, then it is a citation of respective 1 or 2 digits
+      const nextChar = text[i + 1];
+      const nextNextChar = text[i + 2];
+      const nextNextNextChar = text[i + 3];
+
+      if (nextNextChar == "]") {
+        citation = parseInt(nextChar);
+        i += 3;
+      } else if (nextNextNextChar == "]") {
+        citation = parseInt(nextChar + nextNextChar);
+        i += 4;
+      } else {
+        currentText += char;
+        continue;
+      }
+      elements.push(<span>{currentText}</span>);
+      elements.push(
+        <Link to={`/projects/${project}/pdf/${citation}`}>
+          {`[`}
+          {message.citationMapping && message.citationMapping[citation]}
+          {`]`}
+        </Link>
+      );
+    } else {
+      currentText += char;
+      i++;
+    }
+  }
+  elements.push(<span>{currentText}</span>);
+
+  return <div>{elements}</div>;
+};
+
+export default ChatMessage;
 
 const DEFAULT_MESSAGES = [
   {
@@ -51,10 +138,8 @@ const DEFAULT_MESSAGES = [
 export function ProjectChat({
   getAiResponse,
   projectName,
-  setSearchResults,
 }: Props) {
   const chatBoxRef = useRef<HTMLDivElement>(null);
-  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
 
   const [messages, setMessages] = useLocalStorage({
@@ -93,7 +178,10 @@ export function ProjectChat({
             type: "text",
             id: i,
             position: msg.role === "user" ? "right" : "left",
-            text: msg.content,
+            // text: msg.content,
+            text: (
+              <ChatMessage message={msg} project={projectName} />
+            ) as unknown as string,
             title: msg.role === "user" ? "You" : "AI",
             focus: false,
             date: new Date(),
@@ -116,20 +204,26 @@ export function ProjectChat({
         <Form<{ value: string }>
           id="submit-chat"
           onSubmit={async (values) => {
-            setMessages([
-              ...messages,
-              {
-                role: "user",
-                content: values.value,
-              },
-            ]);
+            let oldMessages: Message[] = [];
+            setMessages((prev) => {
+              oldMessages = prev;
+              return [
+                ...prev,
+                {
+                  role: "user",
+                  content: values.value,
+                },
+              ];
+            });
 
-            const matches = await searchProjectWithPromptReq(
-              values.value,
-              projectName
-            );
+            try {
+              setLoading(true);
+              const matches = await searchProjectWithPromptReq(
+                values.value,
+                projectName
+              );
 
-            const userPrompt = `
+              const userPrompt = `
             documents: [${matches.map(
               (match, i) =>
                 `{id: ${i}, text: "${match.highlightedBox.content}"}`
@@ -137,53 +231,28 @@ export function ProjectChat({
             query: ${values.value}
             `;
 
-            const msg = {
-              role: "user",
-              content: userPrompt,
-            } as const;
+              const msg = {
+                role: "user",
+                content: userPrompt,
+              } as const;
 
-            const newMessages = [...messages, msg];
+              const newMessages = [...messages, msg];
 
-            setLoading(true);
+              const newMessage = await getAiResponse(newMessages);
+              setLoading(false);
 
-            const newMessage = await getAiResponse(newMessages);
-
-            // get citation matches
-            const citationMatches = newMessage.match(/\[\d+\]/g);
-
-            // extract number
-            const citations = citationMatches?.map((match) =>
-              parseInt(match.replace(/\D/g, ""))
-            );
-
-            // get matches used in citations
-            const usedMatches = citations?.map((citation) => ({
-              ...matches[citation],
-              citation: "[" + citation.toString() + "]",
-            }));
-
-            // reomve matches with duplicate citation
-            const usedMatchesSet = new Set();
-            const usedMatchesNoDuplicates = usedMatches?.filter((match) => {
-              if (usedMatchesSet.has(match.citation)) {
-                return false;
-              } else {
-                usedMatchesSet.add(match.citation);
-                return true;
-              }
-            });
-
-            if (usedMatchesNoDuplicates) {
-              dispatch(toggleSearchPane());
-              setSearchResults(usedMatchesNoDuplicates);
+              const citationMapping = getCitations(newMessage, matches);
+              setMessages((prev) => [
+                ...prev,
+                { role: "assistant", content: newMessage, citationMapping },
+              ]);
+            } catch (error) {
+              console.error(error);
+              setLoading(false);
+              showError("Could not get AI response");
+              setMessages(oldMessages);
+              return;
             }
-
-            setLoading(false);
-
-            setMessages((prev) => [
-              ...prev,
-              { role: "assistant", content: newMessage },
-            ]);
           }}
           options={{
             defaultValues: {

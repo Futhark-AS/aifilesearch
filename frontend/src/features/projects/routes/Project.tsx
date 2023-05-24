@@ -9,6 +9,7 @@ import { useQuery } from "react-query";
 import { Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { ProjectChat, ProjectSearchSidebar } from "../components";
 import { ProjectFilesSidebar } from "../components/ProjectFilesSidebar";
+import { UploadFilesBox } from "../components/UploadFilesBox";
 import {
   leftBarShowing,
   selectHighlightedResult,
@@ -24,8 +25,6 @@ import {
   getNewChatMessage,
   searchProjectWithPromptReq,
 } from "../requests";
-import { UploadFilesBox } from "../components/UploadFilesBox";
-import { ErrorPage } from "@/features/errors";
 
 // get pdf from url
 // => get blob url from pdf
@@ -100,7 +99,7 @@ const Project = () => {
 
     searchProjectWithPromptReq(searchValue, projectName)
       .then((res) => {
-        console.log(res)
+        console.log(res);
         if (res.length === 0) {
           showNotification({
             title: "No results",
@@ -170,9 +169,12 @@ const Project = () => {
             <Route path="pdf/:pdf" element={<PdfView _={null} ref={ref} />} />
             <Route
               path=""
-              element={<ProjectChat getAiResponse={getNewChatMessage} projectName={projectName} setSearchResults={
-                setSearchResults
-              }/>}
+              element={
+                <ProjectChat
+                  getAiResponse={getNewChatMessage}
+                  projectName={projectName}
+                />
+              }
             />
           </Routes>
         </section>
