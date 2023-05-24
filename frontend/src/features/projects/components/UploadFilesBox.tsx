@@ -18,7 +18,7 @@ type FileInfo = {
 const extractFileInfo = async (file: FileValidated): Promise<FileInfo> => {
   // talk with backend to get the price and pages
   const pages = await pdfNumberOfPages(file.file);
-  const price = pages * 2 * 100;
+  const price = pages * 1.5 * 100 / 1000;
   return {
     name: file.file.name,
     pages: pages,
