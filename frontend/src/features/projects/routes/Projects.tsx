@@ -12,7 +12,11 @@ import { createProject, getUser } from "../requests";
 export default function Projects() {
   const queryClient = useQueryClient();
 
-  const { data: projects, isLoading, isError } = useQuery({
+  const {
+    data: projects,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["projects"],
     queryFn: () => getUser().then((user) => user?.projects),
   });
@@ -63,35 +67,37 @@ export default function Projects() {
         <h1 className="mt-8 text-3xl font-semibold">Your projects</h1>
         <Divider className="mt-2 mb-4" />
 
-
         {/* <div className="mt-4 flex-1 overflow-y-scroll" ref={chatBoxRef}> */}
-        <ul className="overflow-y-scroll max-h-72">
+        <ul className="max-h-72 overflow-y-scroll">
           {isError ? (
             <div className="text-red-500">
               There was an error loading your projects
             </div>
           ) : isLoading ? (
             <div>Loading...</div>
-          ) : (
-            projects &&
+          ) : projects?.length ? (
             projects.map((project) => (
               <Link to={`./projects/${project.name}`} key={project.name}>
                 <Card
                   shadow="sm"
                   radius="md"
-                  className="my-2 transform cursor-pointer p-4 px-4 transition duration-100 hover:scale-105 hover:cursor-pointer w-11/12 mx-auto"
+                  className="my-2 mx-auto w-11/12 transform cursor-pointer p-4 px-4 transition duration-100 hover:scale-105 hover:cursor-pointer"
                 >
                   <div className="text-md">{project.name}</div>
                 </Card>
               </Link>
             ))
+          ) : (
+            <div className="text-gray-500">
+              You do not have any projects yet
+            </div>
           )}
         </ul>
         <Form<{ name: string }>
           onSubmit={(values) => {
             newProjectMutation.mutate(values.name);
           }}
-          className="flex flex-col sm:flex-row mt-4"
+          className="mt-4 flex flex-col sm:flex-row"
         >
           {(methods) => (
             <>
