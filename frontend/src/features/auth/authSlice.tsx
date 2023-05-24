@@ -59,13 +59,19 @@ export const authSlice = createSlice({
         credits: action.payload.credits,
       };
     },
+    setUserCredits: (state, action: PayloadAction<{credits: number}>) => {
+      return {
+        ...state,
+        credits: action.payload.credits,
+      };
+    },
     logout: () => {
       return initialState;
     },
   },
 });
 
-export const { login, logout, hydrate } = authSlice.actions;
+export const { login, logout, hydrate, setUserCredits } = authSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectIsAuthenticated = (state: RootState) => state.auth.isLoggedIn;

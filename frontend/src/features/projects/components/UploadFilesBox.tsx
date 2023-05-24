@@ -121,7 +121,7 @@ export function UploadFilesBox({ open, setOpen }: Props) {
               </div>
             ) : (
               <div className="text-sm text-gray-500">
-                Your remaining balance after buying: {user.credits.toFixed(0)}
+                Your remaining balance after buying: {getFilePrice() - Number(user.credits)}
               </div>
             ) 
           }

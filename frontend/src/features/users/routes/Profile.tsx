@@ -7,6 +7,8 @@ import { useQuery } from "react-query";
 import { useLocation } from "react-router-dom";
 import { useIsAuthenticated } from "../../../redux/hooks";
 import { BuyCredits } from "../components/BuyCredits";
+import { useAppDispatch } from "@/redux/hooks";
+import { setUserCredits } from "@/features/auth/authSlice";
 
 import { showNotification } from "@mantine/notifications";
 
@@ -32,14 +34,18 @@ export const Profile = () => {
   });
 
   const location = useLocation();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const isSuccess = searchParams.get("success");
     const credits = searchParams.get("credits");
 
-    if (isSuccess) {
-      console.log(searchParams);
+    if (isSuccess && credits) {
+      const newCredits = user?.credits
+        ? user.credits + parseInt(credits)
+        : parseInt(credits);
+
       showNotification({
         title: "Payment successful!",
         message:
@@ -48,6 +54,12 @@ export const Profile = () => {
           " credits. They will be added to your account shortly. Thank you for your purchase!",
         color: "teal",
       });
+
+      dispatch(
+        setUserCredits({
+          credits: newCredits,
+        })
+      );
 
       console.log(location.pathname);
       history.pushState(null, "", location.pathname);
@@ -69,9 +81,7 @@ export const Profile = () => {
       <div className="mt-4 overflow-hidden bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <div className="flex justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-            Balance
-            </h3>
+            <h3 className="text-lg font-medium text-gray-900">Balance</h3>
             <BuyCredits />
           </div>
         </div>
@@ -92,7 +102,7 @@ export const Profile = () => {
             </h3>
           </div>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          Your profile information.
+            Your profile information.
           </p>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
