@@ -20,6 +20,13 @@ const stripePromise = loadStripe(
   "pk_live_51MePU5JR76QyQ6AvL89IwWk9yYLIH3ERANOGGCWgJOYeNCLe3gZkc610rqRQazf2anIVB5wz3ob05zleH0q4I1Jy00bztowdqI"
 );
 
+const successURL = (credits: number) =>
+  import.meta.env.VITE_PROD == "1"
+    ? import.meta.env.VITE_PROD_URL + `/app/profile?success=true&credits=${credits}`
+    : import.meta.env.VITE_DEV_URL + `/app/profile?success=true&credits=${credits}`
+
+console.log(successURL(100))
+
 export const BuyCredits = () => {
   const [clientSecret, setClientSecret] = useState("");
   const [credits, setCredits] = useState(0);
@@ -34,7 +41,7 @@ export const BuyCredits = () => {
 
   return (
     <FormDrawer
-    isDone={false}
+      isDone={false}
       triggerButton={
         <Button startIcon={<PencilIcon className="h-4 w-4" />} size="sm">
           Buy Credits
@@ -43,19 +50,11 @@ export const BuyCredits = () => {
       title="Update Profile"
       submitButton={
         clientSecret ? (
-          <Button
-            form="payment-form"
-            type="submit"
-            size="sm"
-          >
+          <Button form="payment-form" type="submit" size="sm">
             Confirm Payment
           </Button>
         ) : (
-          <Button
-            form="buy-credits"
-            type="submit"
-            size="sm"
-          >
+          <Button form="buy-credits" type="submit" size="sm">
             Check out
           </Button>
         )
@@ -84,7 +83,7 @@ export const BuyCredits = () => {
       {clientSecret && (
         <Elements options={options} stripe={stripePromise}>
           <StripeCheckoutForm
-            successURL={`http://localhost:5173/app/profile?success=true&credits=${credits}`}
+            successURL={successURL(credits)}
             paymentIntentClientSecret={clientSecret}
           />
         </Elements>
