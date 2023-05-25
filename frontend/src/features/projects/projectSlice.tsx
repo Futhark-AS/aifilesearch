@@ -1,8 +1,9 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../../redux/store";
 import { HighlightedBox } from "@/components/PdfViewer";
 
 export enum leftBarShowing {
+  chat = "chat",
   search = "search",
   files = "files",
   none = "none",
@@ -16,7 +17,7 @@ export type ProjectPageState = {
 
 // Define the initial state using that type
 const initialState = {
-  leftBarShowing: leftBarShowing.search,
+  leftBarShowing: leftBarShowing.chat,
   highlightedResult: null
 } as ProjectPageState;
 
@@ -25,19 +26,16 @@ export const projectSlice = createSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
-    toggleSearchPane: (state) => {
-      state.leftBarShowing = state.leftBarShowing == leftBarShowing.search ? leftBarShowing.none : leftBarShowing.search;
-    },
-    toggleFilesPane: (state) => {
-      state.leftBarShowing = state.leftBarShowing == leftBarShowing.files ? leftBarShowing.none : leftBarShowing.files;
-    },
     setHighlightedResult: (state, action) => {
       state.highlightedResult = action.payload;
-    }
+    },
+    togglePane: (state, action: PayloadAction<leftBarShowing>) => {
+      state.leftBarShowing = action.payload
+    },
   },
 });
 
-export const { toggleFilesPane, toggleSearchPane, setHighlightedResult } = projectSlice.actions;
+export const { togglePane, setHighlightedResult } = projectSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectLeftPanelChosen = (state: RootState) =>
