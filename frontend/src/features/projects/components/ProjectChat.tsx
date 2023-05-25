@@ -9,6 +9,7 @@ import React, { useRef, useState } from "react";
 import { PromptMatch, searchProjectWithPromptReq } from "../requests";
 import { useAppDispatch } from "@/redux/hooks";
 import { setHighlightedResult } from "../projectSlice";
+import { useNavigate } from "react-router-dom";
 export type Message =
   | {
       role: "user" | "system";
@@ -55,6 +56,7 @@ const ChatMessage = ({
   project: string;
 }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   // [1] => <Link to="/projects/1">1</Link>
   // [3] [1] => <Link to="/projects/3">3</Link> <Link to="/projects/1">1</Link>
 
@@ -95,17 +97,18 @@ const ChatMessage = ({
         const blobName = message.citationMapping[citation].blobName;
 
         elements.push(
-          <Link
+          <span
+            className="text-gray-500 cursor-pointer"
             key={"link" + i}
-            to={`/app/projects/${project}/pdf/${encodeURIComponent(blobName)}`}
-            onClick={() =>
-              dispatch(setHighlightedResult(message.citationMapping[citation]))
-            }
+            onClick={() => {
+              navigate(`pdf/${encodeURIComponent(blobName)}`);
+              dispatch(setHighlightedResult(message.citationMapping[citation].highlightedBox));
+            }}
           >
             {`[`}
-            {blobName.split("/").pop() || citation}
+            {citation}
             {`]`}
-          </Link>
+          </span>
         );
         continue;
       } else {
