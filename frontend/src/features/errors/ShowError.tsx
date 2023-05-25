@@ -7,7 +7,7 @@ interface Props {
   error: PageError;
 }
 
-export const ShowError = ({ error }: Props) => {
+export const Error = ({ error }: Props) => {
   const navigate = useNavigate();
   return (
     <div className="container mx-auto my-8 flex flex-col items-center justify-center px-5">

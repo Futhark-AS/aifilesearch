@@ -1,11 +1,20 @@
-import {
-  configureStore,
-  ThunkAction,
-  Action,
-  combineReducers,
-} from "@reduxjs/toolkit";
-import authReducer from "@/features/auth/authSlice";
+import authReducer, { logout } from "@/features/auth/authSlice";
 import projectReducer from "@/features/projects/projectSlice";
+import storage from "@/utils/storage";
+import {
+  Action,
+  ThunkAction,
+  combineReducers,
+  configureStore,
+} from "@reduxjs/toolkit";
+import { listenerMiddleware, startAppListening } from "./listenerMiddleware";
+
+startAppListening({
+  actionCreator: logout,
+  effect: async (action, listenerApi) => {
+    storage.setAzureToken("");
+  },
+});
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -14,7 +23,9 @@ const rootReducer = combineReducers({
 
 export const store = configureStore({
   reducer: rootReducer,
-  devTools: process.env.NODE_ENV !== "production",
+  devTools: import.meta.env.VITE_PROD == "0",
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().prepend([listenerMiddleware.middleware]),
 });
 
 export type AppDispatch = typeof store.dispatch;

@@ -1,14 +1,14 @@
-import { getUser } from "@/features/projects/requests";
 import { baseAxios } from "@/lib/axios";
-import storage from "@/utils/storage";
 import { GoogleLogin } from "@react-oauth/google";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAppDispatch } from "../../../redux/hooks";
-import { login } from "../authSlice";
+import { setLoading, setUser } from "../authSlice";
 import { parseJwt } from "../parseJwt";
-import { postUser } from "../requests";
+import { getUser, postUser } from "../api";
+import storage from "@/utils/storage";
+import { showError } from "@/utils/showError";
 
 const AzureAuthResult = z.object({
   authenticationToken: z.string(),
@@ -56,43 +56,44 @@ export default function GoogleSignInButton() {
 
           storage.setAzureToken(azureAuth.data.authenticationToken);
 
+          dispatch(setLoading(true));
           const user = await getUser();
 
           const isSigningUp = user == null;
 
           if (isSigningUp) {
             await postUser({
-              id: azureAuth.data.user.userId,
               email: parsedGoogleJwt.email,
               name: parsedGoogleJwt.name,
             });
             dispatch(
-              login({
+              setUser({
                 email: parsedGoogleJwt.email,
-                firstName: parsedGoogleJwt.given_name,
-                uid: azureAuth.data.user.userId,
+                id: azureAuth.data.user.userId,
                 name: parsedGoogleJwt.name,
-                credits: 0
+                credits: 0,
+                isLoggedIn: true,
+                projects: [],
               })
             );
           } else {
             dispatch(
-              login({
+              setUser({
                 email: parsedGoogleJwt.email,
-                firstName: parsedGoogleJwt.given_name,
-                uid: azureAuth.data.user.userId,
+                id: azureAuth.data.user.userId,
                 name: parsedGoogleJwt.name,
-                credits: user.credits
+                credits: user.credits,
+                isLoggedIn: true,
+                projects: user.projects,
               })
             );
-
           }
-
           // TODO: get token
           navigate("/app");
         } catch (e) {
-          console.log(e)
-          alert(`Could not authenticate with Google (${e})`);
+          console.log(e);
+          dispatch(setLoading(false));
+          showError("There was an error in the system. Please try again later.")
         }
       }}
       onError={() => {

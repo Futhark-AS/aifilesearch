@@ -1,15 +1,12 @@
 import { ContentLayout } from "@/components/Layout";
 import React, { useEffect } from "react";
 
-import { getUser } from "@/features/projects/requests";
-import { useUser } from "@/redux/hooks";
-import { useQuery } from "react-query";
-import { useLocation } from "react-router-dom";
-import { useIsAuthenticated } from "../../../redux/hooks";
-import { BuyCredits } from "../components/BuyCredits";
-import { useAppDispatch } from "@/redux/hooks";
 import { setUserCredits } from "@/features/auth/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
+import { useLocation } from "react-router-dom";
+import { BuyCredits } from "../components/BuyCredits";
 
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { showNotification } from "@mantine/notifications";
 
 type EntryProps = {
@@ -26,13 +23,7 @@ const Entry = ({ label, value }: EntryProps) => (
 );
 
 export const Profile = () => {
-  const { email, name } = useUser();
-  const isAuthenticated = useIsAuthenticated();
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["user"],
-    queryFn: () => getUser(),
-  });
-
+  const { isLoading, user } = useAuth();
   const location = useLocation();
   const dispatch = useAppDispatch();
 
@@ -64,9 +55,7 @@ export const Profile = () => {
       console.log(location.pathname);
       history.pushState(null, "", location.pathname);
     }
-  }, [location]);
-
-  if (!isAuthenticated) return null;
+  }, [location, dispatch, user?.credits]);
 
   const formatCredits = (credits: undefined | number): string => {
     if (credits === undefined) {
@@ -107,8 +96,8 @@ export const Profile = () => {
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
           <dl className="sm:divide-y sm:divide-gray-200">
-            <Entry label="Name" value={name || "None"} />
-            <Entry label="Email Address" value={email || "None"} />
+            <Entry label="Name" value={user.name || "None"} />
+            <Entry label="Email Address" value={user.email || "None"} />
           </dl>
         </div>
       </div>

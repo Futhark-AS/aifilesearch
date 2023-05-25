@@ -1,65 +1,14 @@
 import { Button } from "@/components/Button";
 import { Form, InputField } from "@/components/Form";
-import { selectUser } from "@/features/auth/authSlice";
-import { useAppSelector } from "@/redux/hooks";
-import { showError } from "@/utils/showError";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Card, Divider } from "@mantine/core";
 import React from "react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import { Link } from "react-router-dom";
-import { createProject, getUser } from "../requests";
+import { Link, useNavigate } from "react-router-dom";
+import { createProject } from "../requests";
 
 export default function Projects() {
-  const queryClient = useQueryClient();
-
-  const {
-    data: projects,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["projects"],
-    queryFn: () => getUser().then((user) => user?.projects),
-  });
-
-  const newProjectMutation = useMutation({
-    mutationFn: createProject,
-    onMutate: async (project) => {
-      // Cancel any outgoing refetches
-      // (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries({ queryKey: ["projects"] });
-
-      // Snapshot the previous value
-      const prevProjects = queryClient.getQueryData<{ name: string }[]>([
-        "projects",
-      ]);
-
-      if (prevProjects) {
-        // Optimistically update to the new value
-        queryClient.setQueryData<{ name: string }[]>(
-          ["projects"],
-          [...prevProjects, { name: project }]
-        );
-      }
-
-      // Return a context object with the snapshotted value
-      return { prevProjects };
-    },
-    onSuccess: () => {
-      // Invalidate and refetch
-      console.log("onSuccess");
-    },
-
-    onError: (error, newProject, context) => {
-      if (context?.prevProjects) {
-        showError("There was an error creating your project");
-        queryClient.setQueryData(["projects"], context.prevProjects);
-      }
-    },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-    },
-  });
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -69,14 +18,10 @@ export default function Projects() {
 
         {/* <div className="mt-4 flex-1 overflow-y-scroll" ref={chatBoxRef}> */}
         <ul className="max-h-72 overflow-y-scroll">
-          {isError ? (
-            <div className="text-red-500">
-              There was an error loading your projects
-            </div>
-          ) : isLoading ? (
+          {isLoading ? (
             <div>Loading...</div>
-          ) : projects?.length ? (
-            projects.map((project) => (
+          ) : user.projects.length ? (
+            user.projects.map((project) => (
               <Link to={`./projects/${project.name}`} key={project.name}>
                 <Card
                   shadow="sm"
@@ -95,7 +40,8 @@ export default function Projects() {
         </ul>
         <Form<{ name: string }>
           onSubmit={(values) => {
-            newProjectMutation.mutate(values.name);
+            createProject(values.name);
+            navigate(`./projects/${values.name}`);
           }}
           className="mt-4 flex flex-col sm:flex-row"
         >

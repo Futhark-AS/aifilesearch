@@ -8,10 +8,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "react-query";
 import { RouterProvider } from "react-router-dom";
-import { hydrate } from "./features/auth/authSlice";
 import { queryClient } from "./lib/react-query";
 import { router } from "./routes";
-import storage from "./utils/storage";
 
 const container = document.getElementById("root");
 
@@ -20,22 +18,6 @@ window.devMode = false;
 if (!container) throw new Error("Could not find root element with id 'root'");
 
 const root = createRoot(container);
-
-const user = storage.getUser();
-if (user) {
-  store.dispatch(hydrate(user));
-}
-
-// TODO: Don't do this. Use a middleware instead.
-store.subscribe(() => {
-  const state = store.getState();
-  const user = state.auth;
-  if (user) {
-    storage.setUser(user);
-  } else {
-    storage.clearUser();
-  }
-});
 
 root.render(
   <React.StrictMode>

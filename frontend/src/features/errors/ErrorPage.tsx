@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
-import { useNavigate, useRouteError } from "react-router-dom";
+import { useRouteError } from "react-router-dom";
 import { z } from "zod";
-import { ShowError } from "./ShowError";
+import { Error } from "./ShowError";
 
 const errorSchema = z.object({
   statusText: z.string().optional(),
@@ -20,7 +20,7 @@ export function ErrorPage() {
 
   return (
     <div className="flex h-full items-center p-16">
-      <ShowError error={parsedError.success ? parsedError.data : {}} />
+      <Error error={parsedError.success ? parsedError.data : {}} />
     </div>
   );
 }

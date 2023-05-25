@@ -1,7 +1,5 @@
 import Projects from "@/features/projects/routes/Projects";
-import { useUser } from "@/redux/hooks";
-import { FileValidated } from "@dropzone-ui/react";
-import React, { useState } from "react";
+import React from "react";
 
 export const Dashboard: React.FC = () => {
   return (

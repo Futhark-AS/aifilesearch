@@ -1,7 +1,6 @@
 import { Button } from "@/components/Button";
 import { FileDropzone } from "@/components/FileDropzone";
-import { selectUser } from "@/features/auth/authSlice";
-import { useAppSelector } from "@/redux/hooks";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { showError } from "@/utils/showError";
 import { FileValidated } from "@dropzone-ui/react";
 import { Modal } from "@mantine/core";
@@ -33,7 +32,8 @@ interface Props {
 
 export function UploadFilesBox({ open, setOpen }: Props) {
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
-  const user = useAppSelector((state) => selectUser(state));
+  const {user} = useAuth({ refetch: true })
+
   const [files, setFiles] = useState<FileValidated[]>([]);
   const [fileInfo, setFileInfo] = useState<FileInfo[]>([]);
 
@@ -72,7 +72,7 @@ export function UploadFilesBox({ open, setOpen }: Props) {
     return () => {
       document.removeEventListener("dragenter", handleDragIn);
     };
-  }, []);
+  }, [setOpen]);
 
   const handleFilesUpload = async () => {
     // call backend with files to upload
@@ -80,7 +80,7 @@ export function UploadFilesBox({ open, setOpen }: Props) {
     try {
       handleFileUpload(
         files.map((file) => file.file),
-        user.uid,
+        user.id,
         projectName
       );
     } catch (error) {

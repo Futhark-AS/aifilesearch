@@ -1,8 +1,6 @@
-import { useDisclosure } from "@/hooks/useDisclosure";
-import { ArrowRightCircleIcon } from "@heroicons/react/24/outline";
+import { clsx } from "@mantine/core";
 import React, { useRef, useState } from "react";
 import "./SideBar.css";
-import { clsx } from "@mantine/core";
 
 interface Props {
   title: string;
@@ -55,7 +53,7 @@ export function SideBar({
         }
       }
     },
-    [isResizing]
+    [isResizing, onClose, side]
   );
 
   React.useEffect(() => {

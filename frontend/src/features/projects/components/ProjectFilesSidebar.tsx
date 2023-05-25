@@ -1,7 +1,7 @@
 import { Button } from "@/components/Button";
 import React, { useState } from "react";
-import { ProjectFile } from "../requests";
 import { SideBar } from "./SideBar";
+import { ProjectFile } from "@/features/auth/types";
 
 interface FileProps {
   file: ProjectFile;
@@ -32,14 +32,14 @@ function File({
       >
         <div className="mx-4 flex">
           <div className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-            {file.name}
+            {file.fileName}
           </div>
         </div>
       </button>
 
       {active && (
         <div className="ml-4">
-          <p className="text-sm">Pages: {file.numPages}</p>
+          <p className="text-sm">Pages: {file.pages}</p>
         </div>
       )}
 
@@ -80,7 +80,7 @@ export function ProjectFilesSidebar({
               const newSelectedFile = selectedFile == i ? null : i;
               setSelectedFile(newSelectedFile);
             }}
-            key={file.name + i}
+            key={file.fileName + i}
             last={i == files.length - 1}
           />
         ))}

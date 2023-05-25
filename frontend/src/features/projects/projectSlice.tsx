@@ -11,21 +11,12 @@ export enum leftBarShowing {
 // Define a type for the slice state
 export type ProjectPageState = {
   leftBarShowing: leftBarShowing;
-  projectFiles: string[];
   highlightedResult: HighlightedBox | null;
-  uploadingFiles: {
-    name: string;
-    submitted: boolean;
-    error: string;
-    success: boolean;
-  }[];
 };
 
 // Define the initial state using that type
 const initialState = {
   leftBarShowing: leftBarShowing.search,
-  projectFiles: [],
-  uploadingFiles: [],
   highlightedResult: null
 } as ProjectPageState;
 

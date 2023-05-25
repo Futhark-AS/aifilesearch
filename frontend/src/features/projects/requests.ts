@@ -1,11 +1,12 @@
 import { HighlightedBox } from "@/components/PdfViewer";
 import { azureAxios, baseAxios } from "@/lib/axios";
 import { z } from "zod";
-import { documentSchema } from "../auth/requests";
 import { uploadFile } from "./azure-storage-blob";
 import { Message } from "./components";
 import { createManyUnion } from "./utils";
 import { mappings } from "./components/exampleResp";
+import { useAuth } from "../auth/hooks/useAuth";
+import { ProjectFile } from "../auth/types";
 
 export const URLS = {
   query: "/api/query",
@@ -14,7 +15,6 @@ export const URLS = {
   getSASToken: "/api/getsastoken",
   getBlobUri: "/api/getBlobUri",
   postFile: "/api/postFile",
-  getFiles: (project: string) => `/api/projects/${project}`,
   user: "/api/user",
   createProject: "/api/createProject",
   payment: "/api/payment",
@@ -215,50 +215,9 @@ export const postFile = async (uid: string, file: File, project: string) => {
   await uploadFile(sasTokenUri, file);
 };
 
-export const getUser = async () => {
-  return azureAxios
-    .get(URLS.user)
-    .then((res) => {
-      return documentSchema.parse(res.data);
-    })
-    .catch((err) => {
-      if (err.response.status === 404) {
-        return null;
-      }
-
-      return null;
-    });
-};
-
-export type ProjectFile = {
-  name: string;
-  blobName: string;
-  numPages: number;
-};
-export const getFiles = async (project: string): Promise<ProjectFile[]> => {
-  const res = await azureAxios.get(URLS.getFiles(project));
-  console.log(res.data);
-
-  const apiReturnSchema = z.object({
-    files: z
-      .array(
-        z.object({
-          blob_name: z.string(),
-          credits: z.number(),
-          num_pages: z.number(),
-          file_name: z.string(),
-        })
-      )
-      .optional()
-      .default([]),
-  });
-
-  // TODO: fetch file metadata from api
-  return apiReturnSchema.parse(res.data).files.map((file) => ({
-    name: file.file_name,
-    blobName: file.blob_name,
-    numPages: file.num_pages,
-  }));
+export const useFiles = (project: string): ProjectFile[] => {
+  const { user } = useAuth();
+  return user?.projects?.filter((p) => p.name === project)[0]?.files || [];
 };
 
 export const createProject = async (name: string) => {

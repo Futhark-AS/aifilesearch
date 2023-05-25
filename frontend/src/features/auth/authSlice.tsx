@@ -1,32 +1,26 @@
-import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { z } from "zod";
+import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../../redux/store";
+import { User } from "./types";
 
-export const AuthSchema = z.object({
-  email: z.string(),
-  name: z.string(),
-  firstName: z.string(),
-  uid: z.string(),
-  isLoading: z.boolean(),
-  error: z.string(),
-  isLoggedIn: z.boolean(),
-  credits: z.number(),
-});
-
-// Define a type for the slice state
-export type UserState = z.infer<typeof AuthSchema>;
+type UserState = {
+  user: User;
+  isLoading: boolean;
+  error: string;
+};
 
 // Define the initial state using that type
 const initialState = {
-  email: "",
-  name: "",
-  firstName: "",
-  uid: "",
+  user: {
+    email: "",
+    name: "",
+    id: "",
+    credits: 0,
+    isLoggedIn: false,
+    projects: [],
+  } as User,
   isLoading: false,
   error: "",
-  isLoggedIn: false,
-  credits: 0,
 } as UserState;
 
 export const authSlice = createSlice({
@@ -35,46 +29,43 @@ export const authSlice = createSlice({
   initialState,
   reducers: {
     hydrate: (state, action: PayloadAction<UserState>) => {
-        return action.payload;
+      return action.payload;
     },
-    login: (
-      state,
-      action: PayloadAction<{
-        email: string;
-        name: string;
-        firstName: string;
-        uid: string;
-        credits: number;
-      }>
-    ) => {
+    setUser: (state, action: PayloadAction<User>) => {
       // return initialState
       return {
-        error: "",
-        email: action.payload.email,
-        name: action.payload.name,
-        firstName: action.payload.firstName,
-        uid: action.payload.uid,
-        isLoggedIn: true,
+        ...state,
+        user: action.payload,
         isLoading: false,
-        credits: action.payload.credits,
       };
     },
-    setUserCredits: (state, action: PayloadAction<{credits: number}>) => {
+    setUserCredits: (state, action: PayloadAction<{ credits: number }>) => {
       return {
         ...state,
-        credits: action.payload.credits,
+        user: {
+          ...state.user,
+          credits: action.payload.credits,
+        },
       };
     },
     logout: () => {
       return initialState;
     },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      return {
+        ...state,
+        isLoading: action.payload,
+      };
+    },
   },
 });
 
-export const { login, logout, hydrate, setUserCredits } = authSlice.actions;
+export const { setUser, logout, hydrate, setUserCredits, setLoading } =
+  authSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
-export const selectIsAuthenticated = (state: RootState) => state.auth.isLoggedIn;
+export const selectIsAuthenticated = (state: RootState) =>
+  state.auth.user.isLoggedIn;
 export const selectUser = (state: RootState) => state.auth;
 
 export default authSlice.reducer;

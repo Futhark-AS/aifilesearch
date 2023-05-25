@@ -1,6 +1,5 @@
 import { Chat } from "@/components/Chat/Chat";
 import { Form, InputField } from "@/components/Form";
-import { Link } from "@/components/Link";
 import { showError } from "@/utils/showError";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { Loader } from "@mantine/core";
@@ -50,10 +49,8 @@ const getCitations = (text: string, matches: PromptMatch[]) => {
 
 const ChatMessage = ({
   message,
-  project,
 }: {
   message: Message;
-  project: string;
 }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -206,7 +203,7 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
             position: msg.role === "user" ? "right" : "left",
             // text: msg.content,
             text: (
-              <ChatMessage message={msg} project={projectName} />
+              <ChatMessage message={msg} />
             ) as unknown as string,
             title: msg.role === "user" ? "You" : "AI",
             focus: false,

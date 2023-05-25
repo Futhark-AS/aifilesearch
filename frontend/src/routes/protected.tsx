@@ -1,16 +1,13 @@
-import { useIsAuthenticated } from "@/redux/hooks";
 import { MainLayout } from "@/components/Layout";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Dashboard } from "@/features/misc";
 import { ProjectRoutes } from "@/features/projects/routes";
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { UserRoutes } from '../features/users/routes/index';
+import { UserRoutes } from "../features/users/routes/index";
 
 const App = () => {
-  const isAuthenticated = useIsAuthenticated();
-  if (!isAuthenticated) {
-    return <div>Not authenticated</div>;
-  }
+  useAuth({ refetch: true });
 
   return (
     <MainLayout>

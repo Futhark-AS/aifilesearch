@@ -21,15 +21,10 @@ import {
 import {
   PromptMatch,
   getBlobUri,
-  getFiles,
   getNewChatMessage,
   searchProjectWithPromptReq,
+  useFiles,
 } from "../requests";
-
-// get pdf from url
-// => get blob url from pdf
-// get highlighted box from state
-// render pdf viewer
 interface Props {
   _: null;
 }
@@ -77,9 +72,7 @@ const Project = () => {
 
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
 
-  const { data: projectFiles } = useQuery(["files", projectName], () =>
-    getFiles(projectName)
-  );
+  const files = useFiles(projectName);
 
   const [searchResults, setSearchResults] = useState<PromptMatch[]>([]);
 
@@ -157,7 +150,7 @@ const Project = () => {
         {leftPane == leftBarShowing.files && (
           <ProjectFilesSidebar
             onClose={() => dispatch(toggleFilesPane())}
-            files={projectFiles || []}
+            files={files}
             fileOnActivate={(file) => showResultInPdf(file.blobName)}
             fileOnDeactivate={() => navigate(-1)}
             initialSelectedFile=""
