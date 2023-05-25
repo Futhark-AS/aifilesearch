@@ -1,18 +1,20 @@
 import { Dialog, Menu, Transition } from "@headlessui/react";
-import {
-  Bars2Icon,
-  UserIcon,
-  XCircleIcon
-} from "@heroicons/react/24/outline";
+import { Bars2Icon, UserIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React from "react";
 import { Link, NavLink, useParams } from "react-router-dom";
 
 import { logout } from "@/features/auth/authSlice";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { closeBuyCredits, openBuyCredits, selectBuyCreditsOpen } from "@/features/misc/buyCreditsSlice";
+import { BuyCreditsModalContents } from "@/features/users/components/BuyCreditsModalContents";
 import { queryClient } from "@/lib/react-query";
 import { useAppDispatch } from "@/redux/hooks";
-import { Logo } from "../Logo";
 import storage from "@/utils/storage";
+import { Divider, Modal } from "@mantine/core";
+import { useAppSelector } from '../../redux/hooks';
+import { Button } from "../Button";
+import { Logo } from "../Logo";
 
 type SideNavigationItem = {
   name: string;
@@ -30,6 +32,7 @@ type UserNavigationItem = {
 
 const UserNavigation = () => {
   const dispatch = useAppDispatch();
+  const { user } = useAuth();
 
   const userNavigation = [
     { name: "Your Profile", to: "./profile" },
@@ -39,7 +42,7 @@ const UserNavigation = () => {
       onClick: () => {
         queryClient.getQueryCache().clear();
         queryClient.clear();
-        storage.setAzureToken("")
+        storage.setAzureToken("");
         dispatch(logout());
       },
     },
@@ -69,6 +72,20 @@ const UserNavigation = () => {
               static
               className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
             >
+              <div className="h-8 pt-2">
+                <div className="mx-4 flex items-center justify-between">
+                  <div className="flex items-center">
+                    {/* <CurrencyDollarIcon className="h-4 w-4" /> */}
+                    <i className="text-xs font-semibold">
+                      {user.credits.toFixed(0)} credits
+                    </i>
+                  </div>
+                  <Button className="ml-2" size="xs" variant="inverse">
+                    Buy
+                  </Button>
+                </div>
+              </div>
+              <Divider className="mt-3" variant="dashed" />
               {userNavigation.map((item) => (
                 <Menu.Item key={item.name}>
                   {({ active }) => (
@@ -213,6 +230,14 @@ type MainLayoutProps = {
 export const MainLayout = ({ children }: MainLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
+  const { user } = useAuth();
+  const opened = useAppSelector((state) => selectBuyCreditsOpen(state));  
+  const dispatch = useAppDispatch();
+  const close = () => dispatch(closeBuyCredits())
+  
+  const openBuy = () => {
+    dispatch(openBuyCredits());
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
@@ -232,7 +257,10 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           <div className="mx-auto flex w-full max-w-7xl px-4 sm:px-6 md:px-8">
             <Navigation />
             {projectName && (
-              <Link to={`/app/projects/${projectName}`} className="flex items-center justify-center">
+              <Link
+                to={`/app/projects/${projectName}`}
+                className="flex items-center justify-center"
+              >
                 <h1 className="text-sm italic text-gray-700">
                   {"> "}
                   {projectName}
@@ -241,12 +269,23 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             )}
             <div className="flex flex-1 justify-end px-4">
               <div className="ml-4 flex items-center md:ml-6">
+                <Button
+                  onClick={() => openBuy()}
+                  size="md"
+                  variant="inverse"
+                >
+                  {user.credits.toFixed(0)} credits
+                </Button>
                 <UserNavigation />
               </div>
             </div>
           </div>
         </div>
         <main className="relative flex-1 overflow-y-auto text-black focus:outline-none">
+          <Modal opened={opened} onClose={close} centered>
+            <BuyCreditsModalContents />
+          </Modal>
+
           {children}
         </main>
       </div>
