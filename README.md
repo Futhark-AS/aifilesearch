@@ -1,5 +1,5 @@
 # Docusearch
-## A simple search engine for your documentation
+## A simple search engine and chat for your documentation
 
 [Live version](https://main--visionary-marzipan-99a689.netlify.app/)
 
