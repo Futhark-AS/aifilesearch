@@ -9,6 +9,7 @@ import { PromptMatch, searchProjectWithPromptReq } from "../requests";
 import { useAppDispatch } from "@/redux/hooks";
 import { setHighlightedResult } from "../projectSlice";
 import { useNavigate } from "react-router-dom";
+import { encodePdfName } from "../utils";
 export type Message =
   | {
       role: "user" | "system";
@@ -98,7 +99,7 @@ const ChatMessage = ({
             className="text-gray-500 cursor-pointer"
             key={"link" + i}
             onClick={() => {
-              navigate(`pdf/${encodeURIComponent(blobName)}`);
+              navigate(`pdf/${encodePdfName(blobName)}`);
               dispatch(setHighlightedResult(message.citationMapping[citation].highlightedBox));
             }}
           >

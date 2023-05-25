@@ -25,6 +25,7 @@ import {
   searchProjectWithPromptReq,
   useFiles,
 } from "../requests";
+import { decodePdfName, encodePdfName } from "../utils";
 interface Props {
   _: null;
 }
@@ -39,7 +40,7 @@ const PdfView = forwardRef(function PdfView(
   parentRef: Ref<HTMLElement>
 ) {
   const { pdf: blobName } = useParams();
-  const { data: fileUrl, isError } = useFileUrl(decodeURIComponent(blobName!));
+  const { data: fileUrl, isError } = useFileUrl(decodePdfName(blobName!));
 
   const highlightedResult = useAppSelector((state) =>
     selectHighlightedResult(state)
@@ -82,7 +83,7 @@ const Project = () => {
     fileBlobName: string,
     result?: PromptMatch
   ) => {
-    const name = encodeURIComponent(fileBlobName);
+    const name = encodePdfName(fileBlobName);
     navigate(`pdf/${name}`);
     dispatch(setHighlightedResult(result?.highlightedBox || null));
   };
@@ -157,7 +158,7 @@ const Project = () => {
             onUploadFileClick={() => setUploadFilesOpen(true)}
           />
         )}
-        <section className="container mx-auto max-h-full flex-1 p-4" ref={ref}>
+        <section className="mx-auto max-h-full flex-1 p-4" ref={ref}>
           <Routes>
             <Route path="pdf/:pdf" element={<PdfView _={null} ref={ref} />} />
             <Route

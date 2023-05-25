@@ -60,3 +60,15 @@ export function highlightBoundingBox(
 
   // ctx.fillRect(140, 140, 30, 30);
 }
+
+export function encodePdfName(fileName: string) {
+  // remove pdf extension
+  const res = fileName.slice(0, fileName.lastIndexOf("."));
+  return encodeURIComponent(res);
+}
+
+export function decodePdfName(fileName: string) {
+  // add pdf extenstion 
+  const res = fileName + ".pdf";
+  return decodeURIComponent(res);
+}
