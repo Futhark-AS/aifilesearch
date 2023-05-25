@@ -6,13 +6,17 @@ import { Link, NavLink, useParams } from "react-router-dom";
 
 import { logout } from "@/features/auth/authSlice";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { closeBuyCredits, openBuyCredits, selectBuyCreditsOpen } from "@/features/misc/buyCreditsSlice";
+import {
+  closeBuyCredits,
+  openBuyCredits,
+  selectBuyCreditsOpen,
+} from "@/features/misc/buyCreditsSlice";
 import { BuyCreditsModalContents } from "@/features/users/components/BuyCreditsModalContents";
 import { queryClient } from "@/lib/react-query";
 import { useAppDispatch } from "@/redux/hooks";
 import storage from "@/utils/storage";
-import { Divider, Modal } from "@mantine/core";
-import { useAppSelector } from '../../redux/hooks';
+import { Modal } from "@mantine/core";
+import { useAppSelector } from "../../redux/hooks";
 import { Button } from "../Button";
 import { Logo } from "../Logo";
 
@@ -72,20 +76,6 @@ const UserNavigation = () => {
               static
               className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
             >
-              <div className="h-8 pt-2">
-                <div className="mx-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    {/* <CurrencyDollarIcon className="h-4 w-4" /> */}
-                    <i className="text-xs font-semibold">
-                      {user.credits.toFixed(0)} credits
-                    </i>
-                  </div>
-                  <Button className="ml-2" size="xs" variant="inverse">
-                    Buy
-                  </Button>
-                </div>
-              </div>
-              <Divider className="mt-3" variant="dashed" />
               {userNavigation.map((item) => (
                 <Menu.Item key={item.name}>
                   {({ active }) => (
@@ -231,10 +221,10 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
   const { user } = useAuth();
-  const opened = useAppSelector((state) => selectBuyCreditsOpen(state));  
+  const opened = useAppSelector((state) => selectBuyCreditsOpen(state));
   const dispatch = useAppDispatch();
-  const close = () => dispatch(closeBuyCredits())
-  
+  const close = () => dispatch(closeBuyCredits());
+
   const openBuy = () => {
     dispatch(openBuyCredits());
   };
@@ -269,11 +259,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             )}
             <div className="flex flex-1 justify-end px-4">
               <div className="ml-4 flex items-center md:ml-6">
-                <Button
-                  onClick={() => openBuy()}
-                  size="md"
-                  variant="inverse"
-                >
+                <Button onClick={() => openBuy()} size="md" variant="inverse">
                   {user.credits.toFixed(0)} credits
                 </Button>
                 <UserNavigation />

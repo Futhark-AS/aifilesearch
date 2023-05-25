@@ -70,7 +70,7 @@ export const Profile = () => {
         <div className="px-4 py-5 sm:px-6">
           <div className="flex justify-between">
             <h3 className="text-lg font-medium text-gray-900">Balance</h3>
-            <BuyCredits />
+            <BuyCredits title="Buy Credits" />
           </div>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -79,24 +79,6 @@ export const Profile = () => {
               label="Credits left"
               value={isLoading ? "Loading..." : formatCredits(user?.credits)}
             />
-          </dl>
-        </div>
-      </div>
-      <div className="mt-4 overflow-hidden bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <div className="flex justify-between">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
-              User Information
-            </h3>
-          </div>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Your profile information.
-          </p>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-          <dl className="sm:divide-y sm:divide-gray-200">
-            <Entry label="Name" value={user.name || "None"} />
-            <Entry label="Email Address" value={user.email || "None"} />
           </dl>
         </div>
       </div>

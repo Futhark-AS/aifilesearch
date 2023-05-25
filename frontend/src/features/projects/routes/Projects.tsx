@@ -26,7 +26,7 @@ export default function Projects() {
                 <Card
                   shadow="sm"
                   radius="md"
-                  className="my-2 mx-auto w-11/12 transform cursor-pointer p-4 px-4 transition duration-100 hover:scale-105 hover:cursor-pointer"
+                  className="my-2 w-11/12 transform cursor-pointer p-4 px-4 transition duration-100 hover:bg-slate-50 hover:cursor-pointer"
                 >
                   <div className="text-md">{project.name}</div>
                 </Card>

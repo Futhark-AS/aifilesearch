@@ -21,12 +21,21 @@ const stripePromise = loadStripe(
 
 const successURL = (credits: number) =>
   import.meta.env.VITE_PROD == "1"
-    ? import.meta.env.VITE_PROD_URL + `/app/profile?success=true&credits=${credits}`
-    : import.meta.env.VITE_DEV_URL + `/app/profile?success=true&credits=${credits}`
+    ? import.meta.env.VITE_PROD_URL +
+      `/app/profile?success=true&credits=${credits}`
+    : import.meta.env.VITE_DEV_URL +
+      `/app/profile?success=true&credits=${credits}`;
 
-export const BuyCredits = () => {
+// custom trigger button
+interface Props {
+  btn?: React.ReactElement;
+  title: string;
+}
+
+export const BuyCredits = ({ btn, title }: Props) => {
   const [clientSecret, setClientSecret] = useState("");
-  const [credits, setCredits] = useState(0);
+  const [credits, setCredits] = useState<string | number>("");
+  const [price, setPrice] = useState<string | number>("");
 
   const appearance = {
     theme: "stripe",
@@ -40,11 +49,15 @@ export const BuyCredits = () => {
     <FormDrawer
       isDone={false}
       triggerButton={
-        <Button startIcon={<PencilIcon className="h-4 w-4" />} size="sm">
-          Buy Credits
-        </Button>
+        btn == null ? (
+          <Button startIcon={<PencilIcon className="h-4 w-4" />} size="sm">
+            Buy Credits
+          </Button>
+        ) : (
+          btn
+        )
       }
-      title="Update Profile"
+      title={title}
       submitButton={
         clientSecret ? (
           <Button form="payment-form" type="submit" size="sm">
@@ -57,41 +70,69 @@ export const BuyCredits = () => {
         )
       }
     >
-      <form
-        id="buy-credits"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const creditsPaymentIntentSecret = await creditsPaymentIntent(
-            Number(credits)
-          );
-          setClientSecret(creditsPaymentIntentSecret.clientSecret);
-        }}
-      >
-        {!clientSecret && (
-          <TextInput
-            label="Credits"
-            onChange={(e) => {
-              setCredits(Number(e.currentTarget.value));
+      {!clientSecret && (
+        <div className="h-full flex flex-col items-center justify-center">
+          <span className="text-2xl font-bold">Buy Credits</span>
+          <form
+            id="buy-credits"
+            className="w-64 mt-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const creditsPaymentIntentSecret = await creditsPaymentIntent(
+                Number(credits)
+              );
+              setClientSecret(creditsPaymentIntentSecret.clientSecret);
             }}
-            type="number"
-          />
-        )}
-      </form>
+          >
+            <TextInput
+              label="Credits"
+              onChange={(e) => {
+                if (isNaN(Number(e.currentTarget.value))) {
+                  setCredits("");
+                  setPrice("");
+                  return;
+                }
+                const value = Number(e.currentTarget.value);
+                setCredits(value);
+                setPrice(value * 0.01);
+              }}
+              value={credits}
+              type="text"
+            />
+            <TextInput
+              label="Price"
+              onChange={(e) => {
+                if (isNaN(Number(e.currentTarget.value))) {
+                  setCredits("");
+                  setPrice("");
+                  return;
+                }
+                const value = Number(e.currentTarget.value);
+                setPrice(value);
+                setCredits(value / 0.01);
+              }}
+              type="text"
+              value={price}
+            />
+          </form>
+        </div>
+      )}
       {clientSecret && (
         <Elements options={options} stripe={stripePromise}>
           <StripeCheckoutForm
-            successURL={successURL(credits)}
+            successURL={successURL(Number(credits))}
             paymentIntentClientSecret={clientSecret}
           />
         </Elements>
       )}
 
       {/* Show cost of credits, pretty */}
-      <div className="mt-2">
+
+      {/* <div className="mt-2">
         <p className="">
           {credits} credits = ${credits * 0.01}
         </p>
-      </div>
+      </div> */}
     </FormDrawer>
   );
 };

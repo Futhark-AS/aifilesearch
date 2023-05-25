@@ -1,5 +1,6 @@
 import authReducer, { logout } from "@/features/auth/authSlice";
 import projectReducer from "@/features/projects/projectSlice";
+import buyCreditsReducer from "@/features/misc/buyCreditsSlice";
 import storage from "@/utils/storage";
 import {
   Action,
@@ -19,6 +20,7 @@ startAppListening({
 const rootReducer = combineReducers({
   auth: authReducer,
   project: projectReducer,
+  buyCredits: buyCreditsReducer
 });
 
 export const store = configureStore({

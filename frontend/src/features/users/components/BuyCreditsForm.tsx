@@ -1,62 +1,74 @@
-import React, { useState } from "react";
 import { Button } from "@/components/Button";
-import { TextInput } from "@mantine/core";
+import { MinusCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import { Divider } from "@mantine/core";
+import React, { useState } from "react";
 
 // take in onsubmit in interface
 interface Props {
   onSubmit(credits: number): void;
 }
 
-export const BuyCreditsForm = ({ onSubmit }: Props) => {
-  const [credits, setCredits] = useState<string | number>("");
-  const [price, setPrice] = useState<string | number>("");
+export const creditToPrice = (credits: number) => credits * 0.01;
 
-  const creditToPrice = (credits: number) => credits * 0.01;
-  const priceToCredit = (price: number) => price / 0.01;
+const MIN_CREDITS = 100
+
+export const BuyCreditsForm = ({ onSubmit }: Props) => {
+  const [credits, setCredits] = useState<number>(MIN_CREDITS);
+  const [price, setPrice] = useState<number>(creditToPrice(MIN_CREDITS));
+
+  const STEP_SIZE = 50;
+
+  const incrementCredits = () => {
+    const newCredits = Number(credits) + STEP_SIZE;
+    setCredits(newCredits);
+    setPrice(creditToPrice(newCredits));
+  };
+
+  const decrementCredits = () => {
+    if (Number(credits) >= MIN_CREDITS + STEP_SIZE) {
+      const newCredits = Number(credits) - STEP_SIZE;
+      setCredits(newCredits);
+      setPrice(creditToPrice(newCredits));
+    }
+  };
 
   return (
-    <div className="flex h-64 flex-col items-center">
-      <span className="text-2xl font-bold">Buy Credits</span>
+    <div className="flex h-64 flex-col">
       <form
         id="buy-credits"
-        className="mt-4 w-64"
+        className="mx-auto mt-4 flex w-64 flex-col items-center"
         onSubmit={async (e) => {
           e.preventDefault();
-          onSubmit(e.currentTarget.value);
+          onSubmit(credits);
         }}
       >
-        <TextInput
-          label="Credits"
-          onChange={(e) => {
-            if (isNaN(Number(e.currentTarget.value))) {
-              setCredits("");
-              setPrice("");
-              return;
-            }
-            const value = Number(e.currentTarget.value);
-            setCredits(value);
-            setPrice(creditToPrice(value));
-          }}
-          value={credits}
-          type="text"
-        />
-        <TextInput
-          label="Price"
-          onChange={(e) => {
-            if (isNaN(Number(e.currentTarget.value))) {
-              setCredits("");
-              setPrice("");
-              return;
-            }
-            const value = Number(e.currentTarget.value);
-            setPrice(value);
-            setCredits(priceToCredit(value));
-          }}
-          type="text"
-          value={price}
-        />
+        <div className="text-center text-lg">
+          <span className="font-bold">{credits}</span> credits
+        </div>
+        <div className="text-md text-gray mt-4 text-center italic">
+          {price}$ USD
+        </div>
+        <Divider className="mt-4 w-full" />
+        <div className="mt-4 flex justify-center">
+          <MinusCircleIcon
+            className="h-8 w-8 hover:cursor-pointer"
+            onClick={() => decrementCredits()}
+          />
+          <div className="mx-2 text-lg font-normal select-none w-6 text-center">{credits / STEP_SIZE - 1}</div>
+          <PlusCircleIcon
+            className="h-8 w-8 hover:cursor-pointer"
+            onClick={() => incrementCredits()}
+          />
+        </div>
       </form>
-      <Button form="buy-credits" type="submit" className="mt-4">Buy</Button>
+      <Button
+        form="buy-credits"
+        type="submit"
+        className="mx-auto mt-4 block w-40"
+        variant="inverse"
+      >
+        Buy Credits
+      </Button>
     </div>
   );
 };

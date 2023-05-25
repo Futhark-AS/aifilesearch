@@ -1,3 +1,3 @@
 export * from "./ProjectFilesSidebar"
 export * from "./ProjectSearchSidebar"
-export * from "./ProjectChat"
+export * from "./chat/ProjectChat"

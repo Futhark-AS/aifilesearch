@@ -4,7 +4,7 @@ import { z } from "zod";
 import { uploadFile } from "./azure-storage-blob";
 import { Message } from "./components";
 import { createManyUnion } from "./utils";
-import { mappings } from "./components/exampleResp";
+import { mappings } from "./components/chat/exampleResp";
 import { useAuth } from "../auth/hooks/useAuth";
 import { ProjectFile } from "../auth/types";
 
