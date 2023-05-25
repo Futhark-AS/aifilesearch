@@ -40,7 +40,6 @@ export const Form = <
       schema &&
       (async (data, context, options) => {
         // you can debug your validation schema here
-        console.log("formData", data);
         console.log(
           "validation result",
           await zodResolver(schema)(data, context, options)

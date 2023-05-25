@@ -69,7 +69,6 @@ export const transfromApiMatchesV1 = (
   data: z.infer<typeof queryResponseBoundingBoxSchema>
 ): PromptMatch[] => {
   const inchToPixel = (x: number) => x * 96;
-  console.log("MATCHES", data.matches);
   return data.matches.map((match) => ({
     id: match.id,
     score: match.score,

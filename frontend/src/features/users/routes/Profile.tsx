@@ -52,7 +52,6 @@ export const Profile = () => {
         })
       );
 
-      console.log(location.pathname);
       history.pushState(null, "", location.pathname);
     }
   }, [location, dispatch, user?.credits]);

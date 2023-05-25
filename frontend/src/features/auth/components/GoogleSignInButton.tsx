@@ -28,8 +28,6 @@ async function handleCredentialResponse(googleAuthToken: string) {
     }
   );
 
-  console.log("accesst oken", res);
-
   return AzureAuthResult.safeParse(res.data);
 }
 

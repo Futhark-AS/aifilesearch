@@ -96,7 +96,6 @@ export const PdfViewer = forwardRef(function PdfViewer(
         const ratio = CONSTANT_RATIO * (page.width / page.originalWidth);
         const { x, y, width, height } = highlightedBox.boundingBox;
 
-        // highlightBoundingBox({ x, y, width: highlightedBox.boundingBox.width, height: highlightedBox.boundingBox.height }, ctx, 1);
         highlightBoundingBox(
           {
             x: x * ratio,
