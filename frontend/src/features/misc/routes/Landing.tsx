@@ -1,17 +1,20 @@
+import { Button } from "@/components/Button";
+import storage from "@/utils/storage";
 import { Divider } from "@mantine/core";
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PlainNavbar } from "../components";
-import { Button } from "@/components/Button";
-import { useIsAuthenticated } from "@/features/auth/hooks/useAuth";
 
 export const Landing = () => {
-  const isAuthenticated = useIsAuthenticated();
   const navigate = useNavigate();
 
   useEffect(() => {
-    isAuthenticated && navigate("app");
-  }, [isAuthenticated, navigate]);
+    const token = storage.getAzureToken();
+
+    if (!(token == null || token == "")) {
+      navigate("app");
+    }
+  }, [navigate]);
 
   return (
     <main className="container mx-auto flex min-h-screen w-full flex-col p-4 md:w-[70ch]">
