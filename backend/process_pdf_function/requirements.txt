@@ -37,4 +37,4 @@ azure-functions-durable
 stripe
 langchain
 typing==3.7.4.3
-docx==0.2.4
+python-docx==0.8.11
