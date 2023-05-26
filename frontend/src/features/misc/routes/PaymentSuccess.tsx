@@ -33,7 +33,7 @@ export const PaymentSuccess = () => {
           className="mx-auto mt-4 rounded px-8 py-3 font-semibold"
           onClick={() => navigate("/app/projects")}
         >
-          Go Home
+          Home
         </Button>
       </div>
     </div>

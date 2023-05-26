@@ -9,6 +9,7 @@ import {
   configureStore,
 } from "@reduxjs/toolkit";
 import { listenerMiddleware, startAppListening } from "./listenerMiddleware";
+import { isProd } from "@/utils/general";
 
 startAppListening({
   actionCreator: logout,
@@ -25,7 +26,7 @@ const rootReducer = combineReducers({
 
 export const store = configureStore({
   reducer: rootReducer,
-  devTools: import.meta.env.VITE_PROD == "0",
+  devTools: !isProd,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().prepend([listenerMiddleware.middleware]),
 });

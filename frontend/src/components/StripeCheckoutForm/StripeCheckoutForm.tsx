@@ -7,11 +7,10 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { StripePaymentElementOptions, loadStripe } from "@stripe/stripe-js";
-
-const prod = import.meta.env.VITE_PROD == "1";
+import { isProd } from "@/utils/general";
 
 const stripePromise = loadStripe(
-  prod
+  isProd
     ? "pk_live_51MePU5JR76QyQ6AvL89IwWk9yYLIH3ERANOGGCWgJOYeNCLe3gZkc610rqRQazf2anIVB5wz3ob05zleH0q4I1Jy00bztowdqI"
     : "pk_test_51MePU5JR76QyQ6Avy732ksgL17hzuDKNXVtI9zpBJrwzfcsshlp9QnygfuaVTKRptbjxts9V6GB1AQEmkacsYdq400LvhshcA4"
 );
@@ -21,10 +20,30 @@ interface Props {
   successURL: string;
 }
 
-export function StripeCheckoutForm({
+export const StripeCheckoutForm = ({
   paymentIntentClientSecret,
   successURL,
-}: Props) {
+}: Props) => {
+  const appearance = {
+    theme: "stripe",
+  } as const;
+
+  const options = {
+    clientSecret: paymentIntentClientSecret,
+    appearance,
+  } as const;
+
+  return (
+    <Elements stripe={stripePromise} options={options}>
+      <CheckoutForm
+        paymentIntentClientSecret={paymentIntentClientSecret}
+        successURL={successURL}
+      />
+    </Elements>
+  );
+};
+
+function CheckoutForm({ paymentIntentClientSecret, successURL }: Props) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -100,23 +119,12 @@ export function StripeCheckoutForm({
     paymentMethodOrder: ["card"],
   };
 
-  const appearance = {
-    theme: "stripe",
-  } as const;
-
-  const options = {
-    clientSecret: paymentIntentClientSecret,
-    appearance,
-  } as const;
-
   return (
-    <Elements options={options} stripe={stripePromise}>
-      <form id="payment-form" onSubmit={handleSubmit}>
-        <PaymentElement id="payment-element" options={paymentElementOptions} />
+    <form id="payment-form" onSubmit={handleSubmit}>
+      <PaymentElement id="payment-element" options={paymentElementOptions} />
 
-        {/* Show any error or success messages */}
-        {message && <div id="payment-message">{message}</div>}
-      </form>
-    </Elements>
+      {/* Show any error or success messages */}
+      {message && <div id="payment-message">{message}</div>}
+    </form>
   );
 }
