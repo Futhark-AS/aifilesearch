@@ -1,8 +1,8 @@
-import React, { useState } from "react";
 import { creditsPaymentIntent } from "@/features/projects/requests";
-import { BuyCreditsForm, creditToPrice } from "./BuyCreditsForm";
-import { StripePayment } from "./StripePayment";
 import { Table } from "@mantine/core";
+import React, { useState } from "react";
+import { BuyCreditsForm, creditToPrice } from "./BuyCreditsForm";
+import { PopupModalStripeCheckout } from "./StripePayment";
 
 // Payment SUmmary component
 
@@ -42,7 +42,10 @@ export const BuyCreditsModalContents = () => {
           <h4 className="mb-4 text-lg font-semibold">Payment Summary</h4>
           <PaymentSummary credits={credits} price={creditToPrice(credits)} />
           <h4 className="mb-4 mt-8 text-lg font-semibold">Payment Method</h4>
-          <StripePayment clientSecret={clientSecret} credits={credits} />
+          <PopupModalStripeCheckout
+            credits={credits}
+            clientSecret={clientSecret}
+          />
         </div>
       ) : (
         <BuyCreditsForm
