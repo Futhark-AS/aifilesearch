@@ -22,10 +22,15 @@ import openai
 from azure.storage.blob import BlobServiceClient
 from PyPDF2 import PdfWriter, PdfReader
 from azure.core.credentials import AzureKeyCredential
+from azure.core._match_conditions import MatchConditions
 from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.cosmos.exceptions import CosmosAccessConditionFailedError
+
+from typing import List, Tuple, Dict, Any, Optional
+from docx import Document
 
 class NotEnoughCreditsError(Exception):
-    pass
+    """Raised when the user does not have enough credits to process the pdf"""
 
 
 
@@ -340,6 +345,7 @@ def embed_paragraphs(paragraphs, namespace, index_name):
 
 
 #----------- COsmos DB ----------
+
 cosmos_endpoint = "https://nlpcosmos.documents.azure.com:443/"
 cosmos_key = os.getenv("ENV_COSMOS_KEY")
 cosmos_client = CosmosClient(url=cosmos_endpoint, credential=cosmos_key)
@@ -350,11 +356,112 @@ cosmos_container = cosmos_database.get_container_client("users")
 # Retrieve the connection string for use with the application. The blob storage
 connect_str = os.getenv("ENV_AZURE_STORAGE_CONNECTION_STRING")
 
+PRICE_PER_1000_PAGES = 10
+
+
+def extract_text_from_doc(blob, price_per_1000_pages, user_credits) -> Tuple[List[str], int, int, int]:
+    """
+    Extracts text from a docx file.
+
+    Args:
+        blob: The blob object representing the docx file.
+        price_per_1000_pages: The price per 1000 pages.
+        user_credits: The user's credits.
+
+    Returns:
+        A tuple containing a list of all paragraphs in the docx file, the price, credits to pay, and number of pages.
+    """
+    document = Document(blob)
+    paragraphs = []
+    for para in document.paragraphs:
+        paragraphs.append(para.text)
+    num_pages = len(paragraphs)
+    price = (num_pages / 1000) * price_per_1000_pages
+    credits_to_pay = price * DOLLAR_TO_CREDIT
+    if user_credits < credits_to_pay:
+        raise NotEnoughCreditsError("User does not have enough credits to process this file.")
+    return paragraphs, price, credits_to_pay, num_pages
+
+
+def extract_text_from_txt(blob, price_per_1000_pages, user_credits) -> Tuple[List[str], int, int, int]:
+    """
+    Extracts text from a txt file.
+
+    Args:
+        blob: The blob object representing the txt file.
+        price_per_1000_pages: The price per 1000 pages.
+        user_credits: The user's credits.
+
+    Returns:
+        A tuple containing a list of all paragraphs in the txt file, the price, credits to pay, and number of pages.
+    """
+    text = blob.decode('utf-8')
+    paragraphs = text.split('\n\n')
+    num_pages = len(paragraphs)
+    price = (num_pages / 1000) * price_per_1000_pages
+    credits_to_pay = price * DOLLAR_TO_CREDIT
+    if user_credits < credits_to_pay:
+        raise NotEnoughCreditsError("User does not have enough credits to process this file.")
+    return paragraphs, price, credits_to_pay, num_pages
+
+
+def update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_name):
+    while True:
+        etag = user["_etag"]
+
+        # update projects total cost and files in project in cosmos db
+        projects = user["projects"]
+
+        # subtract price from user credits
+        user["credits"] -= credits_to_pay
+
+        for project in projects:
+            if project["namespace"] == namespace:
+                # update cost
+                if "cost" in project:
+                    project["cost"] += price
+                else:
+                    project["cost"] = price
+
+                # save info of file
+
+                blob_name = blob_name.split("---split---")[0] + ".pdf" if "---split---" in blob_name else blob_name
+
+                file_info = {
+                    "blob_name": blob_name,
+                    "price": price,
+                    "credits": credits_to_pay,
+                    "num_pages": num_pages,
+                    "file_name": blob_name.split("/")[-1],
+                }
+
+                if "files" in project:
+                    if file_info["blob_name"] not in [file["blob_name"] for file in project["files"]]:
+                        project["files"].append(file_info)
+                    else:
+                        # add price, credits, num_pages to existing file
+                        for file in project["files"]:
+                            if file["blob_name"] == file_info["blob_name"]:
+                                file["price"] += price
+                                file["credits"] += credits_to_pay
+                                file["num_pages"] += num_pages
+                            
+                else:
+                    project["files"] = [file_info]
+
+        try:
+            cosmos_container.upsert_item(user, etag=etag, match_condition=MatchConditions.IfNotModified)
+            break
+        except CosmosAccessConditionFailedError:
+            user = cosmos_container.read_item(item=user["id"], partition_key=user["id"])
+            logging.info("Cosmos DB user modified, retrying...")
+
+
 def main(settings) -> str:
     retry = True
     while retry:
         try:
-            res = openai.Embedding.create(input="Test", engine="text-embedding-ada-002")
+            res = openai.Embedding.create(input=["test"], engine="text-embedding-ada-002")
             retry = False
         except Exception as e:
             logging.info("OPENAI NOT WORKING: "+ str(e))
@@ -377,32 +484,21 @@ def main(settings) -> str:
     index_name = settings["index_name"]
     #get user id
     user_id = settings["user_id"]
-
-    
-
-    # small_pdfs = []
-    logging.info("\nDownloading blob " + blob_name)
-    blob = container_client.download_blob(blob_name).readall()
-    # pdf = PdfReader(on_fly)
-    # for i in range(0, len(pdf.pages), 2):
-    #     output = PdfWriter()
-    #     for j in range(i, i+2):
-    #         if j < len(pdf.pages):
-    #             output.add_page(pdf.pages[j])
-    #     small_pdfs.append((output, i, blob_name))
-
-    # logging.info(f"Number of small pdfs: {len(small_pdfs)}")
-
-    #test_pdf = small_pdfs[:2]
-
+    # get user credits
     user = cosmos_container.read_item(item=user_id, partition_key=user_id)
     user_credits = user["credits"]
-    logging.info(f"User has {user_credits} credits")
-    # price_to_pay = num_pages / 1000 * PRICE_PER_1000_PAGES
 
+    logging.info("\nDownloading blob " + blob_name)
+    blob = container_client.download_blob(blob_name).readall()
 
-    paragraphs, price, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
+    if blob_name.endswith('.pdf'):
+        paragraphs, price, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
+    elif blob_name.endswith('.docx'):
+        paragraphs, price, credits_to_pay, num_pages = extract_text_from_doc(blob, PRICE_PER_1000_PAGES, user_credits)
+    elif blob_name.endswith('.txt'):
+        paragraphs, price, credits_to_pay, num_pages = extract_text_from_txt(blob, PRICE_PER_1000_PAGES, user_credits)
 
+    total_price = price
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
 
@@ -427,60 +523,9 @@ def main(settings) -> str:
     logging.info(f"Price for blob {blob_name}: ${price}")
 
     # update projects total cost and files in prpoject in cosmos db
-<<<<<<< Updated upstream
-    projects = user["projects"]
-    logging.info(projects)
-
-    # subtract price from user credits
-    user["credits"] = user_credits - credits_to_pay
-
-    # COSMOS RACE CONDITIONS PROBLEMATIC, TODO: FIX
-
-    for project in projects:
-        if project["namespace"] == namespace:
-            # update cost
-            if "cost" in project:
-                project["cost"] += price
-            else:
-                project["cost"] = price
-
-            # save info of file
-
-            blob_name = blob_name.split("---split---")[0] + ".pdf" if "---split---" in blob_name else blob_name
-
-            file_info = {
-                "blob_name": blob_name,
-                "price": price,
-                "credits": credits_to_pay,
-                "num_pages": num_pages,
-                "file_name": blob_name.split("/")[-1],
-            }
-
-            if "files" in project:
-                if file_info["blob_name"] not in [file["blob_name"] for file in project["files"]]:
-                    project["files"].append(file_info)
-                else:
-                    # add price, credits, num_pages to existing file
-                    for file in project["files"]:
-                        if file["blob_name"] == file_info["blob_name"]:
-                            file["price"] += price
-                            file["credits"] += credits_to_pay
-                            file["num_pages"] += num_pages
-                        
-            else:
-                project["files"] = [file_info]
-
-    cosmos_container.upsert_item(user)
-
-
-    # TODO: delete all small pdfs
-=======
     update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_name)
     logging.info("Updated cosmos db")
     logging.info(f"Now deleting blob {blob_name}")
     container_client.delete_blob(blob_name)
->>>>>>> Stashed changes
 
     return price
-
-

@@ -22,17 +22,6 @@ connect_str = os.getenv('ENV_AZURE_STORAGE_CONNECTION_STRING')
 def orchestrator_function(context: df.DurableOrchestrationContext):
     try:
 
-        # Create the BlobServiceClient object
-        blob_service_client = BlobServiceClient.from_connection_string(connect_str)
-
-
-        logging.info("\nListing blobs...")
-
-        container_name = "users"
-        container_client = blob_service_client.get_container_client(container_name)
-        # List the blobs in the container
-        blob_list = container_client.list_blobs()
-
         #user_id = "sid:61fdee33eb5fc49c1e82df86d649c8cd"
         req_body = context.get_input()
         user_id = req_body.get('user_id') 
@@ -59,9 +48,6 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
                 return return_err("All blobs must start with the user's namespace")
             if not blob_name.endswith(".pdf"):
                 return return_err("All blobs must be pdfs")
-            if not container_client.get_blob_client(blob_name).exists():
-                return return_err("Blob " + blob_name + " does not exist in the container")
-
 
         logging.info("Found blobs: " + str(blob_names))
 

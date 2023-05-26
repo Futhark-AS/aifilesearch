@@ -36,3 +36,5 @@ uuid==1.30
 azure-functions-durable
 stripe
 langchain
+typing==3.7.4.3
+python-docx==0.8.11
