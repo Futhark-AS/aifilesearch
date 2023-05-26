@@ -9,7 +9,7 @@ interface Props {
 }
 
 export const creditToPrice = (credits: number) =>
-  credits * import.meta.env.VITE_DOLLAR_TO_CREDIT;
+  credits / import.meta.env.VITE_DOLLAR_TO_CREDIT;
 
 const MIN_CREDITS = 100;
 
