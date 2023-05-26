@@ -1,13 +1,7 @@
 import { ContentLayout } from "@/components/Layout";
-import React, { useEffect } from "react";
-
-import { setUserCredits } from "@/features/auth/authSlice";
-import { useAppDispatch } from "@/redux/hooks";
-import { useLocation } from "react-router-dom";
-import { BuyCredits } from "../components/BuyCredits";
-
+import React from "react";
+import { BuyCredits } from "@/features/payment/components/BuyCredits";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { showNotification } from "@mantine/notifications";
 
 type EntryProps = {
   label: string;
@@ -24,37 +18,6 @@ const Entry = ({ label, value }: EntryProps) => (
 
 export const Profile = () => {
   const { isLoading, user } = useAuth();
-  const location = useLocation();
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const isSuccess = searchParams.get("success");
-    const credits = searchParams.get("credits");
-
-    if (isSuccess && credits) {
-      const newCredits = user?.credits
-        ? user.credits + parseInt(credits)
-        : parseInt(credits);
-
-      showNotification({
-        title: "Payment successful!",
-        message:
-          "You have bought " +
-          credits +
-          " credits. They will be added to your account shortly. Thank you for your purchase!",
-        color: "teal",
-      });
-
-      dispatch(
-        setUserCredits({
-          credits: newCredits,
-        })
-      );
-
-      history.pushState(null, "", location.pathname);
-    }
-  }, [location, dispatch, user?.credits]);
 
   const formatCredits = (credits: undefined | number): string => {
     if (credits === undefined) {
@@ -70,7 +33,7 @@ export const Profile = () => {
         <div className="px-4 py-5 sm:px-6">
           <div className="flex justify-between">
             <h3 className="text-lg font-medium text-gray-900">Balance</h3>
-            <BuyCredits />
+            <BuyCredits title="Buy Credits" />
           </div>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -79,24 +42,6 @@ export const Profile = () => {
               label="Credits left"
               value={isLoading ? "Loading..." : formatCredits(user?.credits)}
             />
-          </dl>
-        </div>
-      </div>
-      <div className="mt-4 overflow-hidden bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <div className="flex justify-between">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
-              User Information
-            </h3>
-          </div>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Your profile information.
-          </p>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-          <dl className="sm:divide-y sm:divide-gray-200">
-            <Entry label="Name" value={user.name || "None"} />
-            <Entry label="Email Address" value={user.email || "None"} />
           </dl>
         </div>
       </div>

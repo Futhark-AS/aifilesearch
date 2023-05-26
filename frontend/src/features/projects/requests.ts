@@ -4,9 +4,10 @@ import { z } from "zod";
 import { uploadFile } from "./azure-storage-blob";
 import { Message } from "./components";
 import { createManyUnion } from "./utils";
-import { mappings } from "./components/exampleResp";
+import { mappings } from "./components/chat/exampleResp";
 import { useAuth } from "../auth/hooks/useAuth";
 import { ProjectFile } from "../auth/types";
+import { isProd } from "@/utils/general";
 
 export const URLS = {
   query: "/api/query",
@@ -226,34 +227,13 @@ export const createProject = async (name: string) => {
   return res.data;
 };
 
-export const createPaymentIntent = async (
-  fileNames: string[],
-  project: string
-) => {
-  const res = await azureAxios.post(URLS.payment, {
-    file_names: fileNames,
-    project,
-  });
-
-  return z
-    .object({
-      clientSecret: z.string(),
-      data: z.array(
-        z.object({
-          name: z.string(),
-          price: z.number(),
-        })
-      ),
-    })
-    .parse(res.data);
-};
-
 export const creditsPaymentIntent = async (amount: number) => {
   // const res = await azureAxios.post("/api/newstripepaymentintent",
   const res = await azureAxios.post("/api/newstripepaymentintent", {
     // const res = await azureAxios.post(URLS.payment, {
     paymentType: "credits",
     credits: amount,
+    testing: !isProd
   });
 
   return z

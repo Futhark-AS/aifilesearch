@@ -1,20 +1,49 @@
 import React, { FormEvent, useEffect, useState } from "react";
 
 import {
+  Elements,
   PaymentElement,
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
+import { StripePaymentElementOptions, loadStripe } from "@stripe/stripe-js";
+import { isProd } from "@/utils/general";
+
+const stripePromise = loadStripe(
+  isProd
+    ? "pk_live_51MePU5JR76QyQ6AvL89IwWk9yYLIH3ERANOGGCWgJOYeNCLe3gZkc610rqRQazf2anIVB5wz3ob05zleH0q4I1Jy00bztowdqI"
+    : "pk_test_51MePU5JR76QyQ6Avy732ksgL17hzuDKNXVtI9zpBJrwzfcsshlp9QnygfuaVTKRptbjxts9V6GB1AQEmkacsYdq400LvhshcA4"
+);
 
 interface Props {
-  successURL: string;
   paymentIntentClientSecret: string;
+  successURL: string;
 }
 
-export function StripeCheckoutForm({
-  successURL,
+export const StripeCheckoutForm = ({
   paymentIntentClientSecret,
-}: Props) {
+  successURL,
+}: Props) => {
+  const appearance = {
+    theme: "stripe",
+  } as const;
+
+  const options = {
+    clientSecret: paymentIntentClientSecret,
+    appearance,
+  } as const;
+
+  return (
+    <Elements stripe={stripePromise} options={options}>
+      <CheckoutForm
+        paymentIntentClientSecret={paymentIntentClientSecret}
+        successURL={successURL}
+      />
+    </Elements>
+  );
+};
+
+function CheckoutForm({ paymentIntentClientSecret, successURL }: Props) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -25,10 +54,6 @@ export function StripeCheckoutForm({
     if (!stripe) {
       return;
     }
-
-    // const paymentIntentClientSecret = new URLSearchParams(window.location.search).get(
-    //   "payment_intent_client_secret"
-    // );
 
     if (!paymentIntentClientSecret) {
       return;
@@ -85,19 +110,17 @@ export function StripeCheckoutForm({
       setMessage("An unexpected error occurred.");
     }
 
+    // TODO: error notification
     setIsLoading(false);
   };
 
-  const paymentElementOptions = {
+  const paymentElementOptions: StripePaymentElementOptions = {
     layout: "tabs",
-  } as const;
+    paymentMethodOrder: ["card"],
+  };
 
   return (
     <form id="payment-form" onSubmit={handleSubmit}>
-      {/* <LinkAuthenticationElement
-        id="link-authentication-element"
-        onChange={(e) => setEmail(e.value.email)}
-      /> */}
       <PaymentElement id="payment-element" options={paymentElementOptions} />
 
       {/* Show any error or success messages */}

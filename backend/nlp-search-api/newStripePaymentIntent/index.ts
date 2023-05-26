@@ -6,12 +6,10 @@ import { createResponse } from "./common";
 
 // read from env
 const DOLLAR_TO_CREDIT = Number(process.env["ENV_DOLLAR_TO_CREDIT"]);
-const STRIPE_SECRET_KEY = process.env["ENV_STRIPE_SECRET_KEY"];
 const FREECURRENCYAPI_KEY = process.env["ENV_FREECURRENCYAPI_API_KEY"];
 
-const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: "2022-11-15",
-});
+const STRIPE_SECRET_KEY = process.env["ENV_STRIPE_SECRET_KEY"];
+const STRIPE_TEST_SECRET_KEY = process.env["ENV_STRIPE_TEST_SECRET_KEY"];
 
 // Example response:
 // {
@@ -56,7 +54,16 @@ const calculateOrderAmount = async (credits: number) => {
 };
 
 // create a new payment intent and return the client secret
-const createPaymentIntent = async (credits: number, uid: string) => {
+const createPaymentIntent = async (
+  credits: number,
+  uid: string,
+  testing: boolean
+) => {
+  const key = testing ? STRIPE_TEST_SECRET_KEY : STRIPE_SECRET_KEY;
+  const stripe = new Stripe(key, {
+    apiVersion: "2022-11-15",
+  });
+
   const amount = await calculateOrderAmount(credits);
   return stripe.paymentIntents.create({
     amount,
@@ -71,6 +78,8 @@ const createPaymentIntent = async (credits: number, uid: string) => {
   });
 };
 
+// Providing testing=true in body => create payment intent with test key
+// Not providing => live key
 const extractRequestData = (req: HttpRequest) => {
   const requestSchema = z
     .object({
@@ -79,12 +88,14 @@ const extractRequestData = (req: HttpRequest) => {
       }),
       body: z.object({
         credits: z.number(), // number of credits to buy
+        testing: z.boolean().default(false),
       }),
     })
     .transform((data) => {
       return {
         uid: data.headers["x-ms-client-principal-id"],
         credits: data.body.credits,
+        testing: data.body.testing,
       };
     });
 
@@ -97,7 +108,7 @@ const httpTrigger: AzureFunction = async function (
   req: HttpRequest
 ): Promise<void> {
   context.log("HTTP trigger function processed a request.");
-  context.log(JSON.stringify(req, null, 2))
+  context.log(JSON.stringify(req, null, 2));
 
   try {
     const reqData = extractRequestData(req);
@@ -105,7 +116,8 @@ const httpTrigger: AzureFunction = async function (
     // create payment intent
     const paymentIntent = await createPaymentIntent(
       reqData.credits,
-      reqData.uid
+      reqData.uid,
+      reqData.testing
     );
 
     createResponse(context, 200, {
