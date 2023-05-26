@@ -8,9 +8,10 @@ interface Props {
   onSubmit(credits: number): void;
 }
 
-export const creditToPrice = (credits: number) => credits * 0.01;
+export const creditToPrice = (credits: number) =>
+  credits * import.meta.env.VITE_DOLLAR_TO_CREDIT;
 
-const MIN_CREDITS = 100
+const MIN_CREDITS = 100;
 
 export const BuyCreditsForm = ({ onSubmit }: Props) => {
   const [credits, setCredits] = useState<number>(MIN_CREDITS);
@@ -54,7 +55,9 @@ export const BuyCreditsForm = ({ onSubmit }: Props) => {
             className="h-8 w-8 hover:cursor-pointer"
             onClick={() => decrementCredits()}
           />
-          <div className="mx-2 text-lg font-normal select-none w-6 text-center">{credits / STEP_SIZE - 1}</div>
+          <div className="mx-2 w-6 select-none text-center text-lg font-normal">
+            {credits / STEP_SIZE - 1}
+          </div>
           <PlusCircleIcon
             className="h-8 w-8 hover:cursor-pointer"
             onClick={() => incrementCredits()}

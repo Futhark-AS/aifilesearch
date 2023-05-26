@@ -7,6 +7,7 @@ import { Message } from "./ProjectChat";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Button } from "@/components/Button";
 import { openBuyCredits } from "@/features/misc/buyCreditsSlice";
+import { getChatPrice } from "@/features/payment/utils";
 
 const ChatMessage = ({
   message,
@@ -21,7 +22,7 @@ const ChatMessage = ({
   const elements: React.ReactElement[] = [];
 
   if (initialMessage && message.role === "assistant") {
-    if (user.credits && user.credits < 10) {
+    if (user.credits < getChatPrice()) {
       elements.push(
         <div className="px-2 mt-2" key={0}>
           <span>

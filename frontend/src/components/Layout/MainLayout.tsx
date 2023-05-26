@@ -11,7 +11,7 @@ import {
   openBuyCredits,
   selectBuyCreditsOpen,
 } from "@/features/misc/buyCreditsSlice";
-import { BuyCreditsModalContents } from "@/features/users/components/BuyCreditsModalContents";
+import { BuyCreditsModalContents } from "@/features/payment/components/BuyCreditsModalContents";
 import { queryClient } from "@/lib/react-query";
 import { useAppDispatch } from "@/redux/hooks";
 import storage from "@/utils/storage";

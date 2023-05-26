@@ -68,7 +68,7 @@ export function encodePdfName(fileName: string) {
 }
 
 export function decodePdfName(fileName: string) {
-  // add pdf extenstion 
+  // add pdf extenstion
   const res = fileName + ".pdf";
   return decodeURIComponent(res);
 }

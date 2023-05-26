@@ -1,6 +1,6 @@
 import { ContentLayout } from "@/components/Layout";
 import React from "react";
-import { BuyCredits } from "../components/BuyCredits";
+import { BuyCredits } from "@/features/payment/components/BuyCredits";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
 type EntryProps = {
