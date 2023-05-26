@@ -21,9 +21,9 @@ const ChatMessage = ({
   const elements: React.ReactElement[] = [];
 
   if (initialMessage && message.role === "assistant") {
-    if (user.credits < 10) {
+    if (user.credits && user.credits < 10) {
       elements.push(
-        <div className="px-2 mt-2">
+        <div className="px-2 mt-2" key={0}>
           <span>
             Hey! You dont have enough credits to chat right now. Do you want to
             buy more?
@@ -40,6 +40,8 @@ const ChatMessage = ({
           </Button>
         </div>
       );
+    } else {
+      elements.push(<span key={0}>{message.content}</span>)
     }
   } else if (message.role === "assistant" && message.type == "citations") {
     let currentText = "";
