@@ -129,11 +129,11 @@ def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
     #     logging.info("Language code: '{}' with confidence {}".format(language.locale, language.confidence))
 
     for paragraph in result.paragraphs:
-        # logging.info(
-        #     "...Paragraph of length'{}'".format(
-        #         len(paragraph.content)
-        #     )
-        # )
+        logging.info(
+            "...Paragraph of length'{}'".format(
+                len(paragraph.content)
+            )
+        )
         if len(paragraph.bounding_regions) > 1:
             # throw exception
             logging.info("Error: more than one bounding region")
@@ -524,8 +524,7 @@ def main(settings) -> str:
 
     # update projects total cost and files in prpoject in cosmos db
     update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_name)
-    logging.info("Updated cosmos db")
-    logging.info(f"Now deleting blob {blob_name}")
+    # TODO: delete all small pdfs
     container_client.delete_blob(blob_name)
 
     return price
