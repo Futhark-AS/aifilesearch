@@ -1,3 +1,4 @@
+import { transformer } from "zod";
 import {
   getProcessingStatusReq,
   postFile,
@@ -68,6 +69,65 @@ export const startProcessing = async (
   );
 };
 
+// import { PDFDocument } from "pdf-lib";
+// import { pptxToPdf } from "pptx-to-pdf-converter";
+// import { Image } from "canvas";
+
+// async function convertToPdf(file: File): Promise<Uint8Array> {
+//   if (file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation") {
+//     // If it's a PowerPoint, convert to PDF using pptx-to-pdf-converter library
+//     const pptx = await file.arrayBuffer();
+//     const pdf = await pptxToPdf(pptx);
+//     return new Uint8Array(pdf);
+//   } else if (file.type.startsWith("image/")) {
+//     // If it's an image, convert to PDF using pdf-lib library
+//     const image = await Image.load(file.arrayBuffer());
+//     const pdfDoc = await PDFDocument.create();
+//     const page = pdfDoc.addPage([image.width, image.height]);
+//     page.drawImage(image, {
+//       x: 0,
+//       y: 0,
+//       width: image.width,
+//       height: image.height,
+//     });
+//     const pdfBytes = await pdfDoc.save();
+//     return new Uint8Array(pdfBytes);
+//   } else {
+//     // Unsupported file type
+//     throw new Error(`Unsupported file type: ${file.type}`);
+//   }
+// }
+
+async function transformFile(file: File): Promise<File> {
+  if (file.type === "application/pdf") {
+    // If it's already a PDF, just return the file
+    return file;
+  } else if (
+    file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+    file.type.startsWith("image/")
+  ) {
+    // If it's a PowerPoint or image, convert to PDF using an external library
+    // const pdf = await convertToPdf(file);
+
+    // return new File([pdf], `${file.name}.pdf`, { type: "application/pdf" });
+
+    // Unsupported file type currently
+    throw new Error(`Unsupported file type: ${file.type}`);
+
+  } else if (
+    file.type === "application/msword" ||
+    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    file.type === "text/plain"
+  ) {
+    // If it's a doc or text document, just return the file
+    return file;
+  } else {
+    // Unsupported file type
+    throw new Error(`Unsupported file type: ${file.type}`);
+  }
+}
+
+
 export const pdfNumberOfPages = async (file: File) => {
   const documentAsBytes = await file.arrayBuffer();
   const pdfDoc = await PDFDocument.load(documentAsBytes)
@@ -111,14 +171,27 @@ export const pdfNumberOfPages = async (file: File) => {
         (async () => {
             try {
               const file_names = []
-                for (const file of files) {
+              const new_files = []
+              for (const file of files) {
+                  const new_file = await transformFile(file).catch(e => {
+                    reject(e);
+                  });
+
+                  if(!new_file) break
+                  new_files.push(new_file)
+              }
+
+                for (const file of new_files) {
                   if (file.name.includes("/")) {
                     reject("File name cannot contain '/'");
                   }
 
+
                   await postFile(uid, file, project).catch(e => {
                       reject(e);
                   });
+
+                  if(file.type === "application/pdf") {
                     const smallerFiles = await splitPdf(file, 15);
                     for (const smallerFile of smallerFiles) {
                       file_names.push(smallerFile.name)
@@ -128,6 +201,10 @@ export const pdfNumberOfPages = async (file: File) => {
                         });
                     }
                 }
+                else {
+                  file_names.push(file.name)
+                }
+              }
                 startProcessing(
                     file_names,
                     project,
@@ -139,4 +216,5 @@ export const pdfNumberOfPages = async (file: File) => {
             }
         })();
     });
-};
+}
+;
