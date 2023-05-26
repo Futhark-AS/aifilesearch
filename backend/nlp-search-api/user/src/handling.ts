@@ -9,6 +9,7 @@ import {
   notifyOfEvent,
 } from "./common";
 import { CosmosWrapper } from "./cosmos";
+import { USER_STARTING_CREDITS } from "./constants";
 
 export const handleGET = async (
   context: Context,
@@ -130,8 +131,8 @@ export const handlePOST = async (
 
   const body = reqBody.data;
 
-  // Prevent user from setting credits and projects on creation
-  body.credits = 0;
+  // Set start credits and projects
+  body.credits = USER_STARTING_CREDITS
   body.projects = [];
 
   const dbUserResp = await cosmos.insert(body);
