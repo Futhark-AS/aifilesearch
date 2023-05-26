@@ -1,13 +1,7 @@
 import { ContentLayout } from "@/components/Layout";
-import React, { useEffect } from "react";
-
-import { setUserCredits } from "@/features/auth/authSlice";
-import { useAppDispatch } from "@/redux/hooks";
-import { useLocation } from "react-router-dom";
+import React from "react";
 import { BuyCredits } from "../components/BuyCredits";
-
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { showNotification } from "@mantine/notifications";
 
 type EntryProps = {
   label: string;
@@ -24,37 +18,6 @@ const Entry = ({ label, value }: EntryProps) => (
 
 export const Profile = () => {
   const { isLoading, user } = useAuth();
-  const location = useLocation();
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const isSuccess = searchParams.get("success");
-    const credits = searchParams.get("credits");
-
-    if (isSuccess && credits) {
-      const newCredits = user?.credits
-        ? user.credits + parseInt(credits)
-        : parseInt(credits);
-
-      showNotification({
-        title: "Payment successful!",
-        message:
-          "You have bought " +
-          credits +
-          " credits. They will be added to your account shortly. Thank you for your purchase!",
-        color: "teal",
-      });
-
-      dispatch(
-        setUserCredits({
-          credits: newCredits,
-        })
-      );
-
-      history.pushState(null, "", location.pathname);
-    }
-  }, [location, dispatch, user?.credits]);
 
   const formatCredits = (credits: undefined | number): string => {
     if (credits === undefined) {
