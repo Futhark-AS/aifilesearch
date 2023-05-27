@@ -3,10 +3,11 @@ import { FileDropzone } from "@/components/FileDropzone";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { showError } from "@/utils/showError";
 import { FileValidated } from "@dropzone-ui/react";
-import { Modal } from "@mantine/core";
+import { Checkbox, Modal } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { handleFileUpload, pdfNumberOfPages } from "../projectAPI";
+import { showNotification } from "@mantine/notifications";
 
 type FileInfo = {
   name: string;
@@ -17,7 +18,7 @@ type FileInfo = {
 const extractFileInfo = async (file: FileValidated): Promise<FileInfo> => {
   // talk with backend to get the price and pages
   const pages = await pdfNumberOfPages(file.file);
-  const price = pages * 1.5 * 100 / 1000;
+  const price = (pages * 1.5 * 100) / 1000;
   return {
     name: file.file.name,
     pages: pages,
@@ -32,10 +33,33 @@ interface Props {
 
 export function UploadFilesBox({ open, setOpen }: Props) {
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
-  const {user} = useAuth({ refetch: true })
+  const { user } = useAuth({ refetch: true });
 
   const [files, setFiles] = useState<FileValidated[]>([]);
   const [fileInfo, setFileInfo] = useState<FileInfo[]>([]);
+
+  const showFileUploadedMessage = () => {
+    showNotification({
+      autoClose: false,
+      title: "Success",
+      message: (
+        <div>
+          Your files are processing and will be available soon. 
+          {/* checkbox */}
+          <Checkbox
+            className="mt-2"
+            styles={{
+              labelWrapper: { color: "inherit" },
+            }}
+            label="Notify me when files are ready"
+            color="blue"
+          />
+        </div>
+      ),
+    });
+  };
+
+  showFileUploadedMessage();
 
   const close = () => {
     setOpen(false);
@@ -90,6 +114,7 @@ export function UploadFilesBox({ open, setOpen }: Props) {
     }
 
     close();
+    showFileUploadedMessage();
   };
 
   // Return a box absolutely positioned in the middle of the page. This box should not be blurred from body element.
@@ -114,17 +139,16 @@ export function UploadFilesBox({ open, setOpen }: Props) {
           <div className="text-sm text-gray-600">
             Total price: {getFilePrice()} credits
           </div>
-          {
-            user.credits < getFilePrice() ? (
-              <div className="text-sm text-red-600">
-                You dont have enough credits to buy these files. 
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">
-                Your remaining balance after buying: {Number(user.credits) - getFilePrice()}
-              </div>
-            ) 
-          }
+          {user.credits < getFilePrice() ? (
+            <div className="text-sm text-red-600">
+              You dont have enough credits to buy these files.
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">
+              Your remaining balance after buying:{" "}
+              {Number(user.credits) - getFilePrice()}
+            </div>
+          )}
         </div>
         <div className="mt-2 flex">
           <Button

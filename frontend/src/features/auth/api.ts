@@ -49,7 +49,7 @@ const mapper = (user: DBUser): User => {
     id: user.id,
     email: user.email,
     name: user.name,
-    credits: user.credits,
+    credits: Number(user.credits.toFixed(0)),
     isLoggedIn: true,
     projects: user.projects.map((project) => ({
       name: project.namespace.split("/").pop() || "",
