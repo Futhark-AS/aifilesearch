@@ -41,25 +41,11 @@ export function UploadFilesBox({ open, setOpen }: Props) {
   const showFileUploadedMessage = () => {
     showNotification({
       autoClose: false,
-      title: "Success",
-      message: (
-        <div>
-          Your files are processing and will be available soon. 
-          {/* checkbox */}
-          <Checkbox
-            className="mt-2"
-            styles={{
-              labelWrapper: { color: "inherit" },
-            }}
-            label="Notify me when files are ready"
-            color="blue"
-          />
-        </div>
-      ),
+      title: "File upload started",
+      message:
+        "Your files are processing! They will be available in your project soon.",
     });
   };
-
-  showFileUploadedMessage();
 
   const close = () => {
     setOpen(false);
@@ -107,6 +93,8 @@ export function UploadFilesBox({ open, setOpen }: Props) {
         user.id,
         projectName
       );
+
+      showFileUploadedMessage();
     } catch (error) {
       showError(
         "Unfortunately, there occured an error while uploading the file. Please try again later."
@@ -114,7 +102,6 @@ export function UploadFilesBox({ open, setOpen }: Props) {
     }
 
     close();
-    showFileUploadedMessage();
   };
 
   // Return a box absolutely positioned in the middle of the page. This box should not be blurred from body element.
