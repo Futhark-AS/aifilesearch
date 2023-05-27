@@ -10,7 +10,7 @@ export function PlainNavbar() {
           link: "/about",
         },
         {
-          label: "Log in",
+          label: "Go to app",
           link: "/auth",
         },
       ]}
