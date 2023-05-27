@@ -11,7 +11,7 @@ export function FileDropzone({ setFiles, files }: Props) {
     setFiles(incomingFile);
   };
   return (
-    <Dropzone onChange={updateFiles} value={files}>
+    <Dropzone onChange={updateFiles} value={files} accept="application/pdf" >
       {files.map((file, i) => (
         <FileItem key={i} {...file} preview />
       ))}
