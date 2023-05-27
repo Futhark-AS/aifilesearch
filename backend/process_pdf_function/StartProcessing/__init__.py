@@ -14,7 +14,6 @@ import azure.functions as func
 import azure.durable_functions as df
 
 from azure.storage.blob import BlobServiceClient
-from SingleProcess import NotEnoughCreditsError
 
 # Retrieve the connection string for use with the application. The storage
 connect_str = os.getenv('ENV_AZURE_STORAGE_CONNECTION_STRING')
@@ -86,20 +85,8 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
             "total_price": sum(results),
         } 
 
-    except NotEnoughCreditsError as e:
-        logging.info("Not enough credits")
-        return {
-            "status": "error",
-            "error": str(e)
-        }
     except Exception as e:
         # e not instance of NotEnoughCreditsError
-        if type(e) == NotEnoughCreditsError:
-            logging.info("Not enough credits")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
         logging.info("Error in orchestrator function: " + str(e))
         return {
             "status": "error",

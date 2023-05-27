@@ -3,11 +3,11 @@ import { FileDropzone } from "@/components/FileDropzone";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { showError } from "@/utils/showError";
 import { FileValidated } from "@dropzone-ui/react";
-import { Checkbox, Modal } from "@mantine/core";
+import { Modal } from "@mantine/core";
+import { showNotification } from "@mantine/notifications";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { handleFileUpload, pdfNumberOfPages } from "../projectAPI";
-import { showNotification } from "@mantine/notifications";
 
 type FileInfo = {
   name: string;
