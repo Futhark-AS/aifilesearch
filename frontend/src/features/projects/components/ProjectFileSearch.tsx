@@ -2,14 +2,18 @@ import { Form, InputField } from "@/components/Form";
 import { Spinner } from "@/components/Spinner";
 import { Card, Divider } from "@mantine/core";
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { PromptMatch, searchProjectWithPromptReq } from "../requests";
-import { extractFileName } from "../utils";
+import { encodePdfName, extractFileName } from "../utils";
+import { useAppDispatch } from "@/redux/hooks";
+import { setHighlightedResult } from "../projectSlice";
 
 export function ProjectFileSearch() {
   const [results, setResults] = useState<PromptMatch[]>([]);
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const search = async (value: string) => {
     setLoading(true);
@@ -19,7 +23,8 @@ export function ProjectFileSearch() {
   };
 
   const itemOnClick = (item: PromptMatch) => {
-    console.log(item);
+    navigate(`/app/projects/${projectName}/pdf/${encodePdfName(item.blobName)}`);
+    dispatch(setHighlightedResult(item.highlightedBox));
   };
 
   return (
@@ -41,7 +46,7 @@ export function ProjectFileSearch() {
               {results?.map((result, i) => (
                 <Card
                   key={result.id}
-                  className="my-2 w-11/12 transform cursor-pointer p-4 px-4 transition duration-100 hover:bg-slate-50 hover:cursor-pointer"
+                  className="my-2 w-11/12 transform cursor-pointer p-4 px-4 transition duration-100 hover:cursor-pointer hover:bg-slate-50"
                   onClick={() => itemOnClick(result)}
                 >
                   <div className="w-8">{i + 1}</div>
