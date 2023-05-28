@@ -59,7 +59,7 @@ export function ProjectFiles() {
   const navigate = useNavigate();
   const [uploadFilesOpen, setUploadFilesOpen] = useState(false);
 
-  const files = useFiles(projectName);
+  const { files, isLoading } = useFiles(projectName);
 
   return (
     <div className="flex h-full flex-col">
@@ -68,24 +68,30 @@ export function ProjectFiles() {
           All Files
         </h2>
       </div>
-      {files.map((file, i) => (
-        <File
-          active={selectedFile == i}
-          file={file}
-          fileOnClick={(file) => {
-            const name = encodePdfName(file.blobName);
-            navigate(`/app/projects/${projectName}/pdf/${name}`);
+      {isLoading ? (
+        <div className="text-sm italic text-gray-500">Loading files...</div>
+      ) : (
+        <div>
+          {files.map((file, i) => (
+            <File
+              active={selectedFile == i}
+              file={file}
+              fileOnClick={(file) => {
+                const name = encodePdfName(file.blobName);
+                navigate(`/app/projects/${projectName}/pdf/${name}`);
 
-            const newSelectedFile = selectedFile == i ? null : i;
-            setSelectedFile(newSelectedFile);
-          }}
-          key={file.fileName + i}
-          last={i == files.length - 1}
-        />
-      ))}
-      {files.length == 0 && (
-        <div className="text-sm italic text-gray-500">
-          No files uploaded yet
+                const newSelectedFile = selectedFile == i ? null : i;
+                setSelectedFile(newSelectedFile);
+              }}
+              key={file.fileName + i}
+              last={i == files.length - 1}
+            />
+          ))}
+          {files.length == 0 && (
+            <div className="text-sm italic text-gray-500">
+              No files uploaded yet
+            </div>
+          )}
         </div>
       )}
       <Button

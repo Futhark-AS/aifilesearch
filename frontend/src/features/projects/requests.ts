@@ -215,9 +215,11 @@ export const postFile = async (uid: string, file: File, project: string) => {
   await uploadFile(sasTokenUri, file);
 };
 
-export const useFiles = (project: string): ProjectFile[] => {
-  const { user } = useAuth();
-  return user?.projects?.filter((p) => p.name === project)[0]?.files || [];
+export const useFiles = (project: string) => {
+  const { user, isLoading } = useAuth();
+  const files = user?.projects?.filter((p) => p.name === project)[0]?.files || [];
+
+  return {files, isLoading};
 };
 
 export const createProject = async (name: string) => {
