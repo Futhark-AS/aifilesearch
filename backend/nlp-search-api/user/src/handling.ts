@@ -129,13 +129,14 @@ export const handlePOST = async (
     return;
   }
 
-  const body = reqBody.data;
+  const user = reqBody.data;
 
   // Set start credits and projects
-  body.credits = USER_STARTING_CREDITS
-  body.projects = [];
+  user.credits = USER_STARTING_CREDITS
+  user.projects = [];
+  user.id = extractReqHeaderUID(req);
 
-  const dbUserResp = await cosmos.insert(body);
+  const dbUserResp = await cosmos.insert(user);
 
   if (dbUserResp.success == false) {
     createErrorResponse(context, 500, "Database error", dbUserResp.error);
@@ -144,7 +145,7 @@ export const handlePOST = async (
 
   createResponse(context, 200, dbUserResp.data);
 
-  notifyOfEvent(["Signed up new user: " + body.name + ", " + body.email])
+  notifyOfEvent(["Signed up new user: " + user.name + ", " + user.email])
 };
 
 export const handleInsupported = async (
