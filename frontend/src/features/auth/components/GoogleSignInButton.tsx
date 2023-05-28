@@ -9,6 +9,7 @@ import { parseJwt } from "../parseJwt";
 import { getUser, postUser } from "../api";
 import storage from "@/utils/storage";
 import { showError } from "@/utils/showError";
+import { User } from "../types";
 
 const AzureAuthResult = z.object({
   authenticationToken: z.string(),
@@ -54,12 +55,23 @@ export default function GoogleSignInButton() {
 
           storage.setAzureToken(azureAuth.data.authenticationToken);
 
+          let data: { isSigningUp: true } | { isSigningUp: false; user: User };
+
           dispatch(setLoading(true));
-          const user = await getUser();
 
-          const isSigningUp = user == null;
+          try {
+            const res = await getUser();
+            data = {
+              isSigningUp: false,
+              user: res,
+            };
+          } catch (e) {
+            data = {
+              isSigningUp: true,
+            };
+          }
 
-          if (isSigningUp) {
+          if (data.isSigningUp == true) {
             await postUser({
               email: parsedGoogleJwt.email,
               name: parsedGoogleJwt.name,
@@ -80,9 +92,9 @@ export default function GoogleSignInButton() {
                 email: parsedGoogleJwt.email,
                 id: azureAuth.data.user.userId,
                 name: parsedGoogleJwt.name,
-                credits: user.credits,
+                credits: data.user.credits,
                 isLoggedIn: true,
-                projects: user.projects,
+                projects: data.user.projects,
               })
             );
           }
@@ -91,7 +103,9 @@ export default function GoogleSignInButton() {
         } catch (e) {
           console.log(e);
           dispatch(setLoading(false));
-          showError("There was an error in the system. Please try again later.")
+          showError(
+            "There was an error in the system. Please try again later."
+          );
         }
       }}
       onError={() => {
