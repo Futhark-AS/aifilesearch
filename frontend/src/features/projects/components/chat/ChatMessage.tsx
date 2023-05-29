@@ -1,13 +1,13 @@
+import { Button } from "@/components/Button";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useOpenBuyCredits } from "@/features/misc/useOpenBuyCredits";
+import { getChatPrice } from "@/features/payment/utils";
 import { useAppDispatch } from "@/redux/hooks";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { setHighlightedResult } from "../../projectSlice";
 import { encodePdfName } from "../../utils";
 import { Message } from "./ProjectChat";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { Button } from "@/components/Button";
-import { openBuyCredits } from "@/features/misc/buyCreditsSlice";
-import { getChatPrice } from "@/features/payment/utils";
 
 const ChatMessage = ({
   message,
@@ -19,12 +19,13 @@ const ChatMessage = ({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { open: openBuyCreditsModal } = useOpenBuyCredits();
   const elements: React.ReactElement[] = [];
 
   if (initialMessage && message.role === "assistant") {
     if (user.credits < getChatPrice()) {
       elements.push(
-        <div className="px-2 mt-2" key={0}>
+        <div className="mt-2 px-2" key={0}>
           <span>
             Hey! You dont have enough credits to chat right now. Do you want to
             buy more?
@@ -33,16 +34,14 @@ const ChatMessage = ({
             className="mt-2 block"
             size="sm"
             variant="inverse"
-            onClick={() => {
-              dispatch(openBuyCredits());
-            }}
+            onClick={openBuyCreditsModal}
           >
-          Buy Credits
+            Buy Credits
           </Button>
         </div>
       );
     } else {
-      elements.push(<span key={0}>{message.content}</span>)
+      elements.push(<span key={0}>{message.content}</span>);
     }
   } else if (message.role === "assistant" && message.type == "citations") {
     let currentText = "";

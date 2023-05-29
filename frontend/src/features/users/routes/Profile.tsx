@@ -1,7 +1,9 @@
+import { Button } from "@/components/Button";
 import { ContentLayout } from "@/components/Layout";
-import React from "react";
-import { BuyCredits } from "@/features/payment/components/BuyCredits";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useOpenBuyCredits } from "@/features/misc/useOpenBuyCredits";
+import { PencilIcon } from "@heroicons/react/24/outline";
+import React from "react";
 
 type EntryProps = {
   label: string;
@@ -18,6 +20,7 @@ const Entry = ({ label, value }: EntryProps) => (
 
 export const Profile = () => {
   const { isLoading, user } = useAuth();
+  const { open } = useOpenBuyCredits();
 
   const formatCredits = (credits: undefined | number): string => {
     if (credits === undefined) {
@@ -33,7 +36,13 @@ export const Profile = () => {
         <div className="px-4 py-5 sm:px-6">
           <div className="flex justify-between">
             <h3 className="text-lg font-medium text-gray-900">Balance</h3>
-            <BuyCredits title="Buy Credits" />
+            <Button
+              startIcon={<PencilIcon className="h-4 w-4" />}
+              size="sm"
+              onClick={open}
+            >
+              Buy Credits
+            </Button>
           </div>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">

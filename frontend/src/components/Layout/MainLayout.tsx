@@ -6,11 +6,7 @@ import { Link, NavLink, useParams } from "react-router-dom";
 
 import { logout } from "@/features/auth/authSlice";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import {
-  closeBuyCredits,
-  openBuyCredits,
-  selectBuyCreditsOpen,
-} from "@/features/misc/buyCreditsSlice";
+import { selectBuyCreditsOpen } from "@/features/misc/buyCreditsSlice";
 import { BuyCreditsModalContents } from "@/features/payment/components/BuyCreditsModalContents";
 import { queryClient } from "@/lib/react-query";
 import { useAppDispatch } from "@/redux/hooks";
@@ -19,6 +15,7 @@ import { Modal } from "@mantine/core";
 import { useAppSelector } from "../../redux/hooks";
 import { Button } from "../Button";
 import { Logo } from "../Logo";
+import { useOpenBuyCredits } from "@/features/misc/useOpenBuyCredits";
 
 type SideNavigationItem = {
   name: string;
@@ -36,8 +33,6 @@ type UserNavigationItem = {
 
 const UserNavigation = () => {
   const dispatch = useAppDispatch();
-  const { user } = useAuth();
-
   const userNavigation = [
     { name: "Your Profile", to: "./profile" },
     {
@@ -222,12 +217,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
   const { user } = useAuth();
   const opened = useAppSelector((state) => selectBuyCreditsOpen(state));
-  const dispatch = useAppDispatch();
-  const close = () => dispatch(closeBuyCredits());
-
-  const openBuy = () => {
-    dispatch(openBuyCredits());
-  };
+  const { open, close } = useOpenBuyCredits();
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
@@ -259,7 +249,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             )}
             <div className="flex flex-1 justify-end px-4">
               <div className="ml-4 flex items-center md:ml-6">
-                <Button onClick={() => openBuy()} size="md" variant="inverse">
+                <Button onClick={open} size="md" variant="inverse">
                   {user.credits.toFixed(0)} credits
                 </Button>
                 <UserNavigation />
@@ -271,7 +261,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           <Modal opened={opened} onClose={close} centered>
             <BuyCreditsModalContents />
           </Modal>
-
           {children}
         </main>
       </div>

@@ -13,9 +13,14 @@ export const successURL = (credits: number) =>
 interface Props {
   clientSecret: string;
   credits: number;
+  onBack(): void;
 }
 
-export const PopupModalStripeCheckout = ({ clientSecret, credits }: Props) => {
+export const PopupModalStripeCheckout = ({
+  clientSecret,
+  credits,
+  onBack,
+}: Props) => {
   return (
     <div>
       <StripeCheckoutForm
@@ -23,7 +28,11 @@ export const PopupModalStripeCheckout = ({ clientSecret, credits }: Props) => {
         successURL={successURL(credits)}
       />
       <div className="flex">
-        <Button form="payment-form" type="submit" size="sm" variant="gray">
+        <Button
+          onClick={onBack}
+          size="sm"
+          variant="gray"
+        >
           Back
         </Button>
         <Button form="payment-form" type="submit" size="sm" className="flex-1">

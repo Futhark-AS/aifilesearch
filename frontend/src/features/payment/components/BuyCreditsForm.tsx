@@ -67,7 +67,7 @@ export const BuyCreditsForm = ({ onSubmit }: Props) => {
       <Button
         form="buy-credits"
         type="submit"
-        className="mx-auto mt-4 block w-40"
+        className="mx-auto mt-4 block w-40 select-none"
         variant="inverse"
       >
         Buy Credits
