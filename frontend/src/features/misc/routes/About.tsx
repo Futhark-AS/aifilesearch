@@ -7,16 +7,16 @@ export const About = () => {
       <PlainNavbar />
 
       <h1 className="mt-8 text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
-        DocuSearch
+      AIFileSearch
       </h1>
 
       <div className="mt-2 block">
-        With DocuSearch, you can search for information within all types of
+        With AIFileSearch, you can search for information within all types of
         files, including PDFs, Word documents, Excel spreadsheets, and more. Our
         algorithm uses cutting-edge technology to understand the context of your
         search and deliver the most relevant results. Whether you&#39;re a
         student, a professional, or just someone who wants to be more organized,
-        DocuSearch is here to make your life easier.
+        AIFileSearch is here to make your life easier.
       </div>
       <div className="mt-4">
         We understand the importance of privacy and security, which is why all
@@ -26,7 +26,7 @@ export const About = () => {
       </div>
       <div className="mt-4">
         So why waste your time searching for information the old-fashioned way?
-        Try DocuSearch today and experience the benefits of a smarter, more
+        Try AIFileSearch today and experience the benefits of a smarter, more
         efficient search process
       </div>
       <h3 className="mt-8 text-xl font-bold">Examples</h3>
@@ -60,7 +60,7 @@ export const About = () => {
         </div>
 
         <div className="my-8">
-          With DocuSearch, the possibilities are endless and the search process
+          With AIFileSearch, the possibilities are endless and the search process
           has never been more efficient or accurate
         </div>
       </div>

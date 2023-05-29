@@ -6,7 +6,7 @@ export const Logo = () => {
   return (
     <Link to="/" className="flex items-center">
       <img className="h-8 w-auto mr-2" src={logo} alt="Logo" />
-      <span className="text-xl font-semibold">Docusearch</span>
+      <span className="text-xl font-semibold">AIFileSearch</span>
     </Link>
   );
 };

@@ -21,7 +21,7 @@ export const Landing = () => {
       <PlainNavbar />
 
       <h1 className="mt-8 text-5xl font-extrabold leading-normal text-gray-700 md:text-[5rem]">
-        DocuSearch
+        AIFileSearch
       </h1>
 
       <p className="w-full">
@@ -31,7 +31,7 @@ export const Landing = () => {
         what you are looking for. Simply upload your files and let our advanced
         search algorithm do the rest. Say goodbye to endless scrolling and hello
         to efficient, accurate results with{" "}
-        <span className="text-lg font-semibold">DocuSearch</span>
+        <span className="text-lg font-semibold">AIFileSearch</span>
       </p>
       <Divider className="my-5" />
       <Link to={"/auth"}>
