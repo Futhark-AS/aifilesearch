@@ -6,8 +6,10 @@ import { ErrorPage } from "@/features/errors";
 import { About, Landing } from "@/features/misc";
 import { protectedRoutes } from "./protected";
 import { PaymentSuccess } from "../features/misc/routes/PaymentSuccess";
+import { TestPdf } from "@/components/PdfViewer/TestPdf";
 
 const Root = () => {
+  console.log("hello")
   return (
     <div>
       <Outlet />
@@ -36,6 +38,10 @@ export const router = createBrowserRouter([
       {
         path: "about",
         element: <About />,
+      },
+      {
+        path: "test",
+        element: <TestPdf />,
       },
       {
         path: "payment-success",
