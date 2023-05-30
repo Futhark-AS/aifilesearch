@@ -18,7 +18,6 @@ import { showError } from "@/utils/showError";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { PDFPageProxy } from "react-pdf";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
-import { useNavigate } from "react-router-dom";
 
 const FALLBACK_WIDTH = 600;
 export type HighlightedBox =
@@ -44,16 +43,6 @@ interface Props {
   highlightedBox: HighlightedBox | null;
 }
 
-// const TEMP = {
-//   type: "text",
-//   content: `
-//   Briefly answer the following questions (with a maximum of 50 words per answer):
-//   a) What is availability? What factors affect availability?
-//   b) What are fault-­‐tolerant systems?
-//   `,
-//   pageNumber: 2
-// } as const
-
 export const PdfViewer = forwardRef(function PdfViewer(
   { file, highlightedBox }: Props,
   parentRef: Ref<HTMLElement>
@@ -64,21 +53,10 @@ export const PdfViewer = forwardRef(function PdfViewer(
   const [setRef, { width: parentWidth, height: parentHeight }] = useMeasure();
   const [initialPR, setInitialPR] = useState(1);
   const [constantRatio, setConstantRatio] = useState(0.75);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const pr = window.devicePixelRatio;
-
-    if (pr == 2) {
-      setConstantRatio(1.5);
-    }
-
-    if (!(pr == 1 || pr == 2)) {
-      showError(
-        "Error in loading PDF. Please set zoom level to 100% then try again"
-      );
-      navigate(-1);
-    }
+    setConstantRatio(pr * 0.75);
     setInitialPR(pr);
   }, []);
 
