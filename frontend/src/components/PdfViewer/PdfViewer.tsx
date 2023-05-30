@@ -13,11 +13,12 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
 
 import { highlightBoundingBox } from "@/features/projects/utils";
+import useMeasure from "@/hooks/useMeasure";
 import { showError } from "@/utils/showError";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { PDFPageProxy, TextLayerItemInternal } from "react-pdf";
-import useMeasure from "@/hooks/useMeasure";
+import { PDFPageProxy } from "react-pdf";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
+import { useNavigate } from "react-router-dom";
 
 const FALLBACK_WIDTH = 600;
 export type HighlightedBox =
@@ -61,6 +62,25 @@ export const PdfViewer = forwardRef(function PdfViewer(
   const [pageViewports, setPageViewports] = useState<ViewPort[] | null>(null);
   const canvasElementsRef = useRef<(HTMLCanvasElement | null)[]>([]);
   const [setRef, { width: parentWidth, height: parentHeight }] = useMeasure();
+  const [initialPR, setInitialPR] = useState(1);
+  const [constantRatio, setConstantRatio] = useState(0.75);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const pr = window.devicePixelRatio;
+
+    if (pr == 2) {
+      setConstantRatio(1.5);
+    }
+
+    if (!(pr == 1 || pr == 2)) {
+      showError(
+        "Error in loading PDF. Please set zoom level to 100% then try again"
+      );
+      navigate(-1);
+    }
+    setInitialPR(pr);
+  }, []);
 
   const getWidth = useCallback(
     () => parentWidth || FALLBACK_WIDTH,
@@ -91,25 +111,22 @@ export const PdfViewer = forwardRef(function PdfViewer(
 
         if (!canvas || !ctx) return showError("Could not highlight text");
 
-        const CONSTANT_RATIO = 1.5;
+        const pixelRatio = window.devicePixelRatio;
 
-        const ratio = CONSTANT_RATIO * (page.width / page.originalWidth);
+        const ratio = page.width / page.originalWidth;
         const { x, y, width, height } = highlightedBox.boundingBox;
 
         highlightBoundingBox(
           {
-            x: x * ratio,
-            y: y * ratio,
-            width: width * ratio,
-            height: height * ratio,
+            x: ((x * ratio * pixelRatio) / initialPR) * constantRatio,
+            y: ((y * ratio * pixelRatio) / initialPR) * constantRatio,
+            width: ((width * ratio * pixelRatio) / initialPR) * constantRatio,
+            height: ((height * ratio * pixelRatio) / initialPR) * constantRatio,
           },
           ctx
         );
       }
     },
-    [highlightedBox]
-  );
-
   const customTextRenderer = useCallback(
     (layer: TextLayerItemInternal, pageIndex: number) => {
       if (
