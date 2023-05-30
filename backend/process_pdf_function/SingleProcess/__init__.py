@@ -62,11 +62,11 @@ def get_paragraphs(page):
 
 def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
     reader = PdfReader(io.BytesIO(blob))
-    logging.info("Number of pages: " + str(len(reader.pages)))
-
     num_pages = len(reader.pages)
+    logging.info("Number of pages: " + str(num_pages))
+    logging.info("Dollars to pay per 1000 pages: " + str(PRICE_PER_1000_PAGES))
     credits_to_pay = PRICE_PER_1000_PAGES * num_pages / 1000* DOLLAR_TO_CREDIT
-    logging.info("Price to pay: " + str(credits_to_pay) + " credits")
+    logging.info("Credits to pay: " + str(credits_to_pay) + " credits")
     logging.info("User credits: " + str(user_credits) + " credits")
     if user_credits < credits_to_pay:
         raise NotEnoughCreditsError("Not enough credits to process this pdf: price is " + str(credits_to_pay) + " credits and you have " + str(user_credits) + " credits")
@@ -100,40 +100,37 @@ def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
     )
     # price is 1.5 dollars per 1000 pages
     p = 1.5
-    logging.info("Price per 1000 pages: $" + str(p)) 
-    #price = p*/1000 # 2 pages per pdf
-    #logging.info(f"Price for extracting text from {len(pdfs)} pdfs with total length {len(pdfs)*2} pages: {price} dollars")
-    # path = "folder/document_name-0-4.pdf"
+    logging.info("Cost per 1000 pages: $" + str(p)) 
     all_paragraphs = []
-    # for i in range(len(pdfs)):
-    # pdf is of type PyPDF2.PdfReader
-    # pdf = pdfs[i][0]
-    # page_number_base = pdfs[i][1]
-    # blob_name = pdfs[i][2]
-
-    # buf = io.BytesIO()
-    # pdf.write(buf)
-    # buf.seek(0)
-
     
-    poller = document_analysis_client.begin_analyze_document(
-        "prebuilt-read", document=blob
-    )
-    result = poller.result()
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            poller = document_analysis_client.begin_analyze_document("prebuilt-read", document=blob)
+            result = poller.result()
+            # If the code got this far without throwing an exception, the operation must have been successful
+            break
+        except Exception as e:
+            logging.error(f"Error in form recognizer endpoint. Attempt {attempt+1} of {max_retries} failed with error: {e}")
+            if attempt+1 == max_retries:
+                raise  # re-raise the last exception if this was the last attempt
+            time.sleep(5*(attempt+1))  # sleep for 5 seconds multiplied by the attempt number
+
+
     logging.info("Document contains {} pages: ".format(len(result.pages)))
 
-    price = p*len(result.pages)/1000
+    cost = p*len(result.pages)/1000
 
     # logging.info("----Languages detected in the document----")
     # for language in result.languages:
     #     logging.info("Language code: '{}' with confidence {}".format(language.locale, language.confidence))
 
     for paragraph in result.paragraphs:
-        logging.info(
-            "...Paragraph of length'{}'".format(
-                len(paragraph.content)
-            )
-        )
+        # logging.info(
+        #     "...Paragraph of length'{}'".format(
+        #         len(paragraph.content)
+        #     )
+        # )
         if len(paragraph.bounding_regions) > 1:
             # throw exception
             logging.info("Error: more than one bounding region")
@@ -146,13 +143,7 @@ def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
             "bounding_box": [[{"x": point.x, "y":point.y} for point in paragraph.bounding_regions[0].polygon]]
         })
 
-        # # close the stream
-        # buf.close()
-
-        # # close the pdf
-        # pdf.close()
-            
-    return all_paragraphs, price, credits_to_pay, num_pages
+    return all_paragraphs, cost, credits_to_pay, num_pages
 
 
 
@@ -167,7 +158,8 @@ def combine_and_clean_paragraphs(paragraphs):
         page_number = paragraph["page_number"]
         if len(content) < min_paragraph_length: #this works OK, but it's not perfect
             #remove it
-            logging.info("Removing: '" + content + "' at page " + str(page_number) + " of file " + paragraph["file_name"])
+            # logging.info("Removing: '" + content + "' at page " + str(page_number) + " of file " + paragraph["file_name"])
+            continue
 
         else:
             cleaned_paragraphs.append(paragraph)
@@ -195,7 +187,7 @@ def combine_and_clean_paragraphs(paragraphs):
                 next_content = cleaned_paragraphs[i+1]["content"]
                 next_bounding_box = cleaned_paragraphs[i+1].get("bounding_box")
                 # append next_content to content
-                logging.info(f"Appending paragraph on page {page_number} of file {file_name} with paragraph on page {next_page_number} of file {next_file_name}")
+                # logging.info(f"Appending paragraph on page {page_number} of file {file_name} with paragraph on page {next_page_number} of file {next_file_name}")
                 cleaned_paragraphs[i]["content"] = content + " " + next_content
                 # if bounding_box and next_bounding_box, combine them. else leave it as None
                 if bounding_box and next_bounding_box:
@@ -247,9 +239,9 @@ def split_long_paragraphs(paragraphs):
     for i in range(len(paragraphs)):
         paragraph = paragraphs[i]
         if len(paragraph["content"]) > 250*6: #250 words ish
-            logging.info(f"...Splitting paragraph with length {len(paragraph['content'])} on page {paragraph['page_number']} of file {paragraph['file_name']}")
+            # logging.info(f"...Splitting paragraph with length {len(paragraph['content'])} on page {paragraph['page_number']} of file {paragraph['file_name']}")
             segments = split_paragraph(paragraph["content"], segment_length=min(len(paragraph["content"])/2, 250*5), overlap_length=100)
-            logging.info("Length of new segments: "+ str([len(segment) for segment in segments]))
+            # logging.info("Length of new segments: "+ str([len(segment) for segment in segments]))
             # add segments as new paragraphs
             for segment in segments:
                 new_paragraphs.append({"page_number": paragraph["page_number"], "content": segment, "bounding_box": paragraph.get("bounding_box"), "file_name": paragraph["file_name"]})
@@ -279,7 +271,7 @@ def embed_paragraphs(paragraphs, namespace, index_name):
     # calculate the total number of characters in the document
     total_chars = sum([len(paragraph["content"]) for paragraph in paragraphs])
     price = 0.0004*total_chars/1000
-    logging.info("Price for embedding document: $"+str(price))
+    logging.info("Approx. cost of embedding document: $"+str(price))
 
     batch_size = 32  # process everything in batches of 32
     for i in tqdm(range(0, len(paragraphs), batch_size)):
@@ -356,8 +348,6 @@ cosmos_container = cosmos_database.get_container_client("users")
 # Retrieve the connection string for use with the application. The blob storage
 connect_str = os.getenv("ENV_AZURE_STORAGE_CONNECTION_STRING")
 
-PRICE_PER_1000_PAGES = 10
-
 
 def extract_text_from_doc(blob, price_per_1000_pages, user_credits) -> Tuple[List[str], int, int, int]:
     """
@@ -405,7 +395,7 @@ def extract_text_from_txt(blob, price_per_1000_pages, user_credits) -> Tuple[Lis
     return paragraphs, price, credits_to_pay, num_pages
 
 
-def update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_name):
+def update_cosmos_user(user, namespace, cost, credits_to_pay, num_pages, blob_name):
     while True:
         etag = user["_etag"]
 
@@ -419,9 +409,9 @@ def update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_n
             if project["namespace"] == namespace:
                 # update cost
                 if "cost" in project:
-                    project["cost"] += price
+                    project["cost"] += cost
                 else:
-                    project["cost"] = price
+                    project["cost"] = cost
 
                 # save info of file
 
@@ -429,7 +419,7 @@ def update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_n
 
                 file_info = {
                     "blob_name": blob_name,
-                    "price": price,
+                    "price": cost,
                     "credits": credits_to_pay,
                     "num_pages": num_pages,
                     "file_name": blob_name.split("/")[-1],
@@ -442,7 +432,7 @@ def update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_n
                         # add price, credits, num_pages to existing file
                         for file in project["files"]:
                             if file["blob_name"] == file_info["blob_name"]:
-                                file["price"] += price
+                                file["price"] += cost
                                 file["credits"] += credits_to_pay
                                 file["num_pages"] += num_pages
                             
@@ -491,14 +481,14 @@ def main(settings) -> str:
     logging.info("\nDownloading blob " + blob_name)
     blob = container_client.download_blob(blob_name).readall()
 
-    if blob_name.endswith('.pdf'):
-        paragraphs, price, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
-    elif blob_name.endswith('.docx'):
-        paragraphs, price, credits_to_pay, num_pages = extract_text_from_doc(blob, PRICE_PER_1000_PAGES, user_credits)
-    elif blob_name.endswith('.txt'):
-        paragraphs, price, credits_to_pay, num_pages = extract_text_from_txt(blob, PRICE_PER_1000_PAGES, user_credits)
+    paragraphs, cost, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
 
-    total_price = price
+    # if blob_name.endswith('.pdf'):
+    #     paragraphs, cost, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
+    # elif blob_name.endswith('.docx'):
+    #     paragraphs, cost, credits_to_pay, num_pages = extract_text_from_doc(blob, PRICE_PER_1000_PAGES, user_credits)
+    # elif blob_name.endswith('.txt'):
+    #     paragraphs, cost, credits_to_pay, num_pages = extract_text_from_txt(blob, PRICE_PER_1000_PAGES, user_credits)
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
 
@@ -511,20 +501,22 @@ def main(settings) -> str:
     logging.info(f"Split paragraphs. Number of paragraphs now: {len(split_paragraphs)}")
 
     logging.info(f'Extracted {len(split_paragraphs)} paragraphs')
-    logging.info(f'First paragraph: {split_paragraphs[0]}')
-    logging.info(f'Last paragraph: {split_paragraphs[-1]}')
+    # logging.info(f'First paragraph: {split_paragraphs[0]}')
+    # logging.info(f'Last paragraph: {split_paragraphs[-1]}')
 
     logging.info("Now embedding paragraphs")
     embed_price = embed_paragraphs(split_paragraphs, namespace, index_name)
     logging.info("Done embedding paragraphs")
 
-    price = price + embed_price
+    total_cost = cost + embed_price
 
-    logging.info(f"Price for blob {blob_name}: ${price}")
+    logging.info(f"Total cost for blob {blob_name}: ${total_cost}")
 
     # update projects total cost and files in prpoject in cosmos db
-    update_cosmos_user(user, namespace, price, credits_to_pay, num_pages, blob_name)
-    # TODO: delete all small pdfs
+    update_cosmos_user(user, namespace, total_cost, credits_to_pay, num_pages, blob_name)
+
+    logging.info(f"Deleting blob {blob_name}")
     container_client.delete_blob(blob_name)
 
-    return price
+    return cost
+
