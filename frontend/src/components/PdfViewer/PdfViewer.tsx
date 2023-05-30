@@ -127,24 +127,7 @@ export const PdfViewer = forwardRef(function PdfViewer(
         );
       }
     },
-  const customTextRenderer = useCallback(
-    (layer: TextLayerItemInternal, pageIndex: number) => {
-      if (
-        highlightedBox &&
-        highlightedBox.type == "text" &&
-        pageIndex == highlightedBox.pageNumber - 1
-      ) {
-        console.log(layer.str);
-        if (
-          layer.str.includes(highlightedBox.content) ||
-          highlightedBox.content.includes(layer.str)
-        ) {
-          return `<mark>${layer.str}</mark>`;
-        }
-      }
-      return layer.str;
-    },
-    [highlightedBox]
+    [highlightedBox, initialPR, constantRatio]
   );
 
   // Use ref for deciding width if its given.
@@ -205,9 +188,6 @@ export const PdfViewer = forwardRef(function PdfViewer(
               <div style={style}>
                 <Page
                   onRenderSuccess={onPdfPageRenderSuccess}
-                  customTextRenderer={(layer) =>
-                    customTextRenderer(layer, index)
-                  }
                   pageIndex={index}
                   width={getWidth()}
                   canvasRef={(el) => {
