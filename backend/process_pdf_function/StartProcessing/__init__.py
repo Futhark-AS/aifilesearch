@@ -13,11 +13,6 @@ import os
 import azure.functions as func
 import azure.durable_functions as df
 
-from azure.storage.blob import BlobServiceClient
-
-# Retrieve the connection string for use with the application. The storage
-connect_str = os.getenv('ENV_AZURE_STORAGE_CONNECTION_STRING')
-
 def orchestrator_function(context: df.DurableOrchestrationContext):
     try:
 
