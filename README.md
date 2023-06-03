@@ -1,4 +1,4 @@
-# Docusearch
+# AI File Search
 ## A simple search engine and chat for your documentation
 
 [Live version](https://aifilesearch.com/)
