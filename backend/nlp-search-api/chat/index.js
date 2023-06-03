@@ -1,13 +1,16 @@
 const { ChatOpenAI } = require("langchain/chat_models/openai");
 const { HumanChatMessage, SystemChatMessage, AIChatMessage } = require("langchain/schema");
 
+
 // import { TokenTextSplitter } from "langchain/text_splitter";
 
 module.exports = async function (context, req, document) {
   const chat = new ChatOpenAI({
     temperature: 0,
-    openAIApiKey: process.env["ENV_OPENAI_API_KEY"], // In Node.js defaults to process.env.OPENAI_API_KEY
-    modelName: "gpt-3.5-turbo",
+    azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+    azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
+    azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
+    azureOpenAIApiVersion: process.env.AZURE_OPENAI_API_VERSION,
   });
   context.log("HTTP trigger function processed a request.");
 

@@ -9,6 +9,7 @@ from azure.cosmos import CosmosClient
 import logging
 import json
 import time
+import re
 import io
 import datetime
 import uuid
@@ -146,10 +147,42 @@ def analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits):
     return all_paragraphs, cost, credits_to_pay, num_pages
 
 
+def check_reference_or_url(paragraph):
+    # Add your regular expressions here
+    regexes = [
+        # APA (journal articles)
+        r'([A-Za-z]+, \w\. (, & [A-Za-z]+, \w\. )* \(\d{4}\)\. .+?\. [A-Za-z]+, \d{1,3}\(\d{1,3}\), \d{1,5}\-\d{1,5}\.)',
+        # MLA (journal articles)
+        r'([A-Za-z]+, [A-Za-z]+ (, and [A-Za-z]+ [A-Za-z]+ )*\. “.+?” .+?, vol\. \d+, no\. \d+, \d{4}, pp\. \d+-\d+.)',
+        # Chicago (journal articles)
+        r'([A-Za-z]+, [A-Za-z]+ (, and [A-Za-z]+ [A-Za-z]+ )*\. “.+?” .+? \d+, no\. \d+ \(\d{4}\): \d+-\d+.)',
+        # Harvard (journal articles)
+        r'([A-Za-z]+, [A-Za-z]+ (, and [A-Za-z]+ [A-Za-z]+ )*\. \(\d{4}\) .+? .+?, \d{1,3}\(\d{1,3}\), pp\. \d{1,5}-\d{1,5}\.)',
+        # IEEE (journal articles)
+        r'(\[[0-9]+\] [A-Za-z]+\. [A-Za-z]+ (, "[A-Za-z]+\. [A-Za-z]+", )* ".*", .+, vol\. \d+, no\. \d+, pp\. \d+-\d+, \d{4}\.)',
+        # Vancouver (journal articles)
+        r'([A-Za-z]+ [A-Za-z]+ (, [A-Za-z]+ [A-Za-z]+ )*\. .+?\. .+?\. \d{4};\d+:\d+-\d+\.)',
+        # URLs
+        r'(https?://[^\s]+)',
+        # APA (books)
+        r'([A-Za-z]+, \w\. (, & [A-Za-z]+, \w\. )* \(\d{4}\)\. .+?\. [A-Za-z]+\.)',
+        # APA (online articles)
+        r'([A-Za-z]+, \w\. (, & [A-Za-z]+, \w\. )* \(\d{4}, \w+ \d+\)\. .+?\. .+?\. https?://[^\s]+)',
+        # Last name, Initial
+        r'([A-Za-z]+, \w\.)'
+    ]
+
+    
+    for regex in regexes:
+        if re.search(regex, paragraph):
+            return True  # If paragraph matches any regex, return True
+
+    return False  # If paragraph doesn't match any regex, return False
+
 
 # ---------- Combine and clean paragraphs ----------
 def combine_and_clean_paragraphs(paragraphs):
-    min_paragraph_length = 50
+    min_paragraph_length = 75
     cleaned_paragraphs = []
 
     for paragraph in paragraphs:
@@ -159,6 +192,12 @@ def combine_and_clean_paragraphs(paragraphs):
         if len(content) < min_paragraph_length: #this works OK, but it's not perfect
             #remove it
             # logging.info("Removing: '" + content + "' at page " + str(page_number) + " of file " + paragraph["file_name"])
+            continue
+    
+        # check if the paragraph is a reference or a URL
+        if check_reference_or_url(content):
+            # remove
+            logging.info("Removing reference or URL: '" + content + "' at page " + str(page_number) + " of file " + paragraph["file_name"])
             continue
 
         else:
@@ -254,6 +293,13 @@ def split_long_paragraphs(paragraphs):
     
 
 # ---------- Embed paragraphs ----------
+# openai.api_type = "azure"
+# openai.api_key = os.getenv("AZURE_OPENAI_API_KEY")
+# openai.api_base = os.getenv("AZURE_OPENAI_API_INSTANCE_NAME") 
+# openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+# engine = os.getenv("AZURE_OPENAI_API_DEPLOYMENT_NAME_EMBEDDINGS")
+
+engine = "text-embedding-ada-002"
 openai.api_key = os.getenv("ENV_OPENAI_API_KEY")
 pinecone.init(
     api_key=os.getenv("ENV_PINECONE_API_KEY"),
@@ -313,7 +359,7 @@ def embed_paragraphs(paragraphs, namespace, index_name):
         retry = True
         while retry:
             try:
-                res = openai.Embedding.create(input=content_batch, engine="text-embedding-ada-002")
+                res = openai.Embedding.create(input=content_batch, engine=engine)
                 retry = False
             except Exception as e:
                 logging.info("Error in embedding: "+ str(e))
@@ -451,7 +497,7 @@ def main(settings) -> str:
     retry = True
     while retry:
         try:
-            res = openai.Embedding.create(input=["test"], engine="text-embedding-ada-002")
+            res = openai.Embedding.create(input=["test"], engine=engine)
             retry = False
         except Exception as e:
             logging.info("OPENAI NOT WORKING: "+ str(e))
@@ -483,12 +529,14 @@ def main(settings) -> str:
 
     paragraphs, cost, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
 
-    # if blob_name.endswith('.pdf'):
-    #     paragraphs, cost, credits_to_pay, num_pages = analyze_read(blob, blob_name, PRICE_PER_1000_PAGES, user_credits)
-    # elif blob_name.endswith('.docx'):
-    #     paragraphs, cost, credits_to_pay, num_pages = extract_text_from_doc(blob, PRICE_PER_1000_PAGES, user_credits)
-    # elif blob_name.endswith('.txt'):
-    #     paragraphs, cost, credits_to_pay, num_pages = extract_text_from_txt(blob, PRICE_PER_1000_PAGES, user_credits)
+    # Write paragraphs to a JSON file in the blob storage with the same name and then .json
+    try:
+        json_blob_name = blob_name.split('.pdf')[0] + '-ocr.json'
+        json_blob_client = container_client.get_blob_client(json_blob_name)
+        json_blob_client.upload_blob(json.dumps(paragraphs), overwrite=True)
+        logging.info("Wrote paragraphs to JSON file at " + json_blob_name)
+    except Exception as e:
+        logging.warning("Could not write paragraphs to JSON file: " + str(e))
 
     logging.info(f"Number of paragraphs: {len(paragraphs)}")
 
