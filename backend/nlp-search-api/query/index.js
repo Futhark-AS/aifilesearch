@@ -1,77 +1,10 @@
+const { MilvusClient } = require("@zilliz/milvus2-sdk-node");
 const axios = require("axios");
 
-const apiKey = process.env["ENV_PINECONE_API_KEY"]
-const project_name = process.env["ENV_PINECONE_PROJECT_NAME"]
-const environment = process.env["ENV_PINECONE_ENVIRONMENT"]
-
-const baseUrl = (index_name, project_name, environment) => `https://${index_name}-${project_name}.svc.${environment}.pinecone.io/`
-
-const request = async (method, path, body, index_name, project_name, environment) => {
-  const url = baseUrl(index_name, project_name, environment) + path;
-  const headers = {
-    'Content-Type': 'application/json',
-    'Api-Key': apiKey,
-  };
-  const response = await axios({
-    url, method, data:body, headers
-  });
-  // if response 2xx return data
-  if(response.status >= 200 && response.status < 300){
-    return response.data;
-  }
-};
-
-
-// body has this format:
-/*
-{
-     "includeValues": "false",
-     "includeMetadata": true,
-     "vector": [
-          1,
-          2,
-          3,
-          ...
-     ],
-     "namespace": "example-namespace",
-     "topK": 10
-}
-*/
-//url = /query
-const query = async (namespace, vector, topK, index_name, project_name, environment) => {
-    const body = {
-        namespace,
-        vector,
-        topK,
-        includeMetadata: true,
-        // filter: {
-        //     content: {
-        //         $ne: "1"
-        //   }
-        // }
-    };
-    const res = await request('POST', 'query', body, index_name, project_name, environment);
-  
-    //.log(res.matches);
-    // transform each match.bounding_box into json object
-    const matches = res.matches.map(match => {
-        return {
-            ...match,
-            metadata: {
-                ...match.metadata,
-                bounding_box: match.metadata.bounding_box ? JSON.parse(match.metadata.bounding_box): null,
-            }
-        }
-    });
-    return matches;
-}
-
-// describe index stats
-// url : describe_index_stats
-const describeIndexStats = async (index_name, project_name, environment) => {
-    return request('POST', 'describe_index_stats', {}, index_name, project_name, environment);
-}
-
+const client = new MilvusClient({
+  address: process.env["ENV_MILVUS_ADDRESS"],
+  token: process.env["ENV_MILVUS_API_KEY"],
+});
 
 const getEmbedding = async (context, text) => {
   const url = "https://api.openai.com/v1/embeddings";
@@ -88,24 +21,42 @@ const getEmbedding = async (context, text) => {
   return response.data.data[0].embedding;
 };
 
+// {
+//   status: { error_code: 'Success', reason: '', code: 0 },
+//   results: [
+//     { score: 0, id: '513', word_count: '3' },
+//     { score: 6.3357133865356445, id: '562', word_count: '1' }
+// ...
+//   ]
+// }
+const query = async (collection, vector, output_fields, limit) => {
+  const res = await client.search({
+    collection_name: collection,
+    vector: vector,
+    output_fields: output_fields,
+    limit: limit,
+  });
 
+  if (res.status.error_code !== "Success") {
+    console.error(
+      "Could not query milvus index: ",
+      res.status.error_code,
+      res.status.reason
+    );
+  }
 
+  return res.results;
+};
 
 module.exports = async function (context, req, document) {
   await context.log("JavaScript HTTP trigger function processed a request.");
 
-
-  try{
-    // get X-MS-CLIENT-PRINCIPAL-ID and X-MS-CLIENT-PRINCIPAL-NAME headers
-    // from request
+  try {
     const uid = req.headers["x-ms-client-principal-id"];
-    //const client_principal_name = req.headers["x-ms-client-principal-name"];
+    const price = (0.0004 * 8000) / 1000;
+    const price_credits = process.env["ENV_DOLLAR_TO_CREDIT"] * price;
 
-    
-    const price = 0.0004*8000/1000
-    const price_credits = process.env["ENV_DOLLAR_TO_CREDIT"]*price
-    
-    if (context.bindings.document.credits < price_credits){
+    if (context.bindings.document.credits < price_credits) {
       context.res = {
         status: 402,
         body: "Not enough credits",
@@ -113,19 +64,17 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    const projects = context.bindings.document.projects
+    const projects = context.bindings.document.projects;
     const prompt = req.body.prompt;
     const project = req.body.project;
-    const namespace = uid + "/" + project
+    const namespace = uid + "/" + project;
 
-    context.log("prompt: ", prompt)
-    context.log("namespace: ", namespace)
-    context.log("Allowed projects for user ", uid, ": ", projects)
+    context.log("prompt: ", prompt);
+    context.log("namespace: ", namespace);
+    context.log("Allowed projects for user ", uid, ": ", projects);
 
     const topK = req.body.topK;
 
-    // if namespace not in allowed_namespaces
-    // return error
     if (!projects.some((p) => p.namespace === namespace)) {
       context.res = {
         status: 403,
@@ -134,11 +83,12 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    index_name = projects.find((p) => p.namespace === namespace).index_name
-
-
+    const collection = projects.find(
+      (p) => p.namespace === namespace
+    ).collection_name;
     const vector = await getEmbedding(context, prompt);
-    if(!vector){
+
+    if (!vector) {
       context.res = {
         status: 500,
         body: "Error getting embedding",
@@ -146,8 +96,14 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    const matches = await query(namespace, vector, topK, index_name, project_name, environment);
-    if(!matches){
+    const matches = await query(
+      collection,
+      vector,
+      ["metadata"],
+      (limit = topK)
+    );
+
+    if (!matches) {
       context.res = {
         status: 500,
         body: "Error querying index",
@@ -155,26 +111,20 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    const body = JSON.stringify({matches}, { encoding: "utf8" });
-    
-
-    // update credits
-    context.bindings.document.credits -= price_credits
-
+    const body = JSON.stringify({ matches }, { encoding: "utf8" });
+    context.bindings.document.credits -= price_credits;
     context.bindings.outputDocument = context.bindings.document;
-    
-    context.res = { 
-      body
+
+    context.res = {
+      body,
     };
-  }
-  catch(error){
-    context.log.error(error)
+  } catch (error) {
+    context.log.error(error);
     context.res = {
       status: 500,
       body: {
-        message: "An internal error occurred"
-      }
+        message: "An internal error occurred",
+      },
     };
   }
-
 };
