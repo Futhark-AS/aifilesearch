@@ -22,7 +22,6 @@ const request = async (method, path, body, index_name, project_name, environment
 };
 
 
-
 // body has this format:
 /*
 {

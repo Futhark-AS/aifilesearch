@@ -38,7 +38,7 @@ module.exports = async function (context, req, document) {
       // post to process-upload without waiting for response
       //fetch("https://process-upload.azurewebsites.net/api/startProcessingDocuments", {
       const res = await fetch(
-        "https://process-upload.azurewebsites.net/api/orchestrators/StartProcessing",
+        "https://process-upload.azurewebsites.net/api/startProcessing",
         {
           method: "POST",
           headers: {
