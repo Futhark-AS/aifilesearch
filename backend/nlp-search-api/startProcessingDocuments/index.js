@@ -19,11 +19,11 @@ module.exports = async function (context, req, document) {
         status: 404,
         body: "Project does not exist",
       };
-      return
+      return;
     }
 
     // Get pinecone index name from project in cosmosdb
-    const indexName = cosmosProject.index_name
+    const indexName = cosmosProject.index_name;
 
     // check if all file_names start with uid
     if (file_names.some((name) => !name.startsWith(user_id))) {
@@ -38,7 +38,7 @@ module.exports = async function (context, req, document) {
       // post to process-upload without waiting for response
       //fetch("https://process-upload.azurewebsites.net/api/startProcessingDocuments", {
       const res = await fetch(
-        "https://process-upload.azurewebsites.net/api/startProcessing",
+        "https://process-upload.azurewebsites.net/api/startprocessing",
         {
           method: "POST",
           headers: {

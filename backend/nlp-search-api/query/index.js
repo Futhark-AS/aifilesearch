@@ -83,9 +83,6 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    const collection = projects.find(
-      (p) => p.namespace === namespace
-    ).collection_name;
     const vector = await getEmbedding(context, prompt);
 
     if (!vector) {
@@ -96,12 +93,8 @@ module.exports = async function (context, req, document) {
       return;
     }
 
-    const matches = await query(
-      collection,
-      vector,
-      ["metadata"],
-      (limit = topK)
-    );
+    const collection = "aifilesearch";
+    const matches = await query(collection, vector, ["metadata"], topK);
 
     if (!matches) {
       context.res = {
