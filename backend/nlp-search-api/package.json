@@ -12,7 +12,7 @@
   "dependencies": {
     "@azure/cosmos": "^3.17.3",
     "@azure/openai": "^1.0.0-beta.1",
-    "@zilliz/milvus2-sdk-node": "^2.3.1",
+    "@zilliz/milvus2-sdk-node": "^2.2.24",
     "axios": "^1.2.2",
     "azure-storage": "^2.10.7",
     "fetch": "^1.1.0",
