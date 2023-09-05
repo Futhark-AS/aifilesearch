@@ -4,7 +4,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PromptMatch, useFiles } from "../requests";
-import { Card } from "@mantine/core";
+import { Card, Loader } from "@mantine/core";
 import { encodePdfName } from "../utils";
 import { UploadFilesBox } from "./UploadFilesBox";
 
@@ -60,6 +60,7 @@ export function ProjectFiles() {
   const [uploadFilesOpen, setUploadFilesOpen] = useState(false);
 
   const { files, isLoading } = useFiles(projectName);
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
 
   return (
     <div className="flex h-full flex-col">
@@ -92,6 +93,11 @@ export function ProjectFiles() {
               No files uploaded yet
             </div>
           )}
+          {fileUploadLoading && (
+            <div className="flex justify-center">
+              <Loader size="xl" />
+            </div>
+          )}
         </div>
       )}
       <Button
@@ -102,7 +108,11 @@ export function ProjectFiles() {
       >
         Upload file
       </Button>
-      <UploadFilesBox open={uploadFilesOpen} setOpen={setUploadFilesOpen} />
+      <UploadFilesBox
+        open={uploadFilesOpen}
+        setOpen={setUploadFilesOpen}
+        setUploading={setFileUploadLoading}
+      />
     </div>
   );
 }

@@ -8,6 +8,9 @@ import { showNotification } from "@mantine/notifications";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { handleFileUpload, pdfNumberOfPages } from "../projectAPI";
+import { useAppDispatch } from "@/redux/hooks";
+import { setUser } from "@/features/auth/authSlice";
+import { getUser } from "@/features/auth/api";
 
 type FileInfo = {
   name: string;
@@ -29,11 +32,27 @@ const extractFileInfo = async (file: FileValidated): Promise<FileInfo> => {
 interface Props {
   open: boolean;
   setOpen(open: boolean): void;
+  setUploading(uploading: boolean): void;
 }
 
-export function UploadFilesBox({ open, setOpen }: Props) {
+export function UploadFilesBox({ open, setOpen, setUploading }: Props) {
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
   const { user } = useAuth({ refetch: true });
+  const dispatch = useAppDispatch();
+
+  const refetchUser = async () => {
+    const userResp = await getUser();
+    dispatch(
+      setUser({
+        email: userResp.email,
+        name: userResp.name,
+        id: userResp.id,
+        credits: userResp.credits,
+        isLoggedIn: true,
+        projects: userResp.projects,
+      })
+    );
+  };
 
   const [files, setFiles] = useState<FileValidated[]>([]);
   const [fileInfo, setFileInfo] = useState<FileInfo[]>([]);
@@ -41,9 +60,8 @@ export function UploadFilesBox({ open, setOpen }: Props) {
   const showFileUploadedMessage = () => {
     showNotification({
       autoClose: false,
-      title: "File upload started",
-      message:
-        "Your files are processing! They will be available in your project soon.",
+      title: "Success",
+      message: "Your file was successfully uploaded!",
     });
   };
 
@@ -85,17 +103,29 @@ export function UploadFilesBox({ open, setOpen }: Props) {
   }, [setOpen]);
 
   const handleFilesUpload = async () => {
+    setUploading(true);
     // call backend with files to upload
-
     try {
       handleFileUpload(
         files.map((file) => file.file),
         user.id,
         projectName
-      );
-
-      showFileUploadedMessage();
+      )
+        .then((res) => {
+          setUploading(false);
+          showFileUploadedMessage();
+          refetchUser();
+          console.log("in then", res);
+        })
+        .catch((err) => {
+          setUploading(false);
+          console.log("in catch", err);
+          showError(
+            "Unfortunately, there occured an error while uploading the file. Please try again later."
+          );
+        });
     } catch (error) {
+      setUploading(false);
       showError(
         "Unfortunately, there occured an error while uploading the file. Please try again later."
       );

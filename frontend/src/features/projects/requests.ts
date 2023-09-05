@@ -153,7 +153,7 @@ export const startProcessingReq = async (
     project: project,
   });
 
-  return startProcessingResult.parse(res.data);
+  return res;
 };
 
 const processingStatus = createManyUnion([
@@ -217,9 +217,10 @@ export const postFile = async (uid: string, file: File, project: string) => {
 
 export const useFiles = (project: string) => {
   const { user, isLoading } = useAuth();
-  const files = user?.projects?.filter((p) => p.name === project)[0]?.files || [];
+  const files =
+    user?.projects?.filter((p) => p.name === project)[0]?.files || [];
 
-  return {files, isLoading};
+  return { files, isLoading };
 };
 
 export const createProject = async (name: string) => {
@@ -235,7 +236,7 @@ export const creditsPaymentIntent = async (amount: number) => {
     // const res = await azureAxios.post(URLS.payment, {
     paymentType: "credits",
     credits: amount,
-    testing: !isProd
+    testing: !isProd,
   });
 
   return z

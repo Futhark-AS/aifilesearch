@@ -8,8 +8,8 @@ import { PDFDocument } from 'pdf-lib'
 
 /**
  * Start processing a given list of files (uploading)
- * @param filenames 
- * @param project 
+ * @param filenames
+ * @param project
  * @param resolve callback to call when processing is completed successfully
  * @param reject callback to call when processing is completed with an error
  */
@@ -19,53 +19,12 @@ export const startProcessing = async (
   resolve: (val: unknown) => void,
   reject: (e: any) => void
 ) => {
-  const res = await startProcessingReq(filenames, project);
-
-  // Azure function timeout is 10 minutes, so we will check the status every minute 11 times for good measure
-  const STATUS_RETRIES = 11;
-  const STATUS_RETRY_DELAY = 60*1000; // 60 seconds
-
-  // Check the status of the processing until recieved completed, and no error
-  const clearInterval = setIntervalX(
-    async () => {
-      let processRes;
-      try {
-        processRes = await getProcessingStatusReq(res.uri);
-      } catch (e) {
-        reject(e);
-        clearInterval();
-        return;
-      }
-
-      switch (processRes.status) {
-        case "Completed":
-          if (processRes.isError) {
-            reject(processRes.error);
-            console.log(`Error: ${processRes.error}`);
-          }
-          resolve("success");
-          clearInterval();
-          break;
-        case "Running":
-          console.log(`Files uploading... (status: ${status}})`);
-          break;
-        case "Pending":
-          console.log(`Files uploading... (status: ${status}})`);
-          break;
-        default:
-          reject(
-            "One process check recieved an unexpected status: " +
-              processRes.status
-          );
-          clearInterval();
-      }
-    },
-    STATUS_RETRY_DELAY,
-    STATUS_RETRIES,
-    () => {
-      reject("Processing timed out");
-    }
-  );
+  try {
+    const res = await startProcessingReq(filenames, project);
+    resolve(res);
+  } catch (e) {
+    reject("Error starting processing: " + e);
+  }
 };
 
 export const pdfNumberOfPages = async (file: File) => {
