@@ -29,12 +29,13 @@ const getEmbedding = async (context, text) => {
 // ...
 //   ]
 // }
-const query = async (collection, vector, output_fields, limit) => {
+const query = async (collection, vector, output_fields, limit, namespace) => {
   const res = await client.search({
     collection_name: collection,
     vector: vector,
     output_fields: output_fields,
     limit: limit,
+    filter: `metadata["namespace"] == "${namespace}"`,
   });
 
   if (res.status.error_code !== "Success") {
@@ -94,7 +95,13 @@ module.exports = async function (context, req, document) {
     }
 
     const collection = "aifilesearch";
-    const matches = await query(collection, vector, ["metadata"], topK);
+    const matches = await query(
+      collection,
+      vector,
+      ["metadata"],
+      topK,
+      namespace
+    );
 
     if (!matches) {
       context.res = {
