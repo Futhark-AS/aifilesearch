@@ -7,7 +7,18 @@ import { useLocalStorage } from "@mantine/hooks";
 import React, { useEffect, useRef, useState } from "react";
 import { PromptMatch, searchProjectWithPromptReq } from "../../requests";
 import ChatMessage from "./ChatMessage";
-import { DEFAULT_ASSISTANT_FIRST_PROMPT, SYSTEM_PROMPT } from "./prompts";
+import {
+  DEFAULT_ASSISTANT_FIRST_PROMPT,
+  SYSTEM_PROMPT,
+  SYSTEM_PROMPT_REMINDER,
+} from "./prompts";
+import { TokenTextSplitter } from "langchain/text_splitter";
+
+const splitter = new TokenTextSplitter({
+  encodingName: "gpt2",
+  chunkSize: 1,
+  chunkOverlap: 0,
+});
 
 export type Message =
   | {
@@ -27,6 +38,40 @@ export type Message =
         [id: number]: PromptMatch;
       };
     };
+
+async function countTokens(inputString: string) {
+  const output = await splitter.createDocuments([inputString]);
+  return output.length;
+}
+
+async function constructDocuments(
+  matches: string[],
+  maxTokens: number
+): Promise<string> {
+  const documents: string[] = [];
+
+  // Create a base prompt with the previous question and answer
+  const basePrompt = `documents: [`;
+  let returnPrompt = basePrompt;
+
+  // Iteratively add matches until the token limit is reached or exceeded
+  for (let i = 0; i < matches.length; i++) {
+    const matchStr = `{id: ${i}, text: "${matches[i]}"}`;
+    const tempPrompt = `${basePrompt}${documents.join(",")},${matchStr}]`;
+
+    const tokens = await countTokens(tempPrompt);
+    // const tokens = 0;
+
+    if (tokens <= maxTokens) {
+      documents.push(matchStr);
+      returnPrompt = tempPrompt;
+    } else {
+      break;
+    }
+  }
+
+  return returnPrompt;
+}
 
 interface Props {
   projectName: string;
@@ -62,7 +107,7 @@ const DEFAULT_MESSAGES = [
     role: "assistant",
     type: "simple",
     content: DEFAULT_ASSISTANT_FIRST_PROMPT,
-  }
+  },
 ] as Message[];
 
 export function ProjectChat({ getAiResponse, projectName }: Props) {
@@ -105,7 +150,9 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
             type: "text",
             id: i,
             position: msg.role === "user" ? "right" : "left",
-            text: (<ChatMessage message={msg} initialMessage={i == 0} />) as unknown as string,
+            text: (
+              <ChatMessage message={msg} initialMessage={i == 0} />
+            ) as unknown as string,
             title: msg.role === "user" ? "You" : "AI",
             focus: false,
             date: new Date(),
@@ -147,17 +194,35 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
                 projectName
               );
 
-              const userPrompt = `
-            documents: [${matches.map(
-              (match, i) =>
-                `{id: ${i}, text: "${match.highlightedBox.content}"}`
-            )}]
-            query: ${values.value}
-            `;
+              // if messages is 2 or more, then we need to get the number of tokens in the previous messages
+              // otherwise, we can just use 0
+
+              const numTokensInPreviousMessages =
+                (await countTokens(
+                  messages
+                    .slice(-2)
+                    .map((msg) => msg.content)
+                    .join("")
+                )) + 8;
+
+              const query_tokens = await countTokens(values.value);
+              const tokensReminder = await countTokens(SYSTEM_PROMPT_REMINDER);
+              const answerBuffer = 400;
+
+              const documentsContextString = await constructDocuments(
+                matches.map((match) => match.highlightedBox.content),
+                4096 -
+                  numTokensInPreviousMessages -
+                  query_tokens -
+                  tokensReminder -
+                  answerBuffer
+              );
+
+              const finalPrompt = `${documentsContextString}\n\n${SYSTEM_PROMPT_REMINDER}\n\nquery: "${values.value}"`;
 
               const msg = {
                 role: "user",
-                content: userPrompt,
+                content: finalPrompt,
               } as const;
 
               const newMessages = [...messages, msg];

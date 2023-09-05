@@ -120,7 +120,7 @@ export const searchProjectWithPromptReq = async (
     res = await azureAxios.post(URLS.query, {
       prompt,
       project,
-      topK: 10,
+      topK: 30,
     });
   }
 
