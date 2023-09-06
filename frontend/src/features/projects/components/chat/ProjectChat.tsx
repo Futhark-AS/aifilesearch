@@ -225,7 +225,7 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
                 content: finalPrompt,
               } as const;
 
-              const newMessages = [...messages, msg];
+              const newMessages = [...messages.slice(-2), msg];
 
               const newMessage = await getAiResponse(newMessages);
               setLoading(false);
