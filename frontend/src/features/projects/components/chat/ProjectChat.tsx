@@ -208,6 +208,7 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
               const query_tokens = await countTokens(values.value);
               const tokensReminder = await countTokens(SYSTEM_PROMPT_REMINDER);
               const answerBuffer = 400;
+              const systemChatTokens = tokensReminder;
 
               const documentsContextString = await constructDocuments(
                 matches.map((match) => match.highlightedBox.content),
@@ -215,6 +216,7 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
                   numTokensInPreviousMessages -
                   query_tokens -
                   tokensReminder -
+                  systemChatTokens -
                   answerBuffer
               );
 
@@ -225,7 +227,8 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
                 content: finalPrompt,
               } as const;
 
-              const newMessages = [...messages.slice(-2), msg];
+              // system prompt + last question and answer + new message
+              const newMessages = [messages[0], ...messages.slice(-2), msg];
 
               const newMessage = await getAiResponse(newMessages);
               setLoading(false);
