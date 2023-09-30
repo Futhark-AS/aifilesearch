@@ -33,6 +33,23 @@ from docx import Document
 
 import azure.functions as func
 
+import time
+
+def current_date_iso8601():
+    # Get the local time in struct_time format
+    t = time.localtime()
+    
+    # Use strftime to format the date and time in ISO 8601 format
+    date_time = time.strftime('%Y-%m-%dT%H:%M:%S', t)
+
+    # Calculate timezone offset
+    utc_offset_sec = time.altzone if t.tm_isdst else time.timezone
+    utc_offset = -utc_offset_sec // 3600
+    sign = '+' if utc_offset >= 0 else '-'
+    utc_offset_str = '{}{:02d}:{:02d}'.format(sign, abs(utc_offset), (abs(utc_offset_sec) // 60) % 60)
+
+    return '{}{}'.format(date_time, utc_offset_str)
+
 
 class NotEnoughCreditsError(Exception):
     """Raised when the user does not have enough credits to process the pdf"""
@@ -563,7 +580,8 @@ def update_cosmos_user(user, namespace, cost, credits_to_pay, num_pages, blob_na
                     "credits": credits_to_pay,
                     "num_pages": num_pages,
                     "file_name": blob_name.split("/")[-1],
-                    "num_paragraphs": num_paragraphs
+                    "num_paragraphs": num_paragraphs,
+                    "uploaded_date": current_date_iso8601()
                 }
 
                 if "files" in project:

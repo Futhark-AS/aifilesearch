@@ -18,6 +18,7 @@ export const userSchema = z.object({
             num_pages: z.number(),
             file_name: z.string(),
             num_paragraphs: z.number().optional(),
+            uploaded_date: z.string().optional()
           })
         ),
       })
