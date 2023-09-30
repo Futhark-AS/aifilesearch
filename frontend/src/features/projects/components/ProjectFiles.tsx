@@ -1,61 +1,58 @@
 import { Button } from "@/components/Button";
 import { ProjectFile } from "@/features/auth/types";
-import { useAppDispatch } from "@/redux/hooks";
+import { Card, Loader, Table } from "@mantine/core";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { PromptMatch, useFiles } from "../requests";
-import { Card, Loader } from "@mantine/core";
+import { useFiles } from "../requests";
 import { encodePdfName } from "../utils";
 import { UploadFilesBox } from "./UploadFilesBox";
+import { ProjectPage } from "./ProjectPage";
 
 interface FileProps {
   file: ProjectFile;
   fileOnClick?: (file: ProjectFile) => void;
-  itemOnActivate?: (result: ProjectFile) => void;
-  itemOnDeactivate?: (result: ProjectFile) => void;
-  active: boolean;
-  last: boolean;
 }
 
-function File({
-  file,
-  fileOnClick,
-  itemOnActivate,
-  itemOnDeactivate,
-  active,
-  last = false,
-}: FileProps) {
+function File({ file, fileOnClick }: FileProps) {
   return (
-    <Card className="mb-2 flex w-full transform px-4 transition duration-150 hover:scale-105 hover:cursor-pointer">
+    <Card className="mb-2 max-w-[250px] transform px-4 transition duration-150 hover:scale-105 hover:cursor-pointer">
       <button
         onClick={() => {
           fileOnClick && fileOnClick(file);
-          active && itemOnDeactivate && itemOnDeactivate(file);
-          !active && itemOnActivate && itemOnActivate(file);
         }}
-        className={`w-full py-4 text-left ${active && "font-bold "}`}
+        className={`p-4 text-left`}
       >
-        <div className="mx-4 flex">
-          <div className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-            {file.fileName}
-          </div>
+        <div className="overflow-hidden overflow-ellipsis whitespace-nowrap">
+          <h3 className="mb-4 text-lg font-semibold">{file.fileName}</h3>
+          {/* table with metadata */}
+          <Table fontSize={"xs"}>
+            <tbody>
+              <tr>
+                <td>Created at:</td>
+                <td>{file.uploadedDate || "Unknown"}</td>
+              </tr>
+              <tr>
+                <td>Num pages</td>
+                <td>{file.pages}</td>
+              </tr>
+              <tr>
+                <td>Num paragraphs</td>
+                <td>{file.numParagraphs || "Unknown"}</td>
+              </tr>
+              <tr>
+                <td>Price</td>
+                <td>{file.price}</td>
+              </tr>
+            </tbody>
+          </Table>
         </div>
       </button>
-
-      {active && (
-        <div className="ml-4">
-          <p className="text-sm">Pages: {file.pages}</p>
-        </div>
-      )}
-
-      {!last && <hr className="my-2" />}
     </Card>
   );
 }
 
 export function ProjectFiles() {
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
-  const [selectedFile, setSelectedFile] = useState<number | null>(null);
   const navigate = useNavigate();
   const [uploadFilesOpen, setUploadFilesOpen] = useState(false);
 
@@ -63,31 +60,31 @@ export function ProjectFiles() {
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex justify-between">
-        <h2 className="text-left text-3xl font-extrabold leading-normal text-gray-700">
-          All Files
-        </h2>
-      </div>
+    <ProjectPage title="Project Files">
+      <Button
+        variant="inverse"
+        size="sm"
+        className="mt-4"
+        onClick={() => setUploadFilesOpen(true)}
+      >
+        Upload new file
+      </Button>
       {isLoading ? (
         <div className="text-sm italic text-gray-500">Loading files...</div>
       ) : (
-        <div>
-          {files.map((file, i) => (
-            <File
-              active={selectedFile == i}
-              file={file}
-              fileOnClick={(file) => {
-                const name = encodePdfName(file.blobName);
-                navigate(`/app/projects/${projectName}/pdf/${name}`);
-
-                const newSelectedFile = selectedFile == i ? null : i;
-                setSelectedFile(newSelectedFile);
-              }}
-              key={file.fileName + i}
-              last={i == files.length - 1}
-            />
-          ))}
+        <div className="auto-responsive grid mt-6">
+          {files
+            // .flatMap((file) => Array(8).fill(file))
+            .map((file, i) => (
+              <File
+                file={file}
+                fileOnClick={(file) => {
+                  const name = encodePdfName(file.blobName);
+                  navigate(`/app/projects/${projectName}/pdf/${name}`);
+                }}
+                key={file.fileName + i}
+              />
+            ))}
           {files.length == 0 && (
             <div className="text-sm italic text-gray-500">
               No files uploaded yet
@@ -100,19 +97,11 @@ export function ProjectFiles() {
           )}
         </div>
       )}
-      <Button
-        variant="inverse"
-        size="sm"
-        className="mt-4"
-        onClick={() => setUploadFilesOpen(true)}
-      >
-        Upload file
-      </Button>
       <UploadFilesBox
         open={uploadFilesOpen}
         setOpen={setUploadFilesOpen}
         setUploading={setFileUploadLoading}
       />
-    </div>
+    </ProjectPage>
   );
 }

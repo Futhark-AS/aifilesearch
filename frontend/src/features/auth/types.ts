@@ -8,6 +8,8 @@ export type ProjectFile = {
   price: number;
   pages: number;
   fileName: string;
+  numParagraphs: number | null;
+  uploadedDate: string | null;
 };
 
 export type User = {

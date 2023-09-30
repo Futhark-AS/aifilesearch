@@ -6,7 +6,6 @@ import { Message } from "./components";
 import { createManyUnion } from "./utils";
 import { mappings } from "./components/chat/exampleResp";
 import { useAuth } from "../auth/hooks/useAuth";
-import { ProjectFile } from "../auth/types";
 import { isProd } from "@/utils/general";
 
 export const URLS = {

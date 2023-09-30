@@ -36,6 +36,8 @@ const DBUserSchema = z.object({
           credits: z.number(),
           num_pages: z.number(),
           file_name: z.string(),
+          num_paragraphs: z.number().optional(),
+          uploaded_date: z.string().optional(),
         })
       ),
     })
@@ -58,6 +60,8 @@ const mapper = (user: DBUser): User => {
         price: file.price,
         pages: file.num_pages,
         fileName: file.file_name,
+        numParagraphs: file.num_paragraphs || null,
+        uploadedDate: file.uploaded_date || null,
       })),
     })),
   };

@@ -7,6 +7,7 @@ import { PromptMatch, searchProjectWithPromptReq } from "../requests";
 import { encodePdfName, extractFileName } from "../utils";
 import { useAppDispatch } from "@/redux/hooks";
 import { setHighlightedResult } from "../projectSlice";
+import { ProjectPage } from "./ProjectPage";
 
 export function ProjectFileSearch() {
   const [results, setResults] = useState<PromptMatch[]>([]);
@@ -28,13 +29,7 @@ export function ProjectFileSearch() {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex justify-between">
-        <h2 className="text-left text-3xl font-extrabold leading-normal text-gray-700">
-          File Search
-        </h2>
-      </div>
-
+    <ProjectPage title="Search">
       <div className="mt-4 flex-1 overflow-y-scroll">
         {loading && <Spinner size="sm" className=" ml-2 inline" />}
         {results?.length !== 0 && (
@@ -84,6 +79,6 @@ export function ProjectFileSearch() {
           </>
         )}
       </Form>
-    </div>
+    </ProjectPage>
   );
 }

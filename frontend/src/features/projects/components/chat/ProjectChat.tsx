@@ -13,6 +13,7 @@ import {
   SYSTEM_PROMPT_REMINDER,
 } from "./prompts";
 import { TokenTextSplitter } from "langchain/text_splitter";
+import { ProjectPage } from "../ProjectPage";
 
 const splitter = new TokenTextSplitter({
   encodingName: "gpt2",
@@ -127,7 +128,7 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
 
   return (
     // scroll box
-    <div className="flex h-full flex-col">
+    <ProjectPage title={ 
       <div className="flex justify-between">
         <h2 className="text-left text-3xl font-extrabold leading-normal text-gray-700">
           Chat
@@ -143,6 +144,7 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
           </button>
         </div>
       </div>
+      }>
 
       <div className="mt-4 flex-1 overflow-y-scroll" ref={chatBoxRef}>
         <Chat
@@ -270,6 +272,6 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
           }}
         </Form>
       </div>
-    </div>
+    </ProjectPage>
   );
 }
