@@ -13,9 +13,15 @@ interface FileProps {
   fileOnClick?: (file: ProjectFile) => void;
 }
 
+const showIso8601Date = (date: string) => {
+  const d = new Date(date);
+  // format as: 2021-09-01 12:00
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
+}
+
 function File({ file, fileOnClick }: FileProps) {
   return (
-    <Card className="mb-2 max-w-[250px] transform px-4 transition duration-150 hover:scale-105 hover:cursor-pointer">
+    <Card className="mb-2 w-[300px] transform px-4 transition duration-150 hover:scale-105 hover:cursor-pointer">
       <button
         onClick={() => {
           fileOnClick && fileOnClick(file);
@@ -29,7 +35,7 @@ function File({ file, fileOnClick }: FileProps) {
             <tbody>
               <tr>
                 <td>Created at:</td>
-                <td>{file.uploadedDate || "Unknown"}</td>
+                <td>{file.uploadedDate ? showIso8601Date(file.uploadedDate) : "Unknown"}</td>
               </tr>
               <tr>
                 <td>Num pages</td>

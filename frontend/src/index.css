@@ -4,8 +4,9 @@
 
 @layer utilities {
     .auto-responsive {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, 310px);
+      /* left align */
+      justify-items: flex-start; /* Add this to align the grid items to the start */
     }
   
     .auto-responsive-lg {

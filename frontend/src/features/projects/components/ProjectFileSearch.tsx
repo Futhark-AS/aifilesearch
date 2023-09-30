@@ -29,8 +29,8 @@ export function ProjectFileSearch() {
   };
 
   return (
-    <ProjectPage title="Search">
-      <div className="mt-4 flex-1 overflow-y-scroll">
+    <ProjectPage title="Search" className="flex h-full flex-col">
+      <div className={`mt-4 flex-1 ${results.length && "overflow-y-scroll"}`}>
         {loading && <Spinner size="sm" className=" ml-2 inline" />}
         {results?.length !== 0 && (
           <>

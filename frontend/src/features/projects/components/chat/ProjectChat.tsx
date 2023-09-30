@@ -128,25 +128,8 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
 
   return (
     // scroll box
-    <ProjectPage title={ 
-      <div className="flex justify-between">
-        <h2 className="text-left text-3xl font-extrabold leading-normal text-gray-700">
-          Chat
-        </h2>
-        <div className="mt-4">
-          <button
-            className="inline-flex items-center rounded bg-gray-200 py-2 px-4 font-bold text-gray-800 hover:bg-gray-300"
-            onClick={() => {
-              setMessages(DEFAULT_MESSAGES);
-            }}
-          >
-            <TrashIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-      }>
-
-      <div className="mt-4 flex-1 overflow-y-scroll" ref={chatBoxRef}>
+    <ProjectPage title={"Chat"} className="flex h-full flex-col">
+      <div className={`mt-4 flex-1 ${messages.length != 2 && "overflow-y-scroll"}`} ref={chatBoxRef}>
         <Chat
           messages={messages.slice(1).map((msg, i) => ({
             type: "text",
@@ -261,13 +244,27 @@ export function ProjectChat({ getAiResponse, projectName }: Props) {
         >
           {({ register, formState }) => {
             return (
-              <>
-                <InputField
-                  label="Message"
-                  error={formState.errors["value"]}
-                  registration={register("value")}
-                />
-              </>
+              <div className="flex">
+                <div className="mr-2 flex-1">
+                  <InputField
+                    label="Message"
+                    error={formState.errors["value"]}
+                    registration={register("value")}
+                  />
+                </div>
+                <div className="flex flex-col justify-end">
+                  <button
+                    type="button"
+                    title="Clear chat"
+                    className="inline-flex h-10 items-center justify-center rounded bg-gray-200 py-2 px-4 font-bold text-gray-800 hover:bg-gray-300"
+                    onClick={() => {
+                      setMessages(DEFAULT_MESSAGES);
+                    }}
+                  >
+                    <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
             );
           }}
         </Form>
