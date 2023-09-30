@@ -531,7 +531,7 @@ def extract_text_from_txt(
     return paragraphs, price, credits_to_pay, num_pages
 
 
-def update_cosmos_user(user, namespace, cost, credits_to_pay, num_pages, blob_name):
+def update_cosmos_user(user, namespace, cost, credits_to_pay, num_pages, blob_name, num_paragraphs):
     while True:
         etag = user["_etag"]
 
@@ -563,6 +563,7 @@ def update_cosmos_user(user, namespace, cost, credits_to_pay, num_pages, blob_na
                     "credits": credits_to_pay,
                     "num_pages": num_pages,
                     "file_name": blob_name.split("/")[-1],
+                    "num_paragraphs": num_paragraphs
                 }
 
                 if "files" in project:
@@ -664,7 +665,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # update projects total cost and files in prpoject in cosmos db
     update_cosmos_user(
-        user, namespace, total_cost, credits_to_pay, num_pages, blob_name
+        user, namespace, total_cost, credits_to_pay, num_pages, blob_name, len(split_paragraphs)
     )
 
     logging.info(f"Deleting blob {blob_name}")

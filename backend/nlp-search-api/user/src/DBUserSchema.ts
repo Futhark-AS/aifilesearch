@@ -17,6 +17,7 @@ export const userSchema = z.object({
             credits: z.number(),
             num_pages: z.number(),
             file_name: z.string(),
+            num_paragraphs: z.number().optional(),
           })
         ),
       })
