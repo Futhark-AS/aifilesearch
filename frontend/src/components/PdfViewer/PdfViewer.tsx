@@ -10,21 +10,14 @@ import { VariableSizeList as List } from "react-window";
 
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
-import { Document, Page } from "react-pdf";
+import { Document, Page } from "react-pdf/dist/esm/entry.webpack5";
 
 import { highlightBoundingBox } from "@/features/projects/utils";
 import useMeasure from "@/hooks/useMeasure";
 import { showError } from "@/utils/showError";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { PDFPageProxy } from "pdfjs-dist";
+import { PDFPageProxy } from "react-pdf";
 import { ViewPort, getPageViewports, isDefinedHTMLObjectRef } from "./utils";
-
-import { pdfjs } from 'react-pdf';
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
 
 const FALLBACK_WIDTH = 600;
 export type HighlightedBox =
@@ -159,9 +152,7 @@ export const PdfViewer = forwardRef(function PdfViewer(
 
   return (
     <div>
-      <Document file={file} onLoadSuccess={onDocumentLoadSuccess} onLoadProgress={(prog) => {
-        console.log(prog)
-      }}>
+      <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
         {pdf && pageViewports ? (
           <List
             width={getWidth()}
