@@ -21,7 +21,7 @@ export default function Projects() {
           {isLoading ? (
             <div>Loading...</div>
           ) : user.projects.length ? (
-            user.projects.map((project) => (
+            user.projects.toReversed().map((project) => (
               <Link to={`./projects/${project.name}`} key={project.name}>
                 <Card
                   shadow="sm"
