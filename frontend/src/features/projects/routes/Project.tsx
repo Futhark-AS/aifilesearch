@@ -6,9 +6,9 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { Divider } from "@mantine/core";
-import React, { Ref, forwardRef } from "react";
+import React, { Ref, forwardRef, useEffect } from "react";
 import { useQuery } from "react-query";
-import { Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ProjectChat } from "../components";
 import { ProjectFileSearch } from "../components/ProjectFileSearch";
 import { ProjectFiles } from "../components/ProjectFiles";
@@ -63,6 +63,25 @@ const Project = () => {
   const ref = React.useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation()
+
+
+  useEffect(() => {
+    const a = location.pathname.split("/")
+    switch (a[a.length - 1]) {
+      case "search":
+        dispatch(togglePane(leftBarShowing.search));
+        break;
+        
+      case "files":
+        dispatch(togglePane(leftBarShowing.files));
+        break;
+
+      default:
+        dispatch(togglePane(leftBarShowing.chat));
+        break;
+    }
+  }, [location, dispatch])
 
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
 
@@ -73,7 +92,6 @@ const Project = () => {
           <div className="flex h-16 flex-col justify-center">
             <ChatBubbleLeftIcon
               onClick={() => {
-                dispatch(togglePane(leftBarShowing.chat));
                 navigate("");
               }}
               fontWeight="bold"
@@ -86,7 +104,6 @@ const Project = () => {
           <div className="flex h-16 flex-col justify-center">
             <MagnifyingGlassIcon
               onClick={() => {
-                dispatch(togglePane(leftBarShowing.search));
                 navigate("search");
               }}
               fontWeight="bold"
@@ -99,7 +116,6 @@ const Project = () => {
           <div className="flex h-16 flex-col justify-center">
             <FolderIcon
               onClick={() => {
-                dispatch(togglePane(leftBarShowing.files));
                 navigate("files");
               }}
               className="mx-auto w-5 text-gray-500 hover:cursor-pointer"
