@@ -23,7 +23,6 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("HEI2")
     logging.info(google.protobuf.__version__)
 
-
     try:
         # user_id = "sid:61fdee33eb5fc49c1e82df86d649c8cd"
         req_body = req.get_json()
@@ -82,8 +81,8 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                     else:
                         return {
                             "status": "error",
-                                                    }
-
+                            "message": resp.status,
+                        }
 
         tasks = []
         for blob_name in blob_names:
@@ -113,15 +112,16 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                 res["status"] = "error"
                 res["message"] = f"Error in processing file {blob_names[i]}"
                 break
-                
 
         logging.info(res)
-        return func.HttpResponse(json.dumps(res), status_code=200 if res["status"] == "success" else 500)
+        return func.HttpResponse(
+            json.dumps(res), status_code=200 if res["status"] == "success" else 500
+        )
 
     except Exception as e:
         # e not instance of NotEnoughCreditsError
         logging.info("Error in orchestrator function: " + str(e))
-        res= {
+        res = {
             "status": "error",
             "error": "An internal server error occurred. Please try again later.",
         }
