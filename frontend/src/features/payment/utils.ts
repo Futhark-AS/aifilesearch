@@ -1,5 +1,5 @@
 export const getChatPrice = () => {
-    const GPT_3_PRICE_1000 = 0.002;
+    const GPT_3_PRICE_1000 = 0.005;
     const GPT_3_TOKEN_PRICE = GPT_3_PRICE_1000 / 1000;
   
     const price = GPT_3_TOKEN_PRICE * 8000; 

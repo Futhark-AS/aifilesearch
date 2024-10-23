@@ -6,17 +6,19 @@ const { HumanChatMessage, SystemChatMessage, AIChatMessage } = require("langchai
 
 module.exports = async function (context, req, document) {
   const chat = new ChatOpenAI({
+    model: "gpt-4o",
     temperature: 0,
-    azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
-    azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
-    azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
-    azureOpenAIApiVersion: process.env.AZURE_OPENAI_API_VERSION,
+    api_key: process.env.OPENAI_API_KEY,
+    // azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+    // azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
+    // azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
+    // azureOpenAIApiVersion: process.env.AZURE_OPENAI_API_VERSION,
   });
   context.log("HTTP trigger function processed a request.");
 
   try {
     const uid = req.headers["x-ms-client-principal-id"];
-    const price = (0.002 * 8000) / 1000;
+    const price = (0.005 * 8000) / 1000;
     const price_credits = process.env["ENV_DOLLAR_TO_CREDIT"] * price;
 
     if (context.bindings.document.credits < price_credits) {
