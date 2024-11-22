@@ -97,7 +97,7 @@ const Project = () => {
 
   return (
     <>
-      <main className="flex h-full">
+      <main className="flex h-full overflow-hidden">
         <div className="flex h-full w-12 flex-col border border-r-gray-200">
           <div className="flex h-16 flex-col justify-center">
             <ChatBubbleLeftIcon
