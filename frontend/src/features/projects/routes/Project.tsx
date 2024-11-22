@@ -5,10 +5,10 @@ import {
   FolderIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { Divider } from "@mantine/core";
-import React, { Ref, forwardRef, useEffect } from "react";
+import { Button, Divider } from "@mantine/core";
+import React, { Ref, RefObject, forwardRef, useEffect, useState } from "react";
 import { useQuery } from "react-query";
-import { Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ProjectChat } from "../components";
 import { ProjectFileSearch } from "../components/ProjectFileSearch";
 import { ProjectFiles } from "../components/ProjectFiles";
@@ -20,6 +20,7 @@ import {
 } from "../projectSlice";
 import { getBlobUri, getNewChatMessage } from "../requests";
 import { decodePdfName } from "../utils";
+import { useLocalStorage } from "@mantine/hooks";
 interface Props {
   _: null;
 }
@@ -35,20 +36,29 @@ const PdfView = forwardRef(function PdfView(
 ) {
   const { pdf: blobName } = useParams();
   const { data: fileUrl, isError } = useFileUrl(decodePdfName(blobName!));
+  const [width, setWidth] = useLocalStorage({key: "pdf-width", defaultValue: 800})
 
-  const highlightedResult = useAppSelector((state) =>
-    selectHighlightedResult(state)
-  );
+  const [searchParams] = useSearchParams();
+  const highlightedBox = searchParams.get("highlightedBox");
+
+  function changeZoom(delta: number) {
+    setWidth(width + delta)
+    window.location.reload()
+  }
 
   return (
-    <div>
+    <div style={{width: `${width}px`}} className={`mx-auto`} ref={parentRef as RefObject<HTMLDivElement>}> 
+    <div className="flex justify-center gap-2">
+      <Button variant="outline" onClick={() => changeZoom(-50)}>Zoom out pdf</Button>
+      <Button variant="outline" onClick={() => changeZoom(50)}>Zoom in pdf</Button>
+    </div>
       {!blobName && <div>no pdf</div>}
       {isError ? (
         <div>error</div>
       ) : fileUrl ? (
         <PdfViewer
           file={fileUrl}
-          highlightedBox={highlightedResult}
+          highlightedBox={highlightedBox ? JSON.parse(highlightedBox) : null}
           ref={parentRef}
         />
       ) : (
@@ -125,7 +135,7 @@ const Project = () => {
             )}
           </div>
         </div>
-        <section className="mx-auto max-h-full flex-1 p-4" ref={ref}>
+        <section className="max-h-full flex-1 p-4">
           <Routes>
             <Route path="pdf/:pdf" element={<PdfView _={null} ref={ref} />} />
             <Route

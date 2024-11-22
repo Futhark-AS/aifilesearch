@@ -2,30 +2,27 @@ import { Form, InputField } from "@/components/Form";
 import { Spinner } from "@/components/Spinner";
 import { Card, Divider } from "@mantine/core";
 import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { PromptMatch, searchProjectWithPromptReq } from "../requests";
 import { encodePdfName, extractFileName } from "../utils";
-import { useAppDispatch } from "@/redux/hooks";
-import { setHighlightedResult } from "../projectSlice";
 import { ProjectPage } from "./ProjectPage";
+import { useLocalStorage } from "@mantine/hooks";
 
 export function ProjectFileSearch() {
-  const [results, setResults] = useState<PromptMatch[]>([]);
   const { id: projectName } = useParams<{ id: string }>() as { id: string };
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+
+  const [results, setResults] = useLocalStorage<PromptMatch[]>({
+    key: "project-search" + projectName || "project-search",
+    defaultValue: [],
+  });
 
   const search = async (value: string) => {
     setLoading(true);
     const res = await searchProjectWithPromptReq(value, projectName);
     setLoading(false);
     setResults(res);
-  };
-
-  const itemOnClick = (item: PromptMatch) => {
-    navigate(`/app/projects/${projectName}/pdf/${encodePdfName(item.blobName)}`);
-    dispatch(setHighlightedResult(item.highlightedBox));
   };
 
   return (
@@ -38,24 +35,35 @@ export function ProjectFileSearch() {
             <Divider className="my-2" />
 
             <div className="px-2">
-              {results?.map((result, i) => (
-                <Card
-                  key={result.id}
-                  className="my-2 w-11/12 transform cursor-pointer p-4 px-4 transition duration-100 hover:cursor-pointer hover:bg-slate-50"
-                  onClick={() => itemOnClick(result)}
+              {results?.map((result, i) => {
+
+                console.log(result)
+                
+                return (
+                <Link
+                  to={`/app/projects/${projectName}/pdf/${encodePdfName(
+                    result.blobName
+                  )}?highlightedBox=${JSON.stringify(result.highlightedBox)}`}
                 >
-                  <div className="w-8">{i + 1}</div>
-                  <div>
-                    <h4 className="text-md">
-                      {extractFileName(result.blobName)}
-                    </h4>
-                    <i className="mb-2 block text-xs">
-                      p. {result.highlightedBox.pageNumber}
-                    </i>
-                    <p className="text-sm">{result.highlightedBox.content}</p>
-                  </div>
-                </Card>
-              ))}
+                  <Card
+                    key={result.id}
+                    className="my-2 w-11/12 transform cursor-pointer p-4 px-4 transition duration-100 hover:cursor-pointer hover:bg-slate-50"
+                  >
+                    <div className="w-8">{i + 1}</div>
+                    <div>
+                      <h4 className="text-md">
+                        {extractFileName(result.blobName)}
+                      </h4>
+                      <i className="mb-2 block text-xs">
+                        p. {result.highlightedBox.pageNumber}
+                      </i>
+                      <p className="text-sm">{result.highlightedBox.content}</p>
+                    </div>
+                  </Card>
+                </Link>
+
+
+              )})}
             </div>
           </>
         )}

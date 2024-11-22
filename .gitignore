@@ -1,4 +1,5 @@
 data/
+frontend-temp/
 test/
 __pycache__/
 output.csv
