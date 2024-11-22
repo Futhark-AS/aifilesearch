@@ -25,7 +25,7 @@ root.render(
       <QueryClientProvider client={queryClient}>
         <GoogleOAuthProvider
           clientId={
-            "1041392894738-9vvp25cehujuecelejar3kqsoh203j6p.apps.googleusercontent.com"
+            "1060860818910-of2mib6de089jn475e0ivlf80r849cm5.apps.googleusercontent.com"
           }
         >
           <NotificationsProvider>
