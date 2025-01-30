@@ -77,12 +77,13 @@ const ChatMessage = ({
             className="cursor-pointer text-gray-500"
             key={"link" + i}
             onClick={() => {
-              navigate(`pdf/${encodePdfName(blobName)}`);
-              dispatch(
-                setHighlightedResult(
-                  message.citationMapping[citation].highlightedBox
-                )
-              );
+              navigate(`pdf/${encodePdfName(blobName)}?highlightedBox=${JSON.stringify(message.citationMapping[citation].highlightedBox)}`);
+              // Old approach
+              // dispatch(
+              //   setHighlightedResult(
+              //     message.citationMapping[citation].highlightedBox
+              //   )
+              // );
             }}
           >
             {`[`}
